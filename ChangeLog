@@ -1,3 +1,9 @@
+Qtcam version 2.0.0
+------------------------------
+* Added support for all uvc cameras tested with Microsoft Lifecam Studio(TM) and Live Cam Sync HD VF0770 (Creative).
+
+
 Qtcam Application-1.7.0
 ------------------------------
 *Initial public release
+
