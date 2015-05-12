@@ -42,6 +42,9 @@ Rectangle {
     property int brightnessControlId
     property int contrastControlId
     property int saturationControlId
+    property int panControlId
+    property int tiltControlId
+    property int zoomControlId    
     property int hueControlId
     property int whiteBalanceControl_auto_Id
     property int whiteBalanceControlId
@@ -71,6 +74,9 @@ Rectangle {
     property bool brightValueChangeProperty
     property bool contrastValueChangeProperty
     property bool saturationValueChangeProperty
+    property bool panValueChangeProperty
+    property bool tiltValueChangeProperty
+    property bool zoomValueChangeProperty
     property bool wbValueChangeProperty
     property bool sharpValueChangeProperty
     property bool gainValueChangeProperty
@@ -891,6 +897,9 @@ Rectangle {
                         brightValueChangeProperty = false
                         contrastValueChangeProperty = false
                         saturationValueChangeProperty = false
+                        panValueChangeProperty = false
+                        tiltValueChangeProperty = false
+                        zoomValueChangeProperty = false
                         wbValueChangeProperty = false
                         sharpValueChangeProperty = false
                         gainValueChangeProperty = false
@@ -1140,6 +1149,124 @@ Rectangle {
                                             saturation_Slider.value = saturation_value.text
                                     }
                                 }
+                                Text {
+                                    id: pan
+                                    text: "Pan\n(Absolute)"
+                                    font.pixelSize: 12
+                                    font.family: "Ubuntu"
+                                    color: "#ffffff"
+                                    smooth: true
+                                    opacity: 0.1
+                                }
+                                Slider {
+                                    activeFocusOnPress: true
+                                    updateValueWhileDragging: false
+                                    id: pan_Slider
+                                    opacity: enabled ? 1 : 0.1
+                                    width: 120
+                                    stepSize: 3600
+                                    style:econSliderStyle
+                                    onValueChanged:  {
+                                        if(panValueChangeProperty) {
+                                            camproperty.logDebugWriter("Pan changed to: "+ value.toString())
+                                            vidstreamproperty.changeSettings(panControlId,value.toString())
+                                        }
+                                    }
+                                }
+                                TextField {
+                                    id: pan_value
+                                    text: pan_Slider.value
+                                    font.pixelSize: 8
+                                    font.family: "Ubuntu"
+                                    smooth: true
+                                    horizontalAlignment: TextInput.AlignHCenter
+                                    validator: IntValidator {bottom: pan_Slider.minimumValue; top: pan_Slider.maximumValue;}
+                                    opacity: 0
+                                    style: econTextFieldStyle
+                                    onTextChanged: {
+                                        if(text != "")
+                                            pan_Slider.value = pan_value.text
+                                    }
+                                }
+                                Text {
+                                    id: tilt
+                                    text: "Tilt\n(Absolute)"
+                                    font.pixelSize: 12
+                                    font.family: "Ubuntu"
+                                    color: "#ffffff"
+                                    smooth: true
+                                    opacity: 0.1
+                                }
+                                Slider {
+                                    activeFocusOnPress: true
+                                    updateValueWhileDragging: false
+                                    id: tilt_Slider
+                                    opacity: enabled ? 1 : 0.1
+                                    width: 120
+                                    stepSize: 3600
+                                    style:econSliderStyle
+                                    onValueChanged:  {
+                                        if(tiltValueChangeProperty) {
+                                            camproperty.logDebugWriter("Tilt changed to: "+ value.toString())
+                                            vidstreamproperty.changeSettings(tiltControlId,value.toString())
+                                        }
+                                    }
+                                }
+                                TextField {
+                                    id: tilt_value
+                                    text: tilt_Slider.value
+                                    font.pixelSize: 8
+                                    font.family: "Ubuntu"
+                                    smooth: true
+                                    horizontalAlignment: TextInput.AlignHCenter
+                                    validator: IntValidator {bottom: tilt_Slider.minimumValue; top: tilt_Slider.maximumValue;}
+                                    opacity: 0
+                                    style: econTextFieldStyle
+                                    onTextChanged: {
+                                        if(text != "")
+                                            tilt_Slider.value = tilt_value.text
+                                    }
+                                }
+                                Text {
+                                    id: zoom
+                                    text: "Zoom\n(absolute)"
+                                    font.pixelSize: 12
+                                    font.family: "Ubuntu"
+                                    color: "#ffffff"
+                                    smooth: true
+                                    opacity: 0.1
+                                }
+                                Slider {
+                                    activeFocusOnPress: true
+                                    updateValueWhileDragging: false
+                                    id: zoom_Slider
+                                    opacity: enabled ? 1 : 0.1
+                                    width: 120
+                                    stepSize: 1
+                                    style:econSliderStyle
+                                    onValueChanged:  {
+                                        if(zoomValueChangeProperty) {
+                                            camproperty.logDebugWriter("zoom changed to: "+ value.toString())
+                                            vidstreamproperty.changeSettings(zoomControlId,value.toString())
+                                        }
+                                    }
+                                }
+                                TextField {
+                                    id: zoom_value
+                                    text: zoom_Slider.value
+                                    font.pixelSize: 10
+                                    font.family: "Ubuntu"
+                                    smooth: true
+                                    horizontalAlignment: TextInput.AlignHCenter
+                                    validator: IntValidator {bottom: zoom_Slider.minimumValue; top: zoom_Slider.maximumValue;}
+                                    opacity: 0
+                                    style: econTextFieldStyle
+                                    onTextChanged: {
+                                        if(text != "")
+                                            zoom_Slider.value = zoom_value.text
+                                    }
+                                }
+                                 
                                 Column {
                                     spacing: 4
                                     Text {
@@ -2759,6 +2886,24 @@ Rectangle {
         saturation_Slider.maximumValue = 65536
         saturation_value.opacity = 0
         saturation_value.enabled = false
+        pan.opacity = 0.1
+        pan_Slider.enabled = false
+        pan_Slider.minimumValue = -529200
+        pan_Slider.maximumValue = 529200
+        pan_value.opacity = 0
+        pan_value.enabled = false
+        tilt.opacity = 0.1
+        tilt_Slider.enabled = false
+        tilt_Slider.minimumValue = -432000
+        tilt_Slider.maximumValue = 432000
+        tilt_value.opacity = 0
+        tilt_value.enabled = false
+        zoom.opacity = 0.1
+        zoom_Slider.enabled = false
+        zoom_Slider.minimumValue = 0
+        zoom_Slider.maximumValue = 317
+        zoom_value.opacity = 0
+        zoom_value.enabled = false        
         hue.opacity = 0.1
         hue_Slider.enabled = false
         hue_Slider.minimumValue = -65536
@@ -2875,6 +3020,33 @@ Rectangle {
                 saturation_Slider.minimumValue = controlMinValue
                 saturation_Slider.maximumValue = controlMaxValue
                 saturation_Slider.value = controlDefaultValue
+            } else if(controlName === "Pan (Absolute)") {
+                pan.opacity = 1
+                pan_Slider.enabled = true
+                pan_value.opacity = 1
+                pan_value.enabled = true
+                panControlId = ctrlID
+                pan_Slider.minimumValue = controlMinValue
+                pan_Slider.maximumValue = controlMaxValue
+                pan_Slider.value = controlDefaultValue
+            } else if(controlName === "Tilt (Absolute)") {
+                tilt.opacity = 1
+                tilt_Slider.enabled = true
+                tilt_value.opacity = 1
+                tilt_value.enabled = true
+                tiltControlId = ctrlID
+                tilt_Slider.minimumValue = controlMinValue
+                tilt_Slider.maximumValue = controlMaxValue
+                tilt_Slider.value = controlDefaultValue                
+            } else if(controlName === "Zoom, Absolute") {
+                zoom.opacity = 1
+                zoom_Slider.enabled = true
+                zoom_value.opacity = 1
+                zoom_value.enabled = true
+                zoomControlId = ctrlID
+                zoom_Slider.minimumValue = controlMinValue
+                zoom_Slider.maximumValue = controlMaxValue
+                zoom_Slider.value = controlDefaultValue                
             } else if(controlName === "Hue") {
                 hue.opacity = 1
                 hue_Slider.enabled = true
@@ -3194,6 +3366,9 @@ Rectangle {
             brightValueChangeProperty = true
             contrastValueChangeProperty = true
             saturationValueChangeProperty = true
+            panValueChangeProperty = true
+            tiltValueChangeProperty = true
+            zoomValueChangeProperty = true
             wbValueChangeProperty = true
             sharpValueChangeProperty = true
             gainValueChangeProperty = true
