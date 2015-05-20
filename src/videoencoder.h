@@ -33,12 +33,24 @@ extern "C" {
 #include "libswscale/swscale.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/dict.h"
+#include "libavutil/channel_layout.h"
 }
+#include <iostream>
+#include <cmath>
+#include <cassert>
+#include <cstddef>
+#include <stdlib.h>
+#include "portaudiocpp/PortAudioCpp.hxx"
+
+
+
+
 
 class VideoEncoder
 {
 
 public:
+
    VideoEncoder();
    virtual ~VideoEncoder();
 
@@ -47,6 +59,17 @@ public:
 
    int encodeImage(const QImage &);
    bool isOk();
+   int fill_audio_buffer(u_int64_t ts);
+   int record_sound ( const void *inputBuffer, unsigned long numSamples,
+    void *userData );
+
+   void set_sound (unsigned long fpsNumerator, unsigned long fpsDenominator);
+   int port_init_audio();
+   int init_sound();
+   int get_audio_flag(struct paRecordData *pdata);
+   bool is_audio_processing(struct paRecordData *pdata, bool set_processing);
+//   void* AudioLoop(void *arg);
+   int encodeAudio();
 
 
 protected:
@@ -60,7 +83,7 @@ protected:
       AVFormatContext *pFormatCtx;
       AVOutputFormat *pOutputFormat;
       AVCodecContext *pCodecCtx;
-      AVStream *pVideoStream,*pAudioStream;
+      AVStream *pVideoStream;
       AVCodec *pCodec;
 
       // Frame data
@@ -78,8 +101,23 @@ protected:
       // Packet
       AVPacket pkt;
 
+      AVStream *pAudioStream;
+      AVCodec *paudioCodec;
+      AVFrame *pAudioFrame;
+      uint8_t *paudioOutbuf;
+      AVCodecContext *paudioCodecCtx;
+      int audio_outbuf_size;
+
+      PaStreamParameters  inputParameters;
+      PaStream*           stream;
+      const PaDeviceInfo *deviceInfo;
+      PaError             err;
+      PaDeviceIndex       deviceIndex;
+
+
       QString fileName;
       QString tempExtensionCheck;
+
       unsigned getWidth();
       unsigned getHeight();
       bool isSizeValid();
@@ -98,6 +136,21 @@ protected:
       // Frame conversion
       bool convertImage(const QImage &img);
       bool convertImage_sws(const QImage &img);
+
+      AVStream* add_audio_stream(AVFormatContext *oc, AVCodecID codec_id, unsigned fpsDenominator, unsigned fpsNumerator);
+      void open_audio(AVStream *st);
+
+
+      int check_sample_fmt(AVCodec *codec, enum AVSampleFormat sample_fmt);
+      int select_sample_rate(AVCodec *codec);
+      int select_channel_layout(AVCodec *codec);
+
+//      int recordCallback( const void *pInputBuffer, void *outputBuffer,
+//                                        unsigned long framesPerBuffer,
+//                                        const PaStreamCallbackTimeInfo* timeInfo,
+//                                        PaStreamCallbackFlags statusFlags,
+//                                        void *userData );
+
 
 
 

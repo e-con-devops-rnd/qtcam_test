@@ -24,7 +24,8 @@ SOURCES += main.cpp \
     seecam_11cug.cpp \
     seecam_cu80.cpp \
     seecam_cu50.cpp \
-    videoencoder.cpp
+    videoencoder.cpp \
+	ms_time.c
 
 # Installation path
 # target.path =
@@ -46,14 +47,19 @@ HEADERS += \
     seecam_11cug.h \
     seecam_cu80.h \
     seecam_cu50.h \
-    videoencoder.h
+    videoencoder.h \
+    defs.h \
+    ms_time.h \
+    sound.h \
+    lavc_common.h
+    
 
 INCLUDEPATH +=  $$PWD/v4l2headers/include \
                 $$PWD/include
 
 LIBS += -lv4l2 -lv4lconvert \                
         -ludev \
-        -L$$PWD/lib -lavutil -lavcodec -lavformat -lswscale -lavresample
+        -L$$PWD/lib -lavutil -lavcodec -lavformat -lswscale -lavresample -lportaudio -lsndfile
 
 
 QMAKE_CFLAGS_THREAD = -D__STDC_CONSTANT_MACROS      #For Ubuntu 12.04 compilation
