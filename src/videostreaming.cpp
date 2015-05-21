@@ -186,11 +186,14 @@ void Videostreaming::capFrame()
 
         } else {
             captureSaveTime("Capture time: " +(QString::number((double)captureTime.elapsed()/1000)) + "seconds");
-            stopCapture();
             makeSnapShot = false;
-            vidCapFormatChanged(lastFormat);
-            setResoultion(lastPreviewSize);
-            startAgain();
+            if (!((stillSize == lastPreviewSize) && (stillOutFormat == lastFormat)))
+            {
+                stopCapture();
+                vidCapFormatChanged(lastFormat);
+                setResoultion(lastPreviewSize);
+                startAgain();
+            }
             m_snapShot = false;
             if(tmpValue)
                 formatSaveSuccess(true);
