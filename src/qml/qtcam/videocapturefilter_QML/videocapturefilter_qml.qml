@@ -3227,7 +3227,15 @@ Rectangle {
         {
             see3cam.destroy()
         }
-        cameraColumnLayout.visible = true
+        if(device_box.currentText == "e-con's 1MP Bayer RGB \nCamera")
+        {
+           cbItemsImgFormat.clear();
+           cbItemsImgFormat.insert(0, {text: "raw" })
+           cbItemsImgFormat.insert(1, {text: "bmp" })
+           cbItemsImgFormat.insert(2, {text: "jpg" })
+           cbItemsImgFormat.insert(3, {text: "png" })
+        }
+        cameraColumnLayout.visible = true        
         stillpinchildProperty.visible = false
         stillchildProperty.visible = false
         video_capture_filter_Child.visible = false
