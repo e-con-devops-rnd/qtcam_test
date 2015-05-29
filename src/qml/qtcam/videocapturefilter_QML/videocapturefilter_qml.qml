@@ -1599,12 +1599,12 @@ Rectangle {
                                         if(exposureComboEnable) {
                                             vidstreamproperty.selectMenuIndex(exposureAutoControlId,currentIndex)
                                             if(currentText.toString() == "Manual Mode") {
-                                                //exposure_Slider.opacity = 1
+                                                exposure_Slider.opacity = 1
                                                 exposure_Slider.enabled = true
                                                 exposure_value.opacity = 1
                                                 exposure_value.enabled = true
                                             } else {
-                                                //exposure_Slider.opacity = 0.1
+                                                exposure_Slider.opacity = 0.1
                                                 exposure_Slider.enabled = false
                                                 exposure_value.opacity = 0
                                                 exposure_value.enabled = false
@@ -1635,10 +1635,11 @@ Rectangle {
                                     opacity: enabled ? 1 : 0.1
                                     style:econSliderStyle
                                     onValueChanged: {
-                                        if(exposureCombo.currentText == "Manual Mode") {
+                                        if((exposureCombo.currentText == "Manual Mode") || (device_box.currentText == "e-con's CX3 RDK with O\nV5680")) {
                                             camproperty.logDebugWriter("Exposure Control settings changed to: "+ value.toString())
                                             vidstreamproperty.changeSettings(exposurecontrolId,value.toString())
                                         }
+
                                     }
                                 }
                                 TextField {
@@ -1748,11 +1749,12 @@ Rectangle {
                                     opacity: enabled ? 1 : 0.1
                                     onValueChanged: {
                                         if(focusValueChangeProperty) {
-                                            if(!autoSelect_focus.checked) {
+                                            if(!autoSelect_focus.checked || device_box.currentText == "e-con's CX3 RDK with O\nV5680") {
                                                 camproperty.logDebugWriter("Focus control settings changed to: "+ value.toString())
                                                 vidstreamproperty.changeSettings(focusControlId,value.toString())
                                             } else {
                                                 focus_Slider.enabled = false
+                                                focus_Slider.opacity = 0.1
                                                 focus_value.enabled = false
                                                 focus_value.opacity = 0
                                             }
@@ -2954,7 +2956,7 @@ Rectangle {
         backLight_Slider.maximumValue = 65536
         backLight_value.opacity = 0
         backLight_value.enabled = false
-        focusauto.opacity = 0.1
+        focusauto.opacity = 0.1        
         focus_Slider.enabled = false
         focus_Slider.minimumValue = -65536
         focus_Slider.maximumValue = 65536
@@ -3092,13 +3094,26 @@ Rectangle {
                 sharpness_Slider.maximumValue = controlMaxValue
                 sharpness_Slider.value = controlDefaultValue
             } else if(controlName === "Exposure (Absolute)") {
-                exposure_absolute.opacity = 1
+                exposure_absolute.opacity = 1                
+                if(device_box.currentText === "e-con's CX3 RDK with O\nV5680") {
+                    exposure_Slider.opacity = 1
+                    exposure_Slider.enabled = true
+                    exposure_value.opacity = 1
+                    exposure_value.enabled = true
+                }
+
                 exposurecontrolId = ctrlID
                 exposure_Slider.minimumValue = controlMinValue
                 exposure_Slider.maximumValue = controlMaxValue
                 exposure_Slider.value = controlDefaultValue
             } else if(controlName === "Focus (absolute)") {
                 focusauto.opacity = 1
+                if(device_box.currentText === "e-con's CX3 RDK with O\nV5680") {
+                    focus_Slider.opacity = 1
+                    focus_Slider.enabled = true
+                    focus_value.opacity = 1
+                    focus_value.enabled = true
+                }
                 focusControlId = ctrlID
                 focus_Slider.minimumValue = controlMinValue
                 focus_Slider.maximumValue = controlMaxValue
