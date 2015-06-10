@@ -34,6 +34,7 @@ Rectangle {
     signal dispResCam()
     signal dispOutFormatCam()
     signal stopCamPreview()
+    signal seeCamCu51Capture()
     property bool ret;
     property string stateDisplay:"";
     property string indexvalue: ""
@@ -112,6 +113,14 @@ Rectangle {
     property var menuitems:[]
     property variant aboutWindow
     property variant see3cam
+
+    onSeeCamCu51Capture: {
+        console.log("in onSeeCamCu51Capture",output_value.currentText.toString(), color_comp_box.currentIndex.toString())
+        vidstreamproperty.setStillVideoSize(output_value.currentText.toString(), color_comp_box.currentIndex.toString())
+        vidstreamproperty.makeShot(storage_path.text.toString(),imageFormatCombo.currentText.toString())
+    }
+
+
 
     width:Screen.width
     height:Screen.height
@@ -1635,7 +1644,7 @@ Rectangle {
                                     opacity: enabled ? 1 : 0.1
                                     style:econSliderStyle
                                     onValueChanged: {
-                                        if((exposureCombo.currentText == "Manual Mode") || (device_box.currentText == "e-con's CX3 RDK with O\nV5680")) {
+                                        if((exposureCombo.currentText == "Manual Mode") || (device_box.currentText == "e-con's CX3 RDK with O\nV5680") || (device_box.currentText == "e-con's CX3 RDK with M\nT9P031")) {
                                             camproperty.logDebugWriter("Exposure Control settings changed to: "+ value.toString())
                                             vidstreamproperty.changeSettings(exposurecontrolId,value.toString())
                                         }
@@ -3095,7 +3104,7 @@ Rectangle {
                 sharpness_Slider.value = controlDefaultValue
             } else if(controlName === "Exposure (Absolute)") {
                 exposure_absolute.opacity = 1                
-                if(device_box.currentText === "e-con's CX3 RDK with O\nV5680") {
+                if((device_box.currentText === "e-con's CX3 RDK with O\nV5680") || (device_box.currentText === "e-con's CX3 RDK with M\nT9P031")) {
                     exposure_Slider.opacity = 1
                     exposure_Slider.enabled = true
                     exposure_value.opacity = 1
@@ -3518,6 +3527,12 @@ Rectangle {
                 see3cam = Qt.createComponent("../UVCSettings/see3cam80/uvc80.qml").createObject(root)
             } else if(device_box.currentText == "See3CAMCU50") {
                 see3cam = Qt.createComponent("../UVCSettings/see3cam50/uvc50.qml").createObject(root)
+            } else if(device_box.currentText == "See3CAM_CU130") {
+                see3cam = Qt.createComponent("../UVCSettings/see3cam130/uvc130.qml").createObject(root)
+            } else if(device_box.currentText == "See3CAM_CU51") {
+                see3cam = Qt.createComponent("../UVCSettings/see3cam51/uvc51.qml").createObject(root)
+            } else if(device_box.currentText == "See3CAM_12CUNIR") {
+                see3cam = Qt.createComponent("../UVCSettings/see3camar0130/uvc_ar0130.qml").createObject(root)
             } else {
                 see3cam = Qt.createComponent("../UVCSettings/others/others.qml").createObject(root)
             }

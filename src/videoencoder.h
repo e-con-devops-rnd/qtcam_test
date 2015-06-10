@@ -40,7 +40,7 @@ extern "C" {
 #include <cassert>
 #include <cstddef>
 #include <stdlib.h>
-#include "portaudiocpp/PortAudioCpp.hxx"
+//#include "portaudiocpp/PortAudioCpp.hxx"
 
 
 
@@ -108,11 +108,11 @@ protected:
       AVCodecContext *paudioCodecCtx;
       int audio_outbuf_size;
 
-      PaStreamParameters  inputParameters;
-      PaStream*           stream;
-      const PaDeviceInfo *deviceInfo;
-      PaError             err;
-      PaDeviceIndex       deviceIndex;
+//      PaStreamParameters  inputParameters;
+//      PaStream*           stream;
+//      const PaDeviceInfo *deviceInfo;
+//      PaError             err;
+//      PaDeviceIndex       deviceIndex;
 
 
       QString fileName;

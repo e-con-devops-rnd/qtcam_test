@@ -95,11 +95,14 @@ void Videostreaming::updateFrame(QImage img) {
 
 void Videostreaming::capFrame()
 {
+    //qDebug()<<"in capFrame"<<m_capNotifier->isEnabled();
     __u32 buftype = m_buftype;
     v4l2_plane planes[VIDEO_MAX_PLANES];
     v4l2_buffer buf;
+    unsigned char *tempSrcBuffer = NULL, *tempDestBuffer = NULL, *copyDestBuffer = NULL;
     int err = 0;
     bool again;
+
     //temp.fmt.pix.pixelformat = V4L2_PIX_FMT_Y16;  // cu51
     unsigned char *displaybuf = NULL;
     memset(planes, 0, sizeof(planes));
@@ -123,9 +126,37 @@ void Videostreaming::capFrame()
         return;
     }
 
-    err = v4lconvert_convert(m_convertData, &m_capSrcFormat, &m_capDestFormat,
-                             (unsigned char *)m_buffers[buf.index].start[0], buf.bytesused,
-            m_capImage->bits(), m_capDestFormat.fmt.pix.sizeimage);
+//    tempSrcBuffer = (unsigned char *)malloc(width * height * 2);
+//    tempDestBuffer = (unsigned char *)malloc(width * height << 1);
+//    copyDestBuffer = tempDestBuffer;
+
+
+
+    if (camDeviceName == "e-con's CX3 RDK with M\nT9P031" || camDeviceName == "See3CAM_12CUNIR" || camDeviceName == "See3CAM_CU51")
+    {
+        tempSrcBuffer = (unsigned char *)malloc(width * height * 2);
+        tempDestBuffer = (unsigned char *)malloc(width * height << 1);
+        copyDestBuffer = tempDestBuffer;
+
+        memcpy(tempSrcBuffer, m_buffers[buf.index].start[0], buf.bytesused);
+
+        for(int l=0; l<(width*height*2); l=l+2)
+        {
+            *tempDestBuffer++ = (((tempSrcBuffer[l] & 0xF0) >> 4) | (tempSrcBuffer[l+1] & 0x0F) << 4);
+            *tempDestBuffer++ = 0x80;
+        }
+        m_capSrcFormat.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
+        err = v4lconvert_convert(m_convertData, &m_capSrcFormat, &m_capDestFormat,
+                                 (unsigned char *)copyDestBuffer, buf.bytesused,
+                                 m_capImage->bits(), m_capDestFormat.fmt.pix.sizeimage);
+
+    }
+    else
+    {
+        err = v4lconvert_convert(m_convertData, &m_capSrcFormat, &m_capDestFormat,
+                                 (unsigned char *)m_buffers[buf.index].start[0], buf.bytesused,
+                m_capImage->bits(), m_capDestFormat.fmt.pix.sizeimage);
+   }
 
     if (err != -1) {
         displaybuf = m_capImage->bits();
@@ -153,12 +184,19 @@ void Videostreaming::capFrame()
     }
     free(asil);
     delete qq;
+    int tmpRet;
     if(m_frame > 1 && m_snapShot) {
         bool tmpValue;
         if(formatType == "raw") {
             QFile file(filename);
             if(file.open(QIODevice::WriteOnly)) {
-                int tmpRet = file.write((const char*)m_buffers[buf.index].start[0],buf.bytesused);
+                if (camDeviceName == "e-con's CX3 RDK with M\nT9P031"){
+                    tmpRet = file.write((const char*)copyDestBuffer, buf.bytesused);
+                }
+                else{
+                    tmpRet = file.write((const char*)m_buffers[buf.index].start[0], buf.bytesused);
+                }
+
                 if(tmpRet != -1) {
                     tmpValue = true;
                 } else {
@@ -199,14 +237,35 @@ void Videostreaming::capFrame()
                 formatSaveSuccess(true);
             else
                 formatSaveSuccess(false);
+
+            if(tempSrcBuffer || copyDestBuffer)
+                freeBuffers(tempSrcBuffer,tempDestBuffer,copyDestBuffer);
             return void();
 
         }
     }
     getFrameRates();
+
+    if(tempSrcBuffer || copyDestBuffer)
+        freeBuffers(tempSrcBuffer,tempDestBuffer,copyDestBuffer);
     qbuf(buf);
 }
+void Videostreaming::freeBuffers(unsigned char *srcBuffer, unsigned char *destBuffer, unsigned char *copyBuffer)
+{
 
+        if(srcBuffer)
+        {
+            free(srcBuffer);
+            srcBuffer = NULL;
+        }
+
+        if(copyBuffer)
+        {
+            free(copyBuffer);
+            copyBuffer = NULL;
+            destBuffer = NULL;
+        }
+}
 void Videostreaming::getFrameRates() {
     struct timeval tv, res;
     if (m_frame == 0)
@@ -313,6 +372,8 @@ int Videostreaming::findMax(QList<int> *list) {
     }
     return array[index_of_min];
 }
+
+
 
 void Videostreaming::makeShot(QString filePath,QString imgFormatType) {
 
@@ -431,25 +492,32 @@ void Videostreaming::displayFrame() {
 
     m_capDestFormat = m_capSrcFormat;
     m_capDestFormat.fmt.pix.pixelformat = V4L2_PIX_FMT_RGB24;
+
     //m_capDestFormat.fmt.pix.sizeimage = (m_capDestFormat.fmt.pix.width * m_capDestFormat.fmt.pix.height * 3);
     v4l2_format copy = m_capSrcFormat;
     v4lconvert_try_format(m_convertData, &m_capDestFormat, &m_capSrcFormat);
     // v4lconvert_try_format sometimes modifies the source format if it thinks
     // that there is a better format available. Restore our selected source
     // format since we do not want that happening.
+
     m_capSrcFormat = copy;
+    m_capDestFormat.fmt.pix.width  = m_capSrcFormat.fmt.pix.width;
+    m_capDestFormat.fmt.pix.height = m_capSrcFormat.fmt.pix.height;
     width = m_capDestFormat.fmt.pix.width;
     height = m_capDestFormat.fmt.pix.height;
     pixfmt = m_capDestFormat.fmt.pix.pixelformat;
+    m_capDestFormat.fmt.pix.sizeimage = width*height*3;
 
     m_capImage = new QImage(width, height, QImage::Format_RGB888);
+
     if(camDeviceName == "e-con's 1MP Bayer RGB \nCamera") {
         m_capSrcFormat.fmt.pix.pixelformat = V4L2_PIX_FMT_SGRBG8;
     }
+
     if (startCapture()) {
         sprintf(header,"P6\n%d %d 255\n",width,height);
         m_capNotifier = new QSocketNotifier(fd(), QSocketNotifier::Read);
-        connect(m_capNotifier, SIGNAL(activated(int)), this, SLOT(capFrame()));
+        bool connectStatus = connect(m_capNotifier, SIGNAL(activated(int)), this, SLOT(capFrame()));
     }
 }
 
@@ -623,6 +691,11 @@ void Videostreaming::updateFrameInterval(QString pixelFormat, QString frameSize)
     height = tempResList.value(1).toInt();
     QStringList tempPixFmt = pixelFormat.split(' ');
     QString pixFmtValue = tempPixFmt.value(0);
+
+    /* Actual Format of "Y16" is "Y16 " [Y16 with space]. So append space char */
+    if (0 == QString::compare(pixFmtValue, "Y16")){
+        pixFmtValue.append(" ");
+    }
     ok = enum_frameintervals(frmival,pixFormat.value(pixFmtValue).toInt(), width, height);
     m_has_interval = ok && frmival.type == V4L2_FRMIVAL_TYPE_DISCRETE;
     QStringList availableFPS;

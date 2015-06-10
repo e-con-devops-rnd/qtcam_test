@@ -78,11 +78,11 @@ void Cameraproperty::checkforDevice() {
         emit logHandle(QtCriticalMsg,"/sys/class/video4linux/ path is Not available");
     }
     emit logHandle(QtDebugMsg,"Camera devices Connected to System: "+ availableCam.join(", "));
-    //uvccam.findEconDevice(&availableCam,"video4linux");
+    uvccam.findEconDevice(&availableCam,"video4linux");
     //emit logHandle(QtDebugMsg,"E-Con Camera devices Connected to System: "+availableCam.join(", "));
     availableCam.prepend("----Select camera Device----");
     modelCam.setStringList(availableCam);
-    //uvccam.findEconDevice(&availableCam,"hidraw");    
+    uvccam.findEconDevice(&availableCam,"hidraw");
 }
 
 void Cameraproperty::setCurrentDevice(QString deviceIndex,QString deviceName) {

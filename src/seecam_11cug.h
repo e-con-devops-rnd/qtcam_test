@@ -144,6 +144,7 @@ public slots:
      * true - Value set successfully
      * false - Value is not set successfully
      */
+
     bool setWbValues(camRGBcolor rgbColor, uint rgbValue);
 
     /**
