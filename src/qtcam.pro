@@ -26,7 +26,6 @@ SOURCES += main.cpp \
     seecam_cu50.cpp \
     seecam_ar0130.cpp \
     videoencoder.cpp \
-	ms_time.c \
     seecam_cu51.cpp \
     see3cam_cu130.cpp
 
@@ -52,42 +51,21 @@ HEADERS += \
     seecam_cu50.h \
     seecam_ar0130.h \
     videoencoder.h \
-    defs.h \
-    ms_time.h \
-    sound.h \
-    lavc_common.h \
-    seecam_ar0130.h \
     seecam_cu51.h \
     see3cam_cu130.h
     
 
-#INCLUDEPATH +=  $$PWD/v4l2headers/include \
-#                $$PWD/include
+INCLUDEPATH +=  $$PWD/v4l2headers/include \
+                $$PWD/avpackage/include \
+                $$PWD/udevpackage/include
 
-#LIBS += -lv4l2 -lv4lconvert \
-#        -ludev \
-#        -L$$PWD/lib -lavutil -lavcodec -lavformat -lswscale -lavresample -lportaudio -lsndfile
-#INCLUDEPATH +=  avpackage/include \
-#               udevpackage/include
-
-#LIBS += -lv4l2 -lv4lconvert -ludev \
-#        -L$$PWD/avpackage/lib/ -lavutil \
-#        -L$$PWD/avpackage/lib/ -lavcodec \
-#        -L$$PWD/avpackage/lib/ -lavformat \
-#        -L$$PWD/avpackage/lib/ -lswscale \
-#        -L$$PWD/avpackage/lib/ -lavresample \
-#        -L$$PWD/udevpackage/lib -ludev
-
-INCLUDEPATH +=  /home/vishnu/Music/avpackage/include \
-               /home/vishnu/Music/udevpackage/include
-
-LIBS += -lv4l2 -lv4lconvert -ludev \
-        -L/home/vishnu/Music/avpackage/lib/ -lavutil \
-        -L/home/vishnu/Music/avpackage/lib/ -lavcodec \
-        -L/home/vishnu/Music/avpackage/lib/ -lavformat \
-        -L/home/vishnu/Music/avpackage/lib/ -lswscale \
-        -L/home/vishnu/Music/avpackage/lib/ -lavresample \
-        -L/home/vishnu/Music/udevpackage/lib -ludev
+LIBS += -lv4l2 -lv4lconvert \
+        -L$$PWD/avpackage/lib/ -lavutil \
+        -L$$PWD/avpackage/lib/ -lavcodec \
+        -L$$PWD/avpackage/lib/ -lavformat \
+        -L$$PWD/avpackage/lib/ -lswscale \
+        -L$$PWD/avpackage/lib/ -lavresample \
+        -L$$PWD/udevpackage/lib -ludev
 
 QMAKE_CFLAGS_THREAD = -D__STDC_CONSTANT_MACROS      #For Ubuntu 12.04 compilation
 QMAKE_CXXFLAGS_THREAD = -D__STDC_CONSTANT_MACROS    #For Ubuntu 12.04 compilation

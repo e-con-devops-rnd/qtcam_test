@@ -58,7 +58,7 @@
     color: "#ffffff"
     smooth: true
     x: 72
-    y: 549.5
+    y: 520
     opacity: 0.50196078431373
     }
 
@@ -66,7 +66,7 @@
     Button {
     id: serial_no_selected
     x: 85
-    y: 582
+    y: 542
     opacity: 1
     action: serialNumber
     activeFocusOnPress : true
@@ -90,7 +90,7 @@
     Button {
     id: f_wversion_selectedCU130
     x: 85
-    y: 637
+    y: 592
     opacity: 1
     action: firmwareVersion
     activeFocusOnPress : true
@@ -165,6 +165,7 @@
     label: Text {
     x: 5
     width: 60
+    height: 30
     renderType: Text.NativeRendering
     verticalAlignment: Text.AlignVCenter
     font.pixelSize: 14
@@ -580,53 +581,6 @@
     }
     }
 
-Row {
-    id: deNoiseFeature
-    x: 5
-    y: 520
-
-    spacing: 10
-    Text {
-        id: denoise
-        text: "Denoise"
-        font.pixelSize: 14
-        font.family: "Ubuntu"
-        color: "#ffffff"
-        smooth: true
-        opacity: 1//0.1
-    }
-    Slider {
-        id: denoise_Slider
-        activeFocusOnPress: true
-        updateValueWhileDragging: false
-        enabled: true
-        opacity: enabled ? 1 : 0.1
-        width: 120
-        stepSize: 1
-        minimumValue: 0
-        maximumValue: 15
-        style:econSliderStyle
-        onValueChanged:  {
-            console.log("b value:",value.toString())
-                seecam130.setDenoiseValue(value)
-        }
-    }
-    TextField {
-        id: denoise_value
-        text: denoise_Slider.value
-        font.pixelSize: 10
-        font.family: "Ubuntu"
-        smooth: true
-        horizontalAlignment: TextInput.AlignHCenter
-        validator: IntValidator {bottom: denoise_Slider.minimumValue; top: denoise_Slider.maximumValue;}
-        opacity: 1
-        style: econTextFieldStyle
-        onTextChanged: {
-            if(text != "")
-                denoise_Slider.value = denoise_value.text
-        }
-    }
-}
 
 See3Cam130 {
     id: seecam130
@@ -639,13 +593,6 @@ See3Cam130 {
         console.log("effectMode:",effectMode)
         defaultEffectMode(effectMode)
     }
-    onSendDenoiseValue: {
-        console.log("denoiseValue:",denoiseValue)
-        defaultDenoiseValue(denoiseValue)
-    }
-
-
-
 }
 
 
@@ -667,8 +614,7 @@ See3Cam130 {
             Component.onCompleted:{
                 uvccamera.initExtensionUnit("See3CAM_CU130")
                 seecam130.getSceneMode()
-                seecam130.getEffectMode()
-                seecam130.getDenoiseValue()
+                seecam130.getEffectMode() 
             }
             Component.onDestruction: {
                 uvccamera.exitExtensionUnit()
@@ -683,10 +629,6 @@ See3Cam130 {
                 uvccamera.getFirmWareVersion()
                 messageDialog.open()
             }
-             function defaultDenoiseValue(denoiseValue)
-             {
-                 denoise_Slider.value = denoiseValue
-             }
 
             function defaultSceneMode(mode)
             {

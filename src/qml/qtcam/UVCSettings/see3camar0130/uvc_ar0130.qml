@@ -309,6 +309,7 @@ Item {
         opacity: 1
         action: serialNumber
         activeFocusOnPress : true
+        text: "Serial No"
         tooltip: "Click to view the Serial Number"
         style: econAR0130ButtonStyle
         Keys.onReturnPressed: {
@@ -363,13 +364,18 @@ Item {
                 radioOff.checked = true;
             }
         }
+        onDeviceStatus:{
+            messageDialog.title = title.toString()
+            messageDialog.text = message.toString()
+            messageDialog.open()
+        }
     }
     function enableMasterMode() {
        masterModeCapture();
         masterMode = seecamar0130.enableMasterMode()
         if(masterMode) {
             masterModeTimer.start()
-            JS.enableMasterMode_ar0130()
+            JS.enableMasterMode_12cuinr()
             if(!vga60fps_selected.enabled) {
                 vga60fps_selected.enabled = true
                 vga60fps_selected.opacity = 1
@@ -389,7 +395,7 @@ Item {
         triggerModeCapture()
         triggerMode = seecamar0130.enableTriggerMode()
         if(triggerMode) {
-            JS.enableTriggerMode_ar0130()
+            JS.enableTriggerMode_12cuinr()
             vga60fps_selected.enabled = false
             vga60fps_selected.opacity = 0.2
             vga30fps_selected.enabled = false

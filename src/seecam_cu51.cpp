@@ -1,3 +1,23 @@
+/*
+ * seecam_cu51.cpp -- Handling special feature of seecamcu51 camera
+ * Copyright © 2015  e-con Systems India Pvt. Limited
+ *
+ * This file is part of Qtcam.
+ *
+ * Qtcam is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3, or (at your option)
+ * any later version.
+ *
+ * Qtcam is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Qtcam. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "seecam_cu51.h"
 
 
@@ -20,15 +40,14 @@ void See3CAM_CU51::getTorchLevel(QString cameraName) {
          return void();
     }
 
-    quint8 flash_level = 0;
-    see3cam_ctrl.getTorchState(&flash_level,cameraName);
-    QString tmpStr = QString::number(flash_level);
+    quint8 torch_level = 0;
+    see3cam_ctrl.getTorchState(&torch_level,cameraName);
+    QString tmpStr = QString::number(torch_level);
     emit updateFlashCheckBox(tmpStr);
 }
 
 void See3CAM_CU51::getExposure()
 {
-    qDebug()<<"in getExposure";
     if(uvccamera::hid_fd < 0)
        {
            return void();
@@ -69,8 +88,7 @@ void See3CAM_CU51::getExposure()
                 if(g_in_packet_buf[0] == CAMERA_CONTROL_51 &&
                     g_in_packet_buf[1] == GET_EXPOSURE_VALUE ) {
                         if(g_in_packet_buf[4] == EXP_SUCCESS) {
-                            exposureValue = (g_in_packet_buf[3]<<8)+g_in_packet_buf[2];
-                            qDebug()<<"exposureValue:"<<exposureValue;
+                            exposureValue = (g_in_packet_buf[3]<<8)+g_in_packet_buf[2];                            
                             emit sendExposure(exposureValue);
 
                             timeout = false;
@@ -82,7 +100,6 @@ void See3CAM_CU51::getExposure()
             end = uvc.getTickCount();
                        if(end - start > TIMEOUT)
                        {
-                            qDebug()<<"timeout getExposure";
                            printf("%s(): Timeout occurred\n", __func__);
                            timeout = false;
                            return void();
@@ -96,11 +113,9 @@ void See3CAM_CU51::setExposure(const uint &exposureValue)
     if(uvccamera::hid_fd < 0)
        {
            return void();
-       }
-    qDebug()<<"exposure passed:"<<exposureValue;
+       }    
     if(exposureValue >= 1 && exposureValue <= 30000)
     {
-        qDebug()<<"exposureValue set in range";
            bool timeout = true;
            int ret =0;
            unsigned int start, end = 0;
@@ -157,6 +172,6 @@ void See3CAM_CU51::setExposure(const uint &exposureValue)
     }
     else
     {
-        qDebug()<<"exposureValue not set in range";
+        qDebug()<<"exposure value is not set in range";
     }
 }

@@ -75,7 +75,8 @@ int main(int argc, char *argv[])
 
     Videostreaming vs;
     viewer.rootContext()->setContextProperty("resolutionModel", &vs.resolution);
-    viewer.rootContext()->setContextProperty("outputFormatModel", &vs.outputFormat);
+    viewer.rootContext()->setContextProperty("stillOutputFormatModel", &vs.stillOutputFormat);
+    viewer.rootContext()->setContextProperty("videoOutputFormatModel", &vs.videoOutputFormat);
     viewer.rootContext()->setContextProperty("fpsAvailable", &vs.fpsList);
     viewer.rootContext()->setContextProperty("SystemPictureFolder",QStandardPaths::standardLocations(QStandardPaths::PicturesLocation).first());
     viewer.rootContext()->setContextProperty("SystemVideoFolder",QStandardPaths::standardLocations(QStandardPaths::MoviesLocation).first());
@@ -89,7 +90,7 @@ int main(int argc, char *argv[])
     //Setting the Window ICON
     QIcon icon("qml/qtcam/icon/images/icon.jpg");
     viewer.setIcon(icon);
-    viewer.setTitle(("Qtcam"));
+    viewer.setTitle("Qtcam");
     viewer.showMaximized();
     return app.exec();
 }
