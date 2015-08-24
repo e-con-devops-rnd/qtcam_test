@@ -36,6 +36,7 @@
 #include <QMutex>
 #include <QList>
 #include <QStandardPaths>
+#include <turbojpeg.h>
 #include "v4l2-api.h"
 #include "videoencoder.h"
 
@@ -55,13 +56,19 @@ public:
     QString fileName;
 
     static QStringListModel resolution;
-    static QStringListModel outputFormat;
-    static QStringListModel fpsList;
+    static QStringListModel stillOutputFormat;
+    static QStringListModel videoOutputFormat;
+    static QStringListModel fpsList;    
 
     void setFrame(unsigned char *data);
     void displayFrame();
     bool setBuffer(unsigned char *buf, unsigned size);
 
+    int jpegDecode(unsigned char **pic, unsigned char *buf, unsigned long bytes_used);    
+    int decomp(unsigned char **jpegbuf,
+                                unsigned long *jpegsize, unsigned char *dstbuf, int w, int h,
+                                int jpegqual, int tilew, int tileh,unsigned char **pic);
+    double getTimeInSecs(void);
 
     bool findNativeFormat(__u32 format, QImage::Format &dstFmt);
     bool startCapture();
@@ -73,6 +80,15 @@ public:
     QString lastFormat;
 
     VideoEncoder  *videoEncoder;
+
+    /* Jpeg decode */
+    int doyuv;
+    int dotile;
+    int pf;
+    int yuvpad;
+    int warmup;
+    int flags;
+    tjscalingfactor sf;
 
 private:
 
@@ -119,7 +135,7 @@ private:
 
     QImage snapShotImage;
     QPixmap qStaticImage;
-    QImage *m_capImage;
+    QImage *m_capImage;    
     QPixmap qImage;
 
     QString ctrlName, ctrlType, ctrlID, ctrlMaxValue, ctrlMinValue,ctrlDefaultValue;
@@ -134,7 +150,6 @@ private:
 
     unsigned char *m_data;
     unsigned char *m_frameData;
-
 
     unsigned char *m_buf;
     unsigned m_size;
@@ -215,9 +230,15 @@ public slots:
     void displayOutputFormat();
 
     /**
-     * @brief Emulate the available resolution supported by the camera.
+     * @brief Emulate the available resolution for still capturing supported by the camera.
      */
-    void displayResolution();
+    void displayStillResolution();
+
+
+    /**
+     * @brief Emulate the available resolution for video streaming supported by the camera.
+     */
+    void displayVideoResolution();
 
     /**
      * @brief To set the camera device node number to setDevice() function
@@ -308,11 +329,12 @@ signals:
     void logDebugHandle(QString _text);
     void logCriticalHandle(QString _text);
     void titleTextChanged(QString _title,QString _text);
+    void enableCaptureAndRecord();
     void newControlAdded(QString ctrlName,QString ctrlType,QString ctrlID,QString ctrlMinValue= "0", QString ctrlMaxValue = "0",QString ctrlDefaultValue="0", QString ctrlHardwareDefault="0");
-    void deviceUnplugged(QString _title,QString _text);
-    void framesPlayed(unsigned frame);
+    void deviceUnplugged(QString _title,QString _text);    
     void averageFPS(unsigned fps);
-    void defaultFrameSize(unsigned int outputIndexValue);
+    void defaultStillFrameSize(unsigned int outputIndexValue);
+    void defaultFrameSize(unsigned int outputIndexValue, unsigned int  defaultWidth, unsigned int defaultHeight);
     void defaultOutputFormat(unsigned int formatIndexValue);
     void defaultFrameInterval(unsigned int frameInterval);
     void captureSaveTime(QString saveTime);

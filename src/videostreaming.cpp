@@ -27,9 +27,33 @@
 #include <QMessageBox>
 #include <QRectF>
 #include <fcntl.h>
+
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
+
+/* MACRO FOR BAYER10 TO RGB24 */
+#define R(x, y, w)	tempCu40DestBuffer[0 + 3 * ((x) + (w) * (y))]
+#define G(x, y, w)	tempCu40DestBuffer[1 + 3 * ((x) + (w) * (y))]
+#define B(x, y, w)	tempCu40DestBuffer[2 + 3 * ((x) + (w) * (y))]
+
+#define Bay(x, y, w) tempCu40SrcBuffer[(x) + (w) * (y)]
+#define CLIP(x) ((x) < 0? 0 :((x) >= 255)? 255 : (x))
+
+/* Jpeg-decode */
+ #define HEADERFRAME1 0xaf
+
+#ifndef min
+ #define min(a,b) ((a)<(b)?(a):(b))
+#endif
+
+#define _throw(op, err) {  \
+    printf("ERROR in line %d while %s:\n%s\n", __LINE__, op, err);  \
+    retval=-1;  goto bailout;}
+
+#define _throwtj(m) _throw(m, tjGetErrorStr())
+
 QStringListModel Videostreaming::resolution;
-QStringListModel Videostreaming::outputFormat;
+QStringListModel Videostreaming::stillOutputFormat;
+QStringListModel Videostreaming::videoOutputFormat;
 QStringListModel Videostreaming::fpsList;
 int Videostreaming::deviceNumber;
 QString Videostreaming::camDeviceName;
@@ -43,6 +67,12 @@ Videostreaming::Videostreaming()
     triggerShot = false;
     correctionDisplay = 0;
     m_VideoRecord = false;
+    dotile = 0;
+    pf = TJPF_RGB;
+    warmup = 1;
+    sf = {1, 1};
+    flags = TJFLAG_NOREALLOC;
+    yuvpad = 1;
 }
 
 Videostreaming::~Videostreaming()
@@ -93,6 +123,13 @@ void Videostreaming::updateFrame(QImage img) {
     }
 }
 
+double Videostreaming::getTimeInSecs()
+{
+    struct timeval tv;
+    if(gettimeofday(&tv, NULL)<0) return 0.0;
+    else return (double)tv.tv_sec+((double)tv.tv_usec/1000000.);
+}
+
 void Videostreaming::capFrame()
 {
     //qDebug()<<"in capFrame"<<m_capNotifier->isEnabled();
@@ -100,8 +137,14 @@ void Videostreaming::capFrame()
     v4l2_plane planes[VIDEO_MAX_PLANES];
     v4l2_buffer buf;
     unsigned char *tempSrcBuffer = NULL, *tempDestBuffer = NULL, *copyDestBuffer = NULL;
+    unsigned char *tempCu130DestBuffer = NULL, *tempCu130SrcBuffer = NULL;
+    unsigned char *tempCu40DestBuffer = NULL;
+    unsigned short int *tempCu40SrcBuffer = NULL;
+
     int err = 0;
-    bool again;
+    bool again, validFrame = false, v4l2convert = false;
+    int x, y;
+
 
     //temp.fmt.pix.pixelformat = V4L2_PIX_FMT_Y16;  // cu51
     unsigned char *displaybuf = NULL;
@@ -121,16 +164,48 @@ void Videostreaming::capFrame()
     if (again) {
         return;
     }
-    if (buf.flags & V4L2_BUF_FLAG_ERROR) {
+    if (buf.flags & V4L2_BUF_FLAG_ERROR) {        
         qbuf(buf);
         return;
     }
+#if 0
+    switch(m_capSrcFormat.fmt.pix.pixelformat) {
+        case V4L2_PIX_FMT_YUYV: {
+            if((width*height*2) == buf.bytesused){
+                validFrame = true;
+            }
 
-//    tempSrcBuffer = (unsigned char *)malloc(width * height * 2);
-//    tempDestBuffer = (unsigned char *)malloc(width * height << 1);
-//    copyDestBuffer = tempDestBuffer;
+        }
+        break;
+        case V4L2_PIX_FMT_SGRBG8:{
+            // if bayer - 8 bit camera
+            // {
+                if ((width*height) == buf.bytesused)
+                    validFrame = true;
+            // }
+            // if bayer - 8 bit + pad camera
+            // {
+                if ((width*height*2) == buf.bytesused)
+                    validFrame = true;
+            // }
+        }
+        break;
+        case V4L2_PIX_FMT_MJPEG:{
+            validFrame = true;
+            break;
+        }
+        default:
+        // To do: for other color spaces
+        break;
 
+    }
 
+    if (validFrame != true){
+        qbuf(buf);
+        qDebug()<<"validFrame != true";
+     //   return;
+    }
+#endif
 
     if (camDeviceName == "e-con's CX3 RDK with M\nT9P031" || camDeviceName == "See3CAM_12CUNIR" || camDeviceName == "See3CAM_CU51")
     {
@@ -140,7 +215,7 @@ void Videostreaming::capFrame()
 
         memcpy(tempSrcBuffer, m_buffers[buf.index].start[0], buf.bytesused);
 
-        for(int l=0; l<(width*height*2); l=l+2)
+        for(int l=0; l<(width*height*2); l=l+2) /* Y16 to YUYV conversion */
         {
             *tempDestBuffer++ = (((tempSrcBuffer[l] & 0xF0) >> 4) | (tempSrcBuffer[l+1] & 0x0F) << 4);
             *tempDestBuffer++ = 0x80;
@@ -149,28 +224,69 @@ void Videostreaming::capFrame()
         err = v4lconvert_convert(m_convertData, &m_capSrcFormat, &m_capDestFormat,
                                  (unsigned char *)copyDestBuffer, buf.bytesused,
                                  m_capImage->bits(), m_capDestFormat.fmt.pix.sizeimage);
+        v4l2convert = true;
 
-    }
-    else
+    }else if (camDeviceName == "See3CAM_CU40")    {
+        tempCu40SrcBuffer = (unsigned short int *)malloc(width * height * 2); // 10 bit bayer - short int used
+        tempCu40DestBuffer = (unsigned char *)malloc(width * height * 3);
+        memcpy(tempCu40SrcBuffer, m_buffers[buf.index].start[0], (width*height*2));
+
+
+        for(x = 0; x < width; x += 2)  /* Nearest neighbour interpolation algorithm - y16 to RGB24 conversion */
+        {
+            for(y = 0; y < height; y += 2)
+            {
+               B(x, y, width) = B(x + 1, y, width) = B(x, y + 1, width) = B(x + 1, y + 1, width) = CLIP(Bay(x, y, width));
+               G(x, y, width) = G(x + 1, y, width) = G(x, y + 1, width) = G(x + 1, y + 1, width) = CLIP(Bay(x + 1, y, width));
+               R(x, y, width) = R(x + 1, y, width) = R(x, y + 1, width) = R(x + 1, y + 1, width) = CLIP(Bay(x + 1, y + 1, width));
+            }
+
+        }
+
+    }else if(camDeviceName == "See3CAM_CU130" && m_capSrcFormat.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG &&  m_frame > 8) {
+        if(buf.bytesused <= HEADERFRAME1) {
+            printf("Ignoring empty buffer");
+            return;
+        }
+
+        tempCu130SrcBuffer = (unsigned char *)malloc(width * height << 1);
+        tempCu130DestBuffer = (unsigned char *)malloc(width * (height + 8) * 3);
+        memcpy(tempCu130SrcBuffer, m_buffers[buf.index].start[0], buf.bytesused);
+
+        if(tempCu130SrcBuffer[0] == 0xFF && tempCu130SrcBuffer[1] == 0xD8){ /* check for valid image */
+            if(jpegDecode(&tempCu130DestBuffer, tempCu130SrcBuffer, buf.bytesused) < 0) {
+                printf("jpeg decode error");
+                return;
+            }
+        }
+        else{
+            qbuf(buf);
+            return;
+        }
+    } else
     {
         err = v4lconvert_convert(m_convertData, &m_capSrcFormat, &m_capDestFormat,
                                  (unsigned char *)m_buffers[buf.index].start[0], buf.bytesused,
-                m_capImage->bits(), m_capDestFormat.fmt.pix.sizeimage);
+                                 m_capImage->bits(), m_capDestFormat.fmt.pix.sizeimage);
+        v4l2convert = true;
    }
 
-    if (err != -1) {
+    if (err != -1 && v4l2convert) {
         displaybuf = m_capImage->bits();
-    }
-
-    if (err == -1) {
+    }else if (err == -1 && v4l2convert) {
         logCriticalHandle(v4lconvert_get_error_message(m_convertData));
-        //return void();
-    }
+        qbuf(buf);
+        return void();
+    }else if(camDeviceName == "See3CAM_CU130" && m_capSrcFormat.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG){
+        displaybuf = tempCu130DestBuffer;    
+    }else {
+        displaybuf = tempCu40DestBuffer;
+    } 
 
-    unsigned char* asil=(unsigned char*)malloc(m_capDestFormat.fmt.pix.sizeimage+qstrlen(header));
-    memmove(asil, m_capImage->bits(), m_capDestFormat.fmt.pix.sizeimage);
-    memmove(asil+qstrlen(header), asil, m_capDestFormat.fmt.pix.sizeimage);
-    memcpy(asil,header,qstrlen(header));
+    unsigned char* asil=(unsigned char*)malloc(m_capDestFormat.fmt.pix.sizeimage+qstrlen(header));    
+    memmove(asil, displaybuf, m_capDestFormat.fmt.pix.sizeimage);    
+    memmove(asil+qstrlen(header), asil, m_capDestFormat.fmt.pix.sizeimage);    
+    memcpy(asil,header,qstrlen(header));        
     QImage *qq = new QImage();
     if(qq->loadFromData(asil,m_capDestFormat.fmt.pix.sizeimage+qstrlen(header),"PPM")) {
         updateFrame(*qq);
@@ -179,21 +295,22 @@ void Videostreaming::capFrame()
                 videoEncoder->encodeImage(*qq);
             }
         }
-    } else {
-        logCriticalHandle("Unsupported Format...");
+    } else {        
+        logCriticalHandle("Unsupported Format...");        
     }
     free(asil);
+
     delete qq;
-    int tmpRet;
+    int tmpRet;    
     if(m_frame > 1 && m_snapShot) {
         bool tmpValue;
+
         if(formatType == "raw") {
             QFile file(filename);
             if(file.open(QIODevice::WriteOnly)) {
-                if (camDeviceName == "e-con's CX3 RDK with M\nT9P031"){
+                if (camDeviceName == "e-con's CX3 RDK with M\nT9P031" || camDeviceName == "See3CAM_12CUNIR" || camDeviceName == "See3CAM_CU51"){
                     tmpRet = file.write((const char*)copyDestBuffer, buf.bytesused);
-                }
-                else{
+                } else{
                     tmpRet = file.write((const char*)m_buffers[buf.index].start[0], buf.bytesused);
                 }
 
@@ -207,64 +324,268 @@ void Videostreaming::capFrame()
                 tmpValue = false;
             }
         }
-        else {
-            QImage *qImage2 = new QImage(displaybuf, width, height,QImage::Format_RGB888);
-            bool tmpRet = qImage2->save(filename);
+        else {            
+            QImage qImage2(displaybuf, width, height,QImage::Format_RGB888);
+            bool tmpRet;
+            QImageWriter writer(filename);
+
+            if(!writer.write(qImage2))
+            {
+                emit logCriticalHandle("Error while saving image:"+writer.errorString());
+                tmpRet = false;
+            }
+            else
+            {
+                tmpRet = true;
+            }
             tmpValue = tmpRet;
-            delete qImage2;
-        }
+        }        
         if(triggerShot) {
             captureSaveTime("Capture time: " +(QString::number((double)captureTime.elapsed()/1000)) + "seconds");
             makeSnapShot = false;
             m_snapShot = false;
-            if(tmpValue)
-                formatSaveSuccess(true);
-            else
-                formatSaveSuccess(false);
+            formatSaveSuccess(tmpValue);
 
         } else {
-            captureSaveTime("Capture time: " +(QString::number((double)captureTime.elapsed()/1000)) + "seconds");
+           captureSaveTime("Capture time: " +(QString::number((double)captureTime.elapsed()/1000)) + "seconds");
             makeSnapShot = false;
+            m_snapShot = false;
             if (!((stillSize == lastPreviewSize) && (stillOutFormat == lastFormat)))
             {
+                if(tempSrcBuffer || copyDestBuffer)
+                {
+                    freeBuffers(tempSrcBuffer,tempDestBuffer,copyDestBuffer);
+                }
+                if(tempCu40SrcBuffer){
+                    free(tempCu40SrcBuffer);
+                    tempCu40SrcBuffer = NULL;
+                }
+                if(tempCu40DestBuffer) {           /* Todo: Need to make generic code */
+                    free(tempCu40DestBuffer);
+                    tempCu40DestBuffer = NULL;
+                }
+                if(tempCu130DestBuffer){
+                free(tempCu130DestBuffer);  tempCu130DestBuffer = NULL;
+                }
+                if(tempCu130SrcBuffer){
+                   free(tempCu130SrcBuffer); tempCu130SrcBuffer = NULL;
+                }
                 stopCapture();
                 vidCapFormatChanged(lastFormat);
                 setResoultion(lastPreviewSize);
                 startAgain();
+                formatSaveSuccess(tmpValue);
+                return void();
             }
-            m_snapShot = false;
-            if(tmpValue)
-                formatSaveSuccess(true);
-            else
-                formatSaveSuccess(false);
-
-            if(tempSrcBuffer || copyDestBuffer)
-                freeBuffers(tempSrcBuffer,tempDestBuffer,copyDestBuffer);
-            return void();
-
+            else{
+                formatSaveSuccess(tmpValue);
+            }
         }
     }
     getFrameRates();
-
+    if(tempCu40SrcBuffer) {
+        free(tempCu40SrcBuffer); tempCu40SrcBuffer = NULL;
+    }
+    if(tempCu40DestBuffer) {
+        free(tempCu40DestBuffer); tempCu40DestBuffer = NULL;
+    }    
+    if(tempCu130DestBuffer){
+    free(tempCu130DestBuffer);  tempCu130DestBuffer = NULL;
+    }
+    if(tempCu130SrcBuffer){
+       free(tempCu130SrcBuffer); tempCu130SrcBuffer = NULL;
+    }
     if(tempSrcBuffer || copyDestBuffer)
-        freeBuffers(tempSrcBuffer,tempDestBuffer,copyDestBuffer);
+        freeBuffers(tempSrcBuffer,tempDestBuffer,copyDestBuffer);    
     qbuf(buf);
 }
+
+
+int Videostreaming::jpegDecode(unsigned char **pic, unsigned char *buf, unsigned long bytes_used)
+{
+    tjhandle handle = NULL;
+    tjtransform *t = NULL;
+
+    int w = 0, h = 0, subsamp = -1, cs = -1, _w, _h;
+    int i, tilew, tileh, ntilesw = 1, ntilesh =1 , retval = 0;
+    int _tilew, _tileh, xformopt=0;
+
+    unsigned char **jpegbuf=NULL, *srcbuf=NULL;
+    unsigned long *jpegsize=NULL, srcsize;
+
+    flags |= TJFLAG_FASTDCT;
+    srcsize = bytes_used;
+
+    if((srcbuf = (unsigned char *)malloc(srcsize))==NULL)
+        printf("allocating srcbuf memory failed");
+
+    memcpy(srcbuf, buf, srcsize);
+
+    if((handle = tjInitTransform()) == NULL)
+        printf("executing tjInitTransform()");
+
+    if(tjDecompressHeader3(handle, srcbuf, srcsize, &w, &h, &subsamp, &cs)==-1)
+        printf("tjDecompressHeader3():%s",tjGetErrorStr());
+
+    for(tilew=dotile? 16:w, tileh=dotile? 16:h; ; tilew*=2, tileh*=2)
+    {
+        if(tilew>w) tilew = w;  if(tileh>h) tileh = h;
+        ntilesw=(w+tilew-1)/tilew;  ntilesh=(h+tileh-1)/tileh;
+
+        if((jpegbuf = (unsigned char **)malloc(sizeof(unsigned char *)
+                                             *ntilesw*ntilesh)) == NULL)
+            printf("allocating JPEG tile array ");
+
+        memset(jpegbuf, 0, sizeof(unsigned char *)*ntilesw*ntilesh);
+
+        if((jpegsize = (unsigned long *)malloc(sizeof(unsigned long)
+                                             *ntilesw*ntilesh)) == NULL)
+            printf("allocating JPEG size array");
+
+        memset(jpegsize, 0, sizeof(unsigned long)*ntilesw*ntilesh);
+
+        if((flags&TJFLAG_NOREALLOC)!=0 || !dotile)
+            for(i=0; i<ntilesw*ntilesh; i++)
+            {
+                if((jpegbuf[i] = (unsigned char *)tjAlloc(tjBufSize(tilew, tileh,
+                                                                  subsamp))) == NULL)
+                    printf("allocating JPEG tiles");
+            }
+
+        _tilew = tilew;
+        _tileh = tileh;
+
+        _w = w;
+        _h = h;
+
+        jpegsize[0] = srcsize;
+        memcpy(jpegbuf[0], srcbuf, srcsize); /* Important Step */
+
+        if(w == tilew) _tilew = _w;
+        if(h == tileh) _tileh = _h;
+        if(!(xformopt & TJXOPT_NOOUTPUT))
+        {
+            if(decomp(jpegbuf, jpegsize, NULL, _w, _h, 0,
+                      _tilew, _tileh, pic)==-1)
+                goto bailout;
+        }        
+
+        for(i=0; i<ntilesw*ntilesh; i++)
+        {
+            tjFree(jpegbuf[i]);
+            jpegbuf[i] = NULL;
+        }        
+        free(jpegbuf);
+        jpegbuf = NULL;
+
+        if(jpegsize)
+        {
+            free(jpegsize);
+            jpegsize = NULL;
+        }
+        if(tilew==w && tileh==h)
+            break;
+    }
+
+bailout:    
+    if(jpegbuf)
+    {
+        for(i=0; i<ntilesw*ntilesh; i++)
+        {
+            if(jpegbuf[i]) tjFree(jpegbuf[i]);  jpegbuf[i] = NULL;
+        }
+        free(jpegbuf);
+        jpegbuf = NULL;
+    }
+    if(jpegsize) {free(jpegsize);  jpegsize = NULL;}
+    if(srcbuf) {free(srcbuf);  srcbuf = NULL;}
+    if(t) {free(t);  t = NULL;}
+    if(handle) {tjDestroy(handle);  handle = NULL;}
+    return retval;
+}
+
+/* Decompression test */
+int Videostreaming::decomp(unsigned char **jpegbuf,
+    unsigned long *jpegsize, unsigned char *dstbuf, int w, int h,
+    int jpegqual, int tilew, int tileh,unsigned char **pic)
+{
+    tjhandle handle = NULL;
+    char  qualstr[6] = "\0";
+
+    double elapsed, elapsedDecode;
+    double startTest, endTest;
+
+    int ps = tjPixelSize[pf];
+    int scaledw = TJSCALED(w, sf);
+    int scaledh = TJSCALED(h, sf);
+    int pitch = scaledw * ps;
+    int ntilesw = (w + tilew - 1) / tilew, ntilesh = (h + tileh - 1)/tileh;
+    int row, col, iter = 0, retval = 0;
+
+    unsigned char *dstptr, *dstptr2;
+
+    if(jpegqual>0)
+    {
+        snprintf(qualstr, 6, "_Q%d", jpegqual);
+        qualstr[5]=0;
+    }
+
+    if((handle = tjInitDecompress()) == NULL)
+        _throwtj("executing tjInitDecompress()");
+
+    /* Benchmark */
+    iter = -warmup;
+    elapsed = elapsedDecode = 0.;
+
+    if(1)
+    {
+        int tile = 0;
+        double start = getTimeInSecs();
+        for(row=0, dstptr=dstbuf; row<ntilesh; row++, dstptr+=pitch*tileh)
+        {
+            for(col=0, dstptr2=dstptr; col<ntilesw; col++, tile++, dstptr2+=ps*tilew)
+            {
+                int width = dotile? min(tilew, w-col*tilew):scaledw;
+                int height = dotile? min(tileh, h-row*tileh):scaledh;
+
+                startTest = getTimeInSecs();
+                if(tjDecompress2(handle, jpegbuf[tile], jpegsize[tile], *pic,
+                                    width, pitch, height, pf, flags)==-1)
+                 _throwtj("executing tjDecompress2()");
+                endTest = getTimeInSecs();
+                //qDebug()<<"Time taken to tjdecompress"<<endTest-startTest;
+            }
+        }
+        iter++;
+        if(iter >= 1)
+            elapsed += getTimeInSecs()-start;
+    }
+
+    if(1) elapsed -= elapsedDecode;
+
+    if(tjDestroy(handle) == -1) _throwtj("executing tjDestroy()");
+    handle = NULL;
+
+    bailout:    
+    if(handle) tjDestroy(handle);
+    return retval;
+}
+
 void Videostreaming::freeBuffers(unsigned char *srcBuffer, unsigned char *destBuffer, unsigned char *copyBuffer)
 {
 
-        if(srcBuffer)
-        {
-            free(srcBuffer);
-            srcBuffer = NULL;
-        }
+    if(srcBuffer)
+    {
+        free(srcBuffer);
+        srcBuffer = NULL;
+    }
 
-        if(copyBuffer)
-        {
-            free(copyBuffer);
-            copyBuffer = NULL;
-            destBuffer = NULL;
-        }
+    if(copyBuffer)
+    {
+        free(copyBuffer);
+        copyBuffer = NULL;
+        destBuffer = NULL;
+    }
 }
 void Videostreaming::getFrameRates() {
     struct timeval tv, res;
@@ -277,7 +598,7 @@ void Videostreaming::getFrameRates() {
         m_lastFrame = m_frame;
         m_tv = tv;
     }
-    emit framesPlayed(++m_frame);
+    ++m_frame;
     emit averageFPS(m_fps);
 }
 
@@ -417,11 +738,15 @@ void Videostreaming::makeShot(QString filePath,QString imgFormatType) {
     }
     makeSnapShot = true;
     triggerShot = false;
-    stopCapture();
-    vidCapFormatChanged(stillOutFormat);
-    setResoultion(stillSize);
     formatType = imgFormatType;
-    startAgain();
+
+    if (!((stillSize == lastPreviewSize) && (stillOutFormat == lastFormat)))
+    {
+        stopCapture();
+        vidCapFormatChanged(stillOutFormat);
+        setResoultion(stillSize);
+        startAgain();
+    }
 }
 
 void Videostreaming::triggerModeShot(QString filePath,QString imgFormatType) {
@@ -453,6 +778,15 @@ void Videostreaming::formatSaveSuccess(bool success) {
         emit logCriticalHandle("Still image not saved successfully");
         emit titleTextChanged(_title,_text);
     }
+
+//    if(success) {
+//        emit logDebugHandle("Still image saved successfully in " + filename);
+//        qDebug("able to save image");
+//    } else {
+//        emit logCriticalHandle("Still image not saved successfully");
+//        qDebug("Not able to save image");
+//    }
+//    emit enableCaptureAndRecord();
 }
 
 bool Videostreaming::getInterval(struct v4l2_fract &interval)
@@ -464,26 +798,25 @@ bool Videostreaming::getInterval(struct v4l2_fract &interval)
 
 void Videostreaming::displayFrame() {
     emit logDebugHandle("Start Previewing");
-    m_frame = m_lastFrame = m_fps = 0;
-    emit framesPlayed(m_frame);
+    m_frame = m_lastFrame = m_fps = 0;    
     emit averageFPS(m_fps);
 
     __u32 buftype = m_buftype;
-
     g_fmt_cap(buftype, m_capSrcFormat);
-    if (try_fmt(m_capSrcFormat)) {
-        if(!s_fmt(m_capSrcFormat)) {
-            emit titleTextChanged("Error", "Device or Resource is busy");
-            emit logCriticalHandle("Device or Resource is busy");
-            if (fd() >= 0) {
-                v4lconvert_destroy(m_convertData);
-                close();
-            }
-            return void();
+
+    // if (try_fmt(m_capSrcFormat)) {
+    if(!s_fmt(m_capSrcFormat)) {        
+        emit titleTextChanged("Error", "Device or Resource is busy");
+        emit logCriticalHandle("Device or Resource is busy");
+        if (fd() >= 0) {
+            v4lconvert_destroy(m_convertData);
+            close();
         }
-    } else {
         return void();
     }
+    //} else {
+    //return void();
+    //}
 
     if (getInterval(interval))
         set_interval(buftype, interval);
@@ -508,16 +841,18 @@ void Videostreaming::displayFrame() {
     pixfmt = m_capDestFormat.fmt.pix.pixelformat;
     m_capDestFormat.fmt.pix.sizeimage = width*height*3;
 
+
     m_capImage = new QImage(width, height, QImage::Format_RGB888);
 
     if(camDeviceName == "e-con's 1MP Bayer RGB \nCamera") {
         m_capSrcFormat.fmt.pix.pixelformat = V4L2_PIX_FMT_SGRBG8;
     }
 
+
     if (startCapture()) {
         sprintf(header,"P6\n%d %d 255\n",width,height);
         m_capNotifier = new QSocketNotifier(fd(), QSocketNotifier::Read);
-        bool connectStatus = connect(m_capNotifier, SIGNAL(activated(int)), this, SLOT(capFrame()));
+        connect(m_capNotifier, SIGNAL(activated(int)), this, SLOT(capFrame()));
     }
 }
 
@@ -592,15 +927,14 @@ void Videostreaming::setResoultion(QString resolution)
     fmt.fmt.pix.height = height;
     m_width = width;
     m_height = height;
-    if (try_fmt(fmt)) {
-        s_fmt(fmt);
-    }
+    try_fmt(fmt);
+    s_fmt(fmt);
 }
 
-void Videostreaming::displayResolution() {
+void Videostreaming::displayStillResolution() {
     g_fmt_cap(V4L2_BUF_TYPE_VIDEO_CAPTURE, fmt);
 
-    QStringList dispRes;
+    QStringList dispStillRes;
 
     m_pixelformat = fmt.fmt.pix.pixelformat;
     m_width       = fmt.fmt.pix.width;
@@ -613,14 +947,46 @@ void Videostreaming::displayResolution() {
     if (ok && frmsize.type == V4L2_FRMSIZE_TYPE_DISCRETE) {
         do {
             indexCount++;
-            dispRes.append(QString("%1x%2").arg(frmsize.discrete.width).arg(frmsize.discrete.height));
+            dispStillRes.append(QString("%1x%2").arg(frmsize.discrete.width).arg(frmsize.discrete.height));
+            if (frmsize.discrete.width == m_width && frmsize.discrete.height == m_height) {                
+                emit defaultStillFrameSize(indexCount);
+            }
+        } while (enum_framesizes(frmsize));
+    }    
+    stillOutputFormat.setStringList(dispStillRes);
+    emit logDebugHandle("Supported still Resolution: " +dispStillRes.join(", "));
+}
+
+void Videostreaming::displayVideoResolution() {
+    g_fmt_cap(V4L2_BUF_TYPE_VIDEO_CAPTURE, fmt);
+
+    QStringList dispVideoRes;
+
+    m_pixelformat = fmt.fmt.pix.pixelformat;
+    m_width       = fmt.fmt.pix.width;
+    m_height      = fmt.fmt.pix.height;
+
+    unsigned int indexCount = -1;
+    unsigned int defaultWidth;
+    unsigned int defaultHeight;
+
+    v4l2_frmsizeenum frmsize;
+    bool ok = false;
+    ok = enum_framesizes(frmsize, m_pixelformat);
+    if (ok && frmsize.type == V4L2_FRMSIZE_TYPE_DISCRETE) {
+        do {
+            indexCount++;
+            dispVideoRes.append(QString("%1x%2").arg(frmsize.discrete.width).arg(frmsize.discrete.height));
             if (frmsize.discrete.width == m_width && frmsize.discrete.height == m_height) {
-                emit defaultFrameSize(indexCount);
+                defaultWidth = m_width;
+                defaultHeight = m_height;
+                emit defaultFrameSize(indexCount, defaultWidth, defaultHeight);                
             }
         } while (enum_framesizes(frmsize));
     }
-    outputFormat.setStringList(dispRes);
-    emit logDebugHandle("Supported Resolution: " +dispRes.join(", "));
+
+    videoOutputFormat.setStringList(dispVideoRes);    
+    emit logDebugHandle("Supported video Resolution: " +dispVideoRes.join(", "));
 }
 
 void Videostreaming::vidCapFormatChanged(QString idx)
@@ -630,11 +996,8 @@ void Videostreaming::vidCapFormatChanged(QString idx)
     v4l2_format fmt;
     g_fmt_cap(m_buftype, fmt);
     fmt.fmt.pix.pixelformat = desc.pixelformat;
-    if (try_fmt(fmt))
-        s_fmt(fmt);
-    else {
-        return void();
-    }
+    try_fmt(fmt);
+    s_fmt(fmt);
     if(!makeSnapShot)
         updateVidOutFormat();
 }
@@ -705,7 +1068,7 @@ void Videostreaming::updateFrameInterval(QString pixelFormat, QString frameSize)
         curr_ok = v4l2::get_interval(m_buftype, curr);
         do {
             availableFPS.append(QString::number((double)frmival.discrete.denominator / frmival.discrete.numerator).append(" FPS"));
-            if (curr_ok && frmival.discrete.numerator == curr.numerator && frmival.discrete.denominator == curr.denominator) {
+            if (curr_ok && frmival.discrete.numerator == curr.numerator && frmival.discrete.denominator == curr.denominator) {                
                 emit defaultFrameInterval(frmival.index);
                 m_interval = frmival.discrete;
             }
@@ -737,7 +1100,7 @@ void Videostreaming::cameraFilterControls(bool actualValue) {
     qctrl.id = V4L2_CTRL_FLAG_NEXT_CTRL;
     emit logDebugHandle("Available Controls:");
     while(queryctrl(qctrl)) {
-        emit logDebugHandle((char*)qctrl.name);
+        emit logDebugHandle((char*)qctrl.name);        
         switch (qctrl.type) {
         case V4L2_CTRL_TYPE_BOOLEAN:
             ctrlName = (char*)qctrl.name;
@@ -818,9 +1181,9 @@ QString Videostreaming::getSettings(unsigned int id) {
 void Videostreaming::changeSettings(unsigned int id, QString value) {
     struct v4l2_control c;
     c.id = id;
-    c.value = value.toInt();
+    c.value = value.toInt();    
     if (ioctl(VIDIOC_S_CTRL, &c)) {
-        emit logCriticalHandle("Error in setting the Value");
+        emit logCriticalHandle("Error in setting the Value");        
     }
 }
 

@@ -1,4 +1,4 @@
- /* seecam_cu51.h -- Handling special feature of seecamcu50 camera
+ /* seecam_cu51.h -- Handling special feature of seecamcu51 camera
  * Copyright © 2015  e-con Systems India Pvt. Limited
  *
  * This file is part of Qtcam.

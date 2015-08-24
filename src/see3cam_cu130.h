@@ -1,3 +1,22 @@
+/*
+ * seecam_cu130.h -- Handling special feature of seecamcu130 camera
+ * Copyright © 2015  e-con Systems India Pvt. Limited
+ *
+ * This file is part of Qtcam.
+ *
+ * Qtcam is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3, or (at your option)
+ * any later version.
+ *
+ * Qtcam is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Qtcam. If not, see <http://www.gnu.org/licenses/>.
+ */
 #ifndef SEE3CAM_CU130_H
 #define SEE3CAM_CU130_H
 
@@ -61,16 +80,13 @@ public:
 
 signals:
      void sendSceneMode(uint sceneMode);
-     void sendEffectMode(uint effectMode);
-     void sendDenoiseValue(uint denoiseValue);
+     void sendEffectMode(uint effectMode);     
 
 public slots:
     void getSceneMode();
-    void getEffectMode();
-    void getDenoiseValue();
+    void getEffectMode();    
     void setSceneMode(const sceneModes& sceneMode);
-    void setEffectMode(const specialEffects& specialEffect);
-    void setDenoiseValue(const uint& noiseValue);
+    void setEffectMode(const specialEffects& specialEffect);    
 
 };
 
