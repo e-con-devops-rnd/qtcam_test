@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 Qtcam version 6.0.0
 ------------------------------
 * Added support for Cu40 camera.
@@ -10,6 +11,8 @@ Qtcam version 5.0.0
 Focus, Disable video processing ]
 * Bug Fixes - Bug Id - 3252, 3259, 3217 
 
+=======
+>>>>>>> 873025b55e59bed48246c2c6d3a5a61e6328e64f
 Qtcam version 4.0.1
 ------------------------------
 * switching of resolution is removed when still and video format, resolution are same to make faster.
