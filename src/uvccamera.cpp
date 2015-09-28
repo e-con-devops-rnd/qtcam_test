@@ -56,7 +56,7 @@ int uvccamera::findEconDevice(QStringList *econCamera,QString parameter)
     /* Create the udev object */
     udev = udev_new();
     if (!udev) {
-        printf("Can't create udev\n");
+        emit logHandle(QtCriticalMsg,"Can't create udev\n");
         exit(1);
     }
 
@@ -93,7 +93,7 @@ int uvccamera::findEconDevice(QStringList *econCamera,QString parameter)
                     "usb",
                     "usb_device");
         if (!pdev) {
-            printf("Unable to find parent usb device.");
+            emit logHandle(QtCriticalMsg,"Unable to find parent usb device.");
             exit(1);
         }
 
@@ -166,8 +166,6 @@ bool uvccamera::readFirmwareVersion(quint8 *pMajorVersion, quint8 *pMinorVersion
         perror("write");
         _text = tr("Device not available");
         return false;
-    } else {
-        printf("%s(): wrote %d bytes\n", __func__,ret);
     }
     /* Read the Firmware Version from the device */
     start = getTickCount();
@@ -177,8 +175,7 @@ bool uvccamera::readFirmwareVersion(quint8 *pMajorVersion, quint8 *pMinorVersion
         ret = read(hid_fd, g_in_packet_buf, BUFFER_LENGTH);
         if (ret < 0) {
             //perror("read");
-        } else {
-            printf("%s(): read %d bytes:\n", __func__,ret);
+        } else {            
             if(g_in_packet_buf[0] == READFIRMWAREVERSION) {
                 sdk_ver = (g_in_packet_buf[3]<<8)+g_in_packet_buf[4];
                 svn_ver = (g_in_packet_buf[5]<<8)+g_in_packet_buf[6];
@@ -193,8 +190,7 @@ bool uvccamera::readFirmwareVersion(quint8 *pMajorVersion, quint8 *pMinorVersion
         }
         end = getTickCount();
         if(end - start > TIMEOUT)
-        {
-            printf("%s(): Timeout occurred\n", __func__);
+        {            
             timeout = false;
             return false;
         }
@@ -203,7 +199,6 @@ bool uvccamera::readFirmwareVersion(quint8 *pMajorVersion, quint8 *pMinorVersion
 }
 
 bool uvccamera::initExtensionUnit(QString cameraName) {
-    qDebug()<<"cameraname passed:"<<cameraName;
     if(cameraName.isEmpty())
     {
         emit logHandle(QtCriticalMsg,"cameraName not passed as parameter\n");
@@ -231,9 +226,7 @@ bool uvccamera::initExtensionUnit(QString cameraName) {
     QMap<QString, QString>::const_iterator ii = cameraMap.find(cameraName);
     openNode = "";
     while (ii != cameraMap.end() && ii.key() == cameraName) {
-        qDebug()<<"opening:"<<ii.value().toLatin1().data();
         hid_fd = open(ii.value().toLatin1().data(), O_RDWR|O_NONBLOCK);
-        qDebug()<<"1st hid_fd:"<<hid_fd;
         memset(buf, 0x0, sizeof(buf));
         /* Get Physical Location */
         ret = ioctl(hid_fd, HIDIOCGRAWPHYS(256), buf);
@@ -242,9 +235,7 @@ bool uvccamera::initExtensionUnit(QString cameraName) {
         }
         QString tempBuf = buf;
         if(tempBuf.contains(hidNode)) {
-
             openNode = ii.value();
-              qDebug()<<" openNode:"<< openNode;
             close(hid_fd);
             break;
         }
@@ -252,9 +243,7 @@ bool uvccamera::initExtensionUnit(QString cameraName) {
         ++ii;
     }
 
-    qDebug()<<"trying to open:"<<openNode.toLatin1().data();
     hid_fd = open(openNode.toLatin1().data(), O_RDWR|O_NONBLOCK);
-     qDebug()<<"final hid_fd:"<<hid_fd;
     //Directly open from map value
     //hid_fd = open(cameraMap.value(getCameraName()).toLatin1().data(), O_RDWR|O_NONBLOCK);
 
@@ -273,8 +262,6 @@ bool uvccamera::initExtensionUnit(QString cameraName) {
         perror("HIDIOCGRDESCSIZE");
         return false;
     }
-    else
-        printf("Report Descriptor Size: %d\n", desc_size);
 
     /* Get Report Descriptor */
     rpt_desc.size = desc_size;
@@ -282,11 +269,6 @@ bool uvccamera::initExtensionUnit(QString cameraName) {
     if (ret < 0) {
         perror("HIDIOCGRDESC");
         return false;
-    } else {
-        printf("Report Descriptors:\n");
-        for (i = 0; i < rpt_desc.size; i++)
-            printf("%hhx ", rpt_desc.value[i]);
-        puts("\n");
     }
 
     /* Get Raw Name */
@@ -295,17 +277,13 @@ bool uvccamera::initExtensionUnit(QString cameraName) {
         perror("HIDIOCGRAWNAME");
         return false;
     }
-    //    else
-    //        printf("Raw Name: %s\n", buf);
 
     /* Get Physical Location */
     ret = ioctl(hid_fd, HIDIOCGRAWPHYS(256), buf);
     if (ret < 0) {
         perror("HIDIOCGRAWPHYS");
         return false;
-    }
-    //    else
-    //        printf("Raw Phys: %s\n", buf);
+    }    
 
     /* Get Raw Info */
     ret = ioctl(hid_fd, HIDIOCGRAWINFO, &info);
@@ -314,13 +292,13 @@ bool uvccamera::initExtensionUnit(QString cameraName) {
         return false;
     }
 
-    if(cameraName != "See3CAM_CU130")//this condition is put temporary until cu130 hardware
+    if(cameraName != "See3CAM_CU130" && cameraName != "See3CAM_CU40")//this condition is put temporary until cu130 and cu40 hardware
     {                                // does not support sendOSCode implementation
         ret = sendOSCode();
         if (ret == false) {
-            printf("OS Identification failed\n");
+            emit logHandle(QtCriticalMsg,"OS Identification failed\n");
         }
-    }
+    }    
     return true;
 }
 
@@ -358,11 +336,8 @@ bool uvccamera::sendOSCode() {
     ret = write(hid_fd, g_out_packet_buf, BUFFER_LENGTH);
     if (ret < 0) {
         perror("write");
-        printf("\nOS Identification Failed\n");
+        emit logHandle(QtCriticalMsg, "\nOS Identification Failed\n");
         return false;
-    } else {
-        printf("%s(): wrote %d bytes\n", __func__,ret);
-        printf("\nSent Linux OS identificaton code\n");
     }
     start = getTickCount();
     while(timeout)
@@ -371,18 +346,16 @@ bool uvccamera::sendOSCode() {
         ret = read(hid_fd, g_in_packet_buf, BUFFER_LENGTH);
         if (ret < 0) {
             //perror("read");
-        } else {
-            printf("%s(): read %d bytes:\n", __func__,ret);
+        } else {            
             if(g_in_packet_buf[0] == OS_CODE &&
                     g_in_packet_buf[1] == LINUX_OS ) {
-                if(g_in_packet_buf[2] == SET_SUCCESS)
-                    printf("\nSet Success\n");
-                else if (g_in_packet_buf[2] == SET_FAIL){
-                    printf("\nSet Failed\n");
+                if(g_in_packet_buf[2] == SET_SUCCESS){
+                    // set success
+                }
+                else if (g_in_packet_buf[2] == SET_FAIL){                    
                     return false;
                 }
-                else {
-                    printf("\nUnknown return value\n");
+                else {  
                     return false;
                 }
                 timeout = false;
@@ -391,8 +364,6 @@ bool uvccamera::sendOSCode() {
         end = getTickCount();
         if(end - start > TIMEOUT)
         {
-            printf("%s(): sendos Timeout occurred\n", __func__);
-            printf("\nOS Identification Failed\n");
             timeout = false;
             return false;
         }
@@ -446,14 +417,11 @@ bool See3CAM_Control::getFlashState(quint8 *flashState, QString cameraName) {
     //g_out_packet_buf[1] = CAMERA_CONTROL_80; /* Report Number */
     g_out_packet_buf[2] = GET_FLASH_LEVEL; /* Report Number */
 
-    qDebug()<<"Hid file descriptor::"<<hid_fd;
     ret = write(uvccamera::hid_fd, g_out_packet_buf, BUFFER_LENGTH);
 
     if (ret < 0) {
         perror("write");
         return false;
-    } else {
-        printf("%s(): write() wrote %d bytes\n", __func__, ret);
     }
     /* Read the Status code from the device */
     start = getTickCount();
@@ -463,8 +431,7 @@ bool See3CAM_Control::getFlashState(quint8 *flashState, QString cameraName) {
         ret = read(uvccamera::hid_fd, g_in_packet_buf, BUFFER_LENGTH);
         if (ret < 0) {
             //perror("read");
-        } else {
-            printf("%s(): read %d bytes:\n", __func__,ret);
+        } else {            
             if((g_in_packet_buf[0] == g_out_packet_buf[1])&&
                     (g_in_packet_buf[1]==GET_FLASH_LEVEL)) {
                 *flashState = (g_in_packet_buf[2]);
@@ -473,8 +440,7 @@ bool See3CAM_Control::getFlashState(quint8 *flashState, QString cameraName) {
         }
         end = getTickCount();
         if(end - start > TIMEOUT)
-        {
-            printf("%s(): Timeout occurred\n", __func__);
+        {            
             timeout = false;
             return false;
         }
@@ -519,9 +485,7 @@ bool See3CAM_Control::setFlashState(flashTorchState flashState, QString cameraNa
         if (ret < 0) {
             perror("write");
             return false;
-        } else {
-            printf("%s(): write() wrote %d bytes\n", __func__, ret);
-        }        
+        }
         /* Read the Status code from the device */
         start = getTickCount();
         while(timeout)
@@ -530,8 +494,7 @@ bool See3CAM_Control::setFlashState(flashTorchState flashState, QString cameraNa
             ret = read(uvccamera::hid_fd, g_in_packet_buf, BUFFER_LENGTH);
             if (ret < 0) {
                 //perror("read");
-            } else {
-                printf("%s(): read %d bytes:\n", __func__,ret);
+            } else {                
                 if((g_in_packet_buf[0] == g_out_packet_buf[1])&&
                         (g_in_packet_buf[1]==SET_FLASH_LEVEL) &&
                         (g_in_packet_buf[2]==flashState )) {
@@ -544,15 +507,14 @@ bool See3CAM_Control::setFlashState(flashTorchState flashState, QString cameraNa
             }
             end = getTickCount();
             if(end - start > TIMEOUT)
-            {
-                printf("%s(): Timeout occurred\n", __func__);
+            {                
                 timeout = false;
                 return false;
-            }        
+            }
         }
     }
     else
-    {        
+    {
         return false;
     }
     return true;
@@ -585,13 +547,10 @@ bool See3CAM_Control::getTorchState(quint8 *torchState, QString cameraName) {
     else if(cameraName == "See3CAM_CU51")
         g_out_packet_buf[1] = CAMERA_CONTROL_51; /* Report Number */
     g_out_packet_buf[2] = GET_TORCH_LEVEL; /* Report Number */
-
     ret = write(uvccamera::hid_fd, g_out_packet_buf, BUFFER_LENGTH);
     if (ret < 0) {
         perror("write");
         return false;
-    } else {
-        printf("%s(): write() wrote %d bytes\n", __func__, ret);
     }
     /* Read the Status code from the device */
     start = getTickCount();
@@ -601,8 +560,7 @@ bool See3CAM_Control::getTorchState(quint8 *torchState, QString cameraName) {
         ret = read(hid_fd, g_in_packet_buf, BUFFER_LENGTH);
         if (ret < 0) {
             //perror("read");
-        } else {
-            printf("%s(): read %d bytes:\n", __func__,ret);
+        } else {            
             if((g_in_packet_buf[0] == g_out_packet_buf[1])&&
                     (g_in_packet_buf[1] == GET_TORCH_LEVEL)) {
                 *torchState = (g_in_packet_buf[2]);
@@ -611,8 +569,7 @@ bool See3CAM_Control::getTorchState(quint8 *torchState, QString cameraName) {
         }
         end = getTickCount();
         if(end - start > TIMEOUT)
-        {
-            printf("%s(): Timeout occurred\n", __func__);
+        {            
             timeout = false;
             return false;
         }
@@ -621,14 +578,12 @@ bool See3CAM_Control::getTorchState(quint8 *torchState, QString cameraName) {
 }
 
 bool See3CAM_Control::setTorchState(flashTorchState torchState, QString cameraName)
-{    
-    qDebug()<<"in cpp setTorchState camera:"<<cameraName<<"state passed"<<torchState;
+{
     if(cameraName.isEmpty())
     {
         emit logHandle(QtCriticalMsg," cameraName Not passed to set torch state of camera\n");
         return false;
     }
-
     if(uvccamera::hid_fd < 0)
     {
         return false;
@@ -640,7 +595,6 @@ bool See3CAM_Control::setTorchState(flashTorchState torchState, QString cameraNa
 
     if(torchState == torchOff || torchState == torchOn)
     {
-
         //Initialize the buffer
         memset(g_out_packet_buf, 0x00, sizeof(g_out_packet_buf));
 
@@ -650,27 +604,23 @@ bool See3CAM_Control::setTorchState(flashTorchState torchState, QString cameraNa
         else if(cameraName == "See3CAMCU50")
             g_out_packet_buf[1] = CAMERA_CONTROL_50; /* Report Number */
         else if(cameraName == "See3CAM_CU51")
-            g_out_packet_buf[1] = CAMERA_CONTROL_51; /* Report Number */
-        qDebug()<<"camera control:"<<CAMERA_CONTROL_51;
+            g_out_packet_buf[1] = CAMERA_CONTROL_51; /* Report Number */        
         g_out_packet_buf[2] = SET_TORCH_LEVEL; 	/* Report Number */
 
         if(cameraName == "See3CAM_CU51" && torchState == torchOff)
         {
-            g_out_packet_buf[3] = 2;		/* Flash mode */
+            g_out_packet_buf[3] = 2;		/* Torch mode */
         }
         else
         {
-             g_out_packet_buf[3] = torchState;		/* Flash mode */
+             g_out_packet_buf[3] = torchState;		/* Torch mode */
         }
 
         ret = write(uvccamera::hid_fd, g_out_packet_buf, BUFFER_LENGTH);
 
         if (ret < 0) {
             perror("write");
-            qDebug()<<"1st.......................................";
             return false;
-        } else {
-            printf("%s(): write() wrote %d bytes\n", __func__, ret);
         }
         /* Read the Status code from the device */
         start = getTickCount();
@@ -680,35 +630,29 @@ bool See3CAM_Control::setTorchState(flashTorchState torchState, QString cameraNa
             ret = read(uvccamera::hid_fd, g_in_packet_buf, BUFFER_LENGTH);
             if (ret < 0) {
                 //perror("read");
-            } else {
-                printf("%s(): read %d bytes:\n", __func__,ret);
+            } else {                
                 if((g_in_packet_buf[0] == g_out_packet_buf[1])&&
                         (g_in_packet_buf[1]==SET_TORCH_LEVEL) &&
-                        (g_in_packet_buf[2]==torchState )) {
+                        (g_in_packet_buf[2]==g_out_packet_buf[3] )) {
                     if(g_in_packet_buf[3] == SET_FAIL) {
-       qDebug()<<"2nd.......................................";
-
                         return false;
                     } else if(g_in_packet_buf[3]==SET_SUCCESS) {
-                        timeout = false;                        
+                        timeout = false;
                     }
                 }
             }
             end = getTickCount();
             if(end - start > TIMEOUT)
-            {
-                printf("%s(): Timeout occurred\n", __func__);
-                timeout = false;                
+            {                
+                timeout = false;
                 return false;
             }
         }
     }
     else
     {
-        qDebug()<<"3rd.......................................";
-
         return false;
-    }    
+    }
     return true;
 }
 
@@ -720,7 +664,6 @@ void See3CAM_Control::setFlashControlState(const int flashState,QString cameraNa
         emit logHandle(QtCriticalMsg," cameraName Not passed to set flash control state of camera\n");
         return void();
     }
-    qDebug()<<"flashstate:"<<flashState;
     if(flashState == 1)
         flashCheckBoxState = flashOn;
     else
@@ -738,13 +681,11 @@ void See3CAM_Control::setTorchControlState(const int torchState,QString cameraNa
         torchCheckBoxState = torchOn;
     else
         torchCheckBoxState = torchOff;
-    bool status = setTorchState(torchCheckBoxState,cameraName);
-    qDebug()<<"status in cpp"<<status;
+    setTorchState(torchCheckBoxState,cameraName);
 }
 
 void See3CAM_GPIOControl::getGpioLevel(camGpioPin gpioPinNumber)
 {
-    qDebug()<<"\nget gpio level";
     if(uvccamera::hid_fd < 0)
     {
         return void();
@@ -767,8 +708,6 @@ void See3CAM_GPIOControl::getGpioLevel(camGpioPin gpioPinNumber)
         if (ret < 0) {
             perror("write");
             return void();
-        } else {
-            printf("%s(): wrote %d bytes\n", __func__,ret);
         }
         /* Read the GPIO level and status of read from the device */
         start = uvc.getTickCount();
@@ -779,8 +718,7 @@ void See3CAM_GPIOControl::getGpioLevel(camGpioPin gpioPinNumber)
 
             if (ret < 0) {
                 //perror("read");
-            } else {
-                printf("%s(): read %d bytes:\n", __func__,ret);
+            } else {                
                 if(g_in_packet_buf[0] == GPIO_OPERATION &&
                         g_in_packet_buf[1] == GPIO_GET_LEVEL &&
                         g_in_packet_buf[2] == gpioPinNumber) {
@@ -794,8 +732,7 @@ void See3CAM_GPIOControl::getGpioLevel(camGpioPin gpioPinNumber)
             }
             end = uvc.getTickCount();
             if(end - start > TIMEOUT)
-            {
-                printf("%s(): Timeout occurred\n", __func__);
+            {                
                 timeout = false;
                 return void();
             }
@@ -804,7 +741,7 @@ void See3CAM_GPIOControl::getGpioLevel(camGpioPin gpioPinNumber)
     else
     {
         return void();
-    }    
+    }
 }
 
 void See3CAM_GPIOControl::setGpioLevel(camGpioPin gpioPin,camGpioValue gpioValue)
@@ -837,8 +774,6 @@ void See3CAM_GPIOControl::setGpioLevel(camGpioPin gpioPin,camGpioValue gpioValue
             if (ret < 0) {
                 perror("write");
                 return void();
-            } else {
-                printf("%s(): wrote %d bytes\n", __func__,ret);
             }
             /* Read the GPIO level and status of read from the device */
             start = uvc.getTickCount();
@@ -848,8 +783,7 @@ void See3CAM_GPIOControl::setGpioLevel(camGpioPin gpioPin,camGpioValue gpioValue
                 ret = read(uvccamera::hid_fd, g_in_packet_buf, BUFFER_LENGTH);
                 if (ret < 0) {
                     //perror("read");
-                } else {
-                    printf("%s(): read %d bytes:\n", __func__,ret);
+                } else {                    
                     if(g_in_packet_buf[0] == GPIO_OPERATION &&
                             g_in_packet_buf[1] == GPIO_SET_LEVEL &&
                             g_in_packet_buf[2] == gpioPin &&
@@ -864,8 +798,7 @@ void See3CAM_GPIOControl::setGpioLevel(camGpioPin gpioPin,camGpioValue gpioValue
                 }
                 end = uvc.getTickCount();
                 if(end - start > TIMEOUT)
-                {
-                    printf("%s(): Timeout occurred\n", __func__);
+                {                    
                     timeout = false;
                     return void();
                 }
@@ -895,13 +828,10 @@ void See3CAM_GPIOControl::setGpioLevel(camGpioPin gpioPin,camGpioValue gpioValue
 
         //Set the Report Number
         g_out_packet_buf[1] = ENABLEMASTERMODE; /* Report Number */
-
         ret = write(uvccamera::hid_fd, g_out_packet_buf, BUFFER_LENGTH);
         if (ret < 0) {
             perror("write");
             return false;
-        } else {
-            printf("%s(): write() wrote %d bytes\n", __func__, ret);
         }
         return true;
     }
@@ -924,8 +854,6 @@ void See3CAM_GPIOControl::setGpioLevel(camGpioPin gpioPin,camGpioValue gpioValue
         if (ret < 0) {
             perror("write");
             return false;
-        } else {
-            printf("%s(): write() wrote %d bytes\n", __func__, ret);
         }
         return true;
     }

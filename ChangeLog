@@ -1,3 +1,34 @@
+Qtcam version 7.0.0
+-------------------------------
+* Added IR image capture for See3CamCu40 camera.
+* Added support for logitech C920 Webcam Pro camera.
+* Added support for logitech C525 Webcam camera.
+* Added support for logitech C310 HD webcam camera.
+* Added support for logitech C615 HD webcam camera.
+
+Qtcam version 6.0.0
+------------------------------
+* Added support for Cu40 camera.
+
+Qtcam version 5.0.0
+-------------------------------------
+* Added support for Lifecam HD-3000.
+* Added support Lifecam Cinema HD.
+* Added few more controls in Logitech camera [LED mode, LED frequency, Exposure Auto Prioriry, Focus, Raw bits per pixel,
+Focus, Disable video processing ]
+* Bug Fixes - Bug Id - 3252, 3259, 3217 
+
+Qtcam version 4.0.1
+------------------------------
+* switching of resolution is removed when still and video format, resolution are same to make faster.
+* Video capture filter is renamed to Image Quality Settings.
+* Video capture pin and Video Capture properties tabs are combined into Video Capture Settings tab.
+* Still capture pin and still capture properties tabs are combined into Still Capture Settings tab.
+* Qtcam logo is changed.
+* Denoise feature is removed in cu130 camera.
+* Preview color format is displayed in status bar.
+
+
 Qtcam version 2.0.0
 ------------------------------
 * Added support for all uvc cameras tested with Microsoft Lifecam Studio(TM) and Live Cam Sync HD VF0770 (Creative).

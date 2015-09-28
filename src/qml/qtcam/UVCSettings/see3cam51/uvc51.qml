@@ -208,172 +208,7 @@ Item {
     }
 
 
-    /*
-    Image {
-        id: side_bar_bg
-        source: "images/side_bar_bg.png"
-        x: 0
-        y: 0
-        opacity: 1
-    }
-    Text {
-        id: camera_controls
-        text: "--- Camera Controls ---"
-        font.pixelSize: 14
-        font.family: "Ubuntu"
-        color: "#ffffff"
-        smooth: true
-        x: 65
-        y: 194.5
-        opacity: 0.50196078431373
-    }
-    Text {
-        id: torch_mode
-        text: "Torch Mode :"
-        font.pixelSize: 14
-        font.family: "Ubuntu"
-        color: "#ffffff"
-        smooth: true
-        x: 13
-        y: 464.5
-        opacity: 1
-    }
-    Text {
-        id: torchmode_on
-        text: "On"
-        font.pixelSize: 14
-        font.family: "Ubuntu"
-        color: "#ffffff"
-        smooth: true
-        x: 139
-        y: 465.5
-        opacity: 1
-    }
-    Text {
-        id: torchmode_off
-        text: "Off"
-        font.pixelSize: 14
-        font.family: "Ubuntu"
-        color: "#ffffff"
-        smooth: true
-        x: 212
-        y: 464.5
-        opacity: 1
-    }
-    Text {
-        id: flash_controls
-        text: "--- Flash Controls ---"
-        font.pixelSize: 14
-        font.family: "Ubuntu"
-        color: "#ffffff"
-        smooth: true
-        x: 73
-        y: 423.5
-        opacity: 0.50196078431373
-    }
-    Image {
-        id: torch_on
-        source: "images/torch_on.png"
-        x: 111
-        y: 466
-        opacity: 1
-    }
-    Image {
-        id: torch_on_selected
-        source: "images/torch_on_selected.png"
-        x: 111
-        y: 466
-        opacity: 1
-    }
-    Image {
-        id: torch_off
-        source: "images/torch_off.png"
-        x: 184
-        y: 466
-        opacity: 1
-    }
-    Image {
-        id: torch_off_selected
-        source: "images/torch_off_selected.png"
-        x: 184
-        y: 466
-        opacity: 1
-    }
-    Text {
-        id: exposure
-        text: "Exposure :"
-        font.pixelSize: 14
-        font.family: "Ubuntu"
-        color: "#ffffff"
-        smooth: true
-        x: 18
-        y: 327.5
-        opacity: 1
-    }
-    Image {
-        id: exposure_no_box
-        source: "images/exposure_no_box.png"
-        x: 104
-        y: 323
-        opacity: 1
-    }
-    Text {
-        id: exposure_no_value
-        text: "1"
-        font.pixelSize: 14
-        font.family: "Ubuntu-Light"
-        color: "#ffffff"
-        smooth: true
-        x: 120
-        y: 328.5
-        opacity: 1
-    }
-    Image {
-        id: mastermode
-        source: "images/mastermode.png"
-        x: 19
-        y: 241
-        opacity: 1
-    }
-    Image {
-        id: mastermmode_selected
-        source: "images/mastermmode_selected.png"
-        x: 19
-        y: 241
-        opacity: 1
-    }
-    Image {
-        id: trigger_mode
-        source: "images/trigger_mode.png"
-        x: 145
-        y: 241
-        opacity: 1
-    }
-    Image {
-        id: trigger_mode_selected
-        source: "images/trigger_mode_selected.png"
-        x: 145
-        y: 241
-        opacity: 1
-    }
-    Image {
-        id: set_exposure
-        source: "images/set_exposure.png"
-        x: 26
-        y: 373
-        opacity: 1
-    }
-    Image {
-        id: capture
-        source: "images/capture.png"
-        x: 139
-        y: 373
-        opacity: 1
-    }
-*/
-
-
-    Component {
+   Component {
         id: econTextFieldStyle
         TextFieldStyle {
             textColor: "black"
@@ -419,7 +254,7 @@ Item {
             activeFocusOnPress: true
             style: econRadioButtonStyle
             onClicked:{
-               see3camctrl.setTorchControlState(radioOn.checked,"See3CAM_CU51")
+               see3camctrl.setTorchControlState(1,"See3CAM_CU51")
                 console.log("on btn called setTorchControlState passed status:",radioOn.checked)
             }
         }
@@ -431,7 +266,7 @@ Item {
             activeFocusOnPress: true
             style: econRadioButtonStyle
             onClicked: {
-                see3camctrl.setTorchControlState(radioOn.checked,"See3CAM_CU51")
+                see3camctrl.setTorchControlState(0,"See3CAM_CU51")
                 console.log("off btn called setTorchControlState:",radioOn.checked)
 
             }
@@ -563,7 +398,6 @@ Item {
                 root.seeCamCu51triggerModeCapture()
 
         }
-
 
 
     }

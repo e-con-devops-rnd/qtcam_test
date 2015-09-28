@@ -70,16 +70,14 @@ void Cameraproperty::checkforDevice() {
                     return void();
                 }
             } else {
-                qDebug()<<qTempStr<<" Device opening failed"<<qDevCount;
-
+                emit logHandle(QtCriticalMsg, qTempStr+"Device opening failed"+qDevCount);
             }
         }
     } else {
         emit logHandle(QtCriticalMsg,"/sys/class/video4linux/ path is Not available");
     }
     emit logHandle(QtDebugMsg,"Camera devices Connected to System: "+ availableCam.join(", "));
-    uvccam.findEconDevice(&availableCam,"video4linux");
-    //emit logHandle(QtDebugMsg,"E-Con Camera devices Connected to System: "+availableCam.join(", "));
+    uvccam.findEconDevice(&availableCam,"video4linux");    
     availableCam.prepend("----Select camera Device----");
     modelCam.setStringList(availableCam);
     uvccam.findEconDevice(&availableCam,"hidraw");

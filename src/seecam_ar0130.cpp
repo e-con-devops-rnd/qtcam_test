@@ -1,3 +1,22 @@
+/*
+ * seecam_ar0130.cpp -- Handling special feature of seecamar0130 camera
+ * Copyright © 2015  e-con Systems India Pvt. Limited
+ *
+ * This file is part of Qtcam.
+ *
+ * Qtcam is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3, or (at your option)
+ * any later version.
+ *
+ * Qtcam is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Qtcam. If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include "seecam_ar0130.h"
 
@@ -20,7 +39,6 @@ void See3CAM_AR130::setCroppedVGAMode()
     ret = enableCroppedVGAMode(&cropped_vga_status);
     if(!ret)
     {
-        printf("Unable to switch to cropped VGA Mode");
         emit deviceStatus("Failure", "Unable to switch to cropped VGA Mode");
         return void();
     }
@@ -28,26 +46,20 @@ void See3CAM_AR130::setCroppedVGAMode()
     {
         switch(cropped_vga_status)
         {
-        case 1 :
-            printf("Cropped VGA mode set successfully\n");
+        case 1 :        
             emit deviceStatus("Success","Cropped VGA mode set successfully");
             break;
-        case 2 :
-            printf("The current resolution is not 640x480, please switch to 640x480 before using the Cropping and Binning modes");
+        case 2 :            
             emit deviceStatus("Failure","The current resolution is not 640x480, please switch to 640x480 before using the Cropping and Binning modes");
             break;
-        case 3 :
-            printf("Device is already in Cropped VGA mode");
+        case 3 :            
             emit deviceStatus("Failure","Device is already in Cropped VGA mode");
             break;
-        case 4 :
-            printf("Failed to set Cropped VGA mode");
+        case 4 :            
             emit deviceStatus("Failure","Failed to set Cropped VGA mode");
             break;
-        default :
-            printf("Unknown %d\n ",cropped_vga_status);
+        default :            
             emit deviceStatus("Failure","Unknown error");
-
         }
     }
 }
@@ -74,8 +86,6 @@ bool See3CAM_AR130::enableCroppedVGAMode(u_int8_t *VGAStatus)
     if (ret < 0) {
         perror("write");
         return false;
-    } else {
-        printf("%s(): write() wrote %d bytes\n", __func__, ret);
     }
     start = uvc.getTickCount();
     while(timeout)
@@ -84,8 +94,7 @@ bool See3CAM_AR130::enableCroppedVGAMode(u_int8_t *VGAStatus)
         ret = read(uvccamera::hid_fd, g_in_packet_buf, BUFFER_LENGTH);
         if (ret < 0) {
             //perror("read");
-        } else {
-            printf("%s(): read %d bytes:\n", __func__,ret);
+        } else {            
             if(g_in_packet_buf[0] == ENABLE_CROPPED_VGA_MODE) {
                 *VGAStatus = g_in_packet_buf[1];
                 timeout = false;
@@ -93,8 +102,7 @@ bool See3CAM_AR130::enableCroppedVGAMode(u_int8_t *VGAStatus)
         }
         end = uvc.getTickCount();
         if(end - start > TIMEOUT)
-        {
-            printf("%s(): Timeout occurred\n", __func__);
+        {            
             timeout = false;
             return false;
         }
@@ -125,8 +133,6 @@ bool See3CAM_AR130::enableBinnedVGAMode(u_int8_t *VGAStatus)
     if (ret < 0) {
         perror("write");
         return false;
-    } else {
-        printf("%s(): write() wrote %d bytes\n", __func__, ret);
     }
     start = uvc.getTickCount();
     while(timeout)
@@ -135,8 +141,7 @@ bool See3CAM_AR130::enableBinnedVGAMode(u_int8_t *VGAStatus)
         ret = read(uvccamera::hid_fd, g_in_packet_buf, BUFFER_LENGTH);
         if (ret < 0) {
             //perror("read");
-        } else {
-            printf("%s(): read %d bytes:\n", __func__,ret);
+        } else {            
             if(g_in_packet_buf[0] == ENABLE_BINNED_VGA_MODE) {
                 *VGAStatus = g_in_packet_buf[1];
                 timeout = false;
@@ -144,8 +149,7 @@ bool See3CAM_AR130::enableBinnedVGAMode(u_int8_t *VGAStatus)
         }
         end = uvc.getTickCount();
         if(end - start > TIMEOUT)
-        {
-            printf("%s(): Timeout occurred\n", __func__);
+        {            
             timeout = false;
             return false;
         }
@@ -161,7 +165,6 @@ void See3CAM_AR130::setBinnedVGAMode()
     ret = enableBinnedVGAMode(&binned_vga_status);
     if(ret == false)
     {
-        printf("Unable to switch to binned VGA Mode");
         emit deviceStatus("Failure","Unable to switch to binned VGA Mode");
         return void();
     }
@@ -181,8 +184,7 @@ void See3CAM_AR130::setBinnedVGAMode()
         case 4 :
             emit deviceStatus("Failure","Failed to set Binned VGA mode");
             break;
-        default :
-            printf("Unknown %d \n",binned_vga_status);
+        default :            
             emit deviceStatus("Failure","Unknown error");
 
         }

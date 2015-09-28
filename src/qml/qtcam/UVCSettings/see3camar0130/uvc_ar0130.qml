@@ -198,35 +198,6 @@ Item {
         }
     }
 
-    Row {
-        x: 111
-        y: 474
-        spacing: 25
-        ExclusiveGroup { id: groupFlashar0130 }
-        RadioButton {
-            exclusiveGroup: groupFlashar0130
-            id: radioOn
-            checked: false
-            text: "On"
-            activeFocusOnPress: true
-            style: econRadioButtonStyle
-            onClicked:{
-               see3camctrl.setFlashControlState(1,"See3CAM_12CUNIR")
-            }            
-        }
-        RadioButton {
-            exclusiveGroup: groupFlashar0130
-            id: radioOff
-            checked: false
-            text: "Off"
-            activeFocusOnPress: true
-            style: econRadioButtonStyle
-            onClicked: {
-                see3camctrl.setFlashControlState(0,"See3CAM_12CUNIR")
-            }           
-        }
-    }
-
     Text {
         id: gpo_level
         text: "GPO Level :"
@@ -290,6 +261,36 @@ Item {
         opacity: 0.50196078431373
     }
 
+    Row {
+        x: 111
+        y: 474
+        spacing: 25
+        ExclusiveGroup { id: groupFlashar0130 }
+        RadioButton {
+            exclusiveGroup: groupFlashar0130
+            id: radioOn
+            checked: false
+            text: "On"
+            activeFocusOnPress: true
+            style: econRadioButtonStyle
+            onClicked:{
+               see3camctrl.setFlashControlState(1,"See3CAM_12CUNIR")
+            }            
+        }
+        RadioButton {
+            exclusiveGroup: groupFlashar0130
+            id: radioOff
+            checked: false
+            text: "Off"
+            activeFocusOnPress: true
+            style: econRadioButtonStyle
+            onClicked: {
+                see3camctrl.setFlashControlState(0,"See3CAM_12CUNIR")
+            }           
+        }
+    }
+
+
     Text {
         id: other_optionsAR0130
         text: "--- Other Options ---"
@@ -309,6 +310,7 @@ Item {
         opacity: 1
         action: serialNumber
         activeFocusOnPress : true
+        text: "Serial No"
         tooltip: "Click to view the Serial Number"
         style: econAR0130ButtonStyle
         Keys.onReturnPressed: {
@@ -363,13 +365,18 @@ Item {
                 radioOff.checked = true;
             }
         }
+        onDeviceStatus:{
+            messageDialog.title = title.toString()
+            messageDialog.text = message.toString()
+            messageDialog.open()
+        }
     }
     function enableMasterMode() {
        masterModeCapture();
         masterMode = seecamar0130.enableMasterMode()
         if(masterMode) {
             masterModeTimer.start()
-            JS.enableMasterMode_ar0130()
+            JS.enableMasterMode_12cuinr()
             if(!vga60fps_selected.enabled) {
                 vga60fps_selected.enabled = true
                 vga60fps_selected.opacity = 1
@@ -389,7 +396,7 @@ Item {
         triggerModeCapture()
         triggerMode = seecamar0130.enableTriggerMode()
         if(triggerMode) {
-            JS.enableTriggerMode_ar0130()
+            JS.enableTriggerMode_12cuinr()
             vga60fps_selected.enabled = false
             vga60fps_selected.opacity = 0.2
             vga30fps_selected.enabled = false

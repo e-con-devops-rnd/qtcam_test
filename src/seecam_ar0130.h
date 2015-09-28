@@ -1,5 +1,5 @@
 /*
- * seecam_11cug.cpp -- Handling special feature of seecam11cug camera
+ * seecam_ar0130.h -- Handling special feature of seecamar0130 camera
  * Copyright © 2015  e-con Systems India Pvt. Limited
  *
  * This file is part of Qtcam.
