@@ -35,6 +35,7 @@
 #include <linux/input.h>
 #include <linux/hidraw.h>
 #include "libudev.h"
+#include <libusb.h>
 #include <QMap>
 
 /* Report Numbers */
@@ -155,6 +156,28 @@
 #define TRIGGER_FAIL		0x00
 #define TRIGGER_SUCCESS		0x01
 
+/* Ascella camera */
+#define ASCELLA_VID 0x04b4
+#define ASCELLA_PID 0x00c3
+#define ASCELLA_BUFLEN 64
+#define ASCELLA_TIMEOUT 100
+
+
+#define LEDSTATUS_MODE				0xF031
+#define LED_BRIGHTNESS				0xF033
+#define AUTOEXPOSURE				0xF022
+#define AUTOFOCUSMODE				0xF041
+#define SKIPFOCUSMODE				0xF040
+#define COLORMODE					0xF051
+#define CM_BLACKWHITE				0xF058
+#define NOISE_REDUCTION				0xF059
+#define SCENEMODE					0xF018
+#define LIMITFRAMERATE				0xF02F
+
+#define SCENEMODE_NORMAL			0x00
+#define SCENEMODE_DOCUMENTSCANNER	0x20
+#define FP_DISABLE					0x00
+#define FP_APPLYMAX					0x03
 
 
 class uvccamera: public QObject
@@ -174,6 +197,10 @@ public:
 
     int findEconDevice(QStringList*,QString);
     void getDeviceNodeName(QString);
+    int closeAscellaDevice();
+
+    static libusb_device_handle* handle;  /* handle for USB device */
+    int kernelDriverDetached;
 
     static QMap<QString, QString> cameraMap;
     static QMap<QString, QString> serialNumberMap;
@@ -250,6 +277,20 @@ public slots:
      * @
      */
     void exitExtensionUnit();
+
+    /**
+     * @brief initExtensionUnitAscella
+     *  - Open the hid handle for Ascella
+     * @return
+     */
+    int initExtensionUnitAscella();
+
+    /**
+     * @brief Close the hid handle
+     *  - This function will close the last opened HID device
+     * @
+     */
+    void exitExtensionUnitAscella();
 };
 
 class See3CAM_Control: public uvccamera {

@@ -26,6 +26,7 @@ QMap<QString, QString> uvccamera::serialNumberMap;
 QString uvccamera::hidNode;
 
 int uvccamera::hid_fd;
+libusb_device_handle *uvccamera::handle;
 
 uvccamera::uvccamera()
 {
@@ -136,6 +137,69 @@ int uvccamera::findEconDevice(QStringList *econCamera,QString parameter)
     return 1;
 }
 
+int uvccamera::initExtensionUnitAscella(){
+    int ret;
+
+    kernelDriverDetached = 0;
+
+    libusb_init(NULL);
+    libusb_set_debug(NULL, 3);
+
+    handle = libusb_open_device_with_vid_pid(NULL, ASCELLA_VID, ASCELLA_PID);
+
+    if(!handle) {
+        qDebug()<<"unable to open the device\n";
+        exit(1);
+    } else {
+        qDebug()<<"Device accessed successfully\n";
+
+        if (libusb_kernel_driver_active(handle, 2))
+        {
+            ret = libusb_detach_kernel_driver(handle, 2);
+            if (ret == 0)
+            {
+                kernelDriverDetached = 1;
+                qDebug()<<"driver detachment successful\n";
+            }
+        }
+        ret = libusb_claim_interface(handle, 2);
+        if(ret == 0){
+            qDebug()<<"Interface claimed successfully\n";
+        }
+        else{
+            qDebug()<<"error claiming interface\n";
+            exit(1);
+        }
+
+     }
+     return 1;
+
+}
+
+int uvccamera::closeAscellaDevice(){
+    int res;
+    res = libusb_release_interface(handle, 2);
+    if (0 != res)
+    {
+       qDebug()<<"Error releasing interface";
+       exit(1);
+    }
+    qDebug()<<"kernelDriverDetached"<<kernelDriverDetached;
+    if (kernelDriverDetached)
+    {
+        libusb_attach_kernel_driver(handle, 2);
+        qDebug()<<"Attaching libusb kernel driver";
+    }
+    if(handle)
+    {
+        libusb_close(handle);
+        qDebug()<<"Closing libusb";
+    }
+
+    libusb_exit(0);
+
+    return 1;
+}
 
 bool uvccamera::readFirmwareVersion(quint8 *pMajorVersion, quint8 *pMinorVersion1, quint16 *pMinorVersion2, quint16 *pMinorVersion3) {
 
@@ -314,6 +378,11 @@ void uvccamera::getDeviceNodeName(QString hidDeviceNode) {
 void uvccamera::exitExtensionUnit() {
     close(hid_fd);
 }
+
+void uvccamera::exitExtensionUnitAscella(){
+    closeAscellaDevice();
+}
+
 
 bool uvccamera::sendOSCode() {
 

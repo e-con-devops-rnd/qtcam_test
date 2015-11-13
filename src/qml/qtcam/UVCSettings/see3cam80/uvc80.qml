@@ -655,11 +655,11 @@ Item {
                 messageDialog.open()
                 break;
             case 1:
-                console.log("Success")
-                break;
+                //success mode
+		break;
             case 2:
-                console.log("Camera busy")
-                break;
+                //camera busy mode
+		break;
             }
         }
     }

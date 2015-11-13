@@ -1,3 +1,22 @@
+/*
+ * h264decoder.h -- Handling special feature of decoding h264
+ * Copyright © 2015  e-con Systems India Pvt. Limited
+ *
+ * This file is part of Qtcam.
+ *
+ * Qtcam is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3, or (at your option)
+ * any later version.
+ *
+ * Qtcam is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Qtcam. If not, see <http://www.gnu.org/licenses/>.
+ */
 #ifndef H264DECODER_H
 #define H264DECODER_H
 
@@ -6,6 +25,10 @@
 #define LIBAVCODEC_VER_AT_LEAST(major,minor)  (LIBAVCODEC_VERSION_MAJOR > major || \
                                               (LIBAVCODEC_VERSION_MAJOR == major && \
                                                LIBAVCODEC_VERSION_MINOR >= minor))
+
+//#if !LIBAVCODEC_VER_AT_LEAST(54,25)
+//    #define AV_CODEC_ID_H264 CODEC_ID_H264
+//#endif
 
 extern "C" {
 #include "libavcodec/avcodec.h"

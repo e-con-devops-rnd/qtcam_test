@@ -23,7 +23,7 @@
 
 #define PRODUCTID "2560"
 QStringListModel Cameraproperty::modelCam;
-
+bool Cameraproperty::saveLog;
 
 Cameraproperty::Cameraproperty()
 {
@@ -31,6 +31,10 @@ Cameraproperty::Cameraproperty()
     connect(this,SIGNAL(setCamName(QString)),&vidStr,SLOT(getCameraName(QString)));
     connect(this,SIGNAL(logHandle(QtMsgType,QString)),this,SLOT(logWriter(QtMsgType,QString)));
     connect(&uvccam,SIGNAL(logHandle(QtMsgType,QString)),this,SLOT(logWriter(QtMsgType,QString)));
+}
+
+Cameraproperty::Cameraproperty(bool enableLog) {
+	saveLog	= enableLog;
 }
 
 Cameraproperty::~Cameraproperty() {
@@ -102,8 +106,10 @@ void Cameraproperty::setCurrentDevice(QString deviceIndex,QString deviceName) {
 }
 
 void Cameraproperty::createLogger() {
-    log.close();
-    log.logFileCreation();
+    if (saveLog){
+	log.close();
+	log.logFileCreation();
+    }
 }
 
 void Cameraproperty::logWriter(QtMsgType msgType,QString tmpStr) {

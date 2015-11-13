@@ -133,7 +133,7 @@
 
     Component.onCompleted:
     {
-    console.log("sceneScroll completed")
+
     }
     Grid {
     columns: 2
@@ -148,7 +148,6 @@
     activeFocusOnPress: true
     //checked: true
     onClicked: {
-        console.log("Normal")
         seecam130.setSceneMode(See3Cam130.SCENE_NORMAL)
     }
     }
@@ -159,7 +158,6 @@
     exclusiveGroup: sceneInputGroup
     activeFocusOnPress: true
     onClicked: {
-        console.log("Portrait")
         seecam130.setSceneMode(See3Cam130.SCENE_PORTRAIT)
     }
     }
@@ -170,7 +168,6 @@
     exclusiveGroup: sceneInputGroup
     activeFocusOnPress: true
     onClicked: {
-        console.log("LandScape")
         seecam130.setSceneMode(See3Cam130.SCENE_LANDSCAPE)
     }
     }
@@ -181,7 +178,6 @@
     exclusiveGroup: sceneInputGroup
     activeFocusOnPress: true
     onClicked: {
-        console.log("Sport")
         seecam130.setSceneMode(See3Cam130.SCENE_SPORT)
     }
     }
@@ -192,7 +188,6 @@
     exclusiveGroup: sceneInputGroup
     activeFocusOnPress: true
     onClicked: {
-        console.log("Close up")
         seecam130.setSceneMode(See3Cam130.SCENE_CLOSE_UP)
     }
     }
@@ -203,7 +198,6 @@
     exclusiveGroup: sceneInputGroup
     activeFocusOnPress: true
     onClicked: {
-        console.log("Night")
         seecam130.setSceneMode(See3Cam130.SCENE_NIGHT)
     }
     }
@@ -214,7 +208,6 @@
     exclusiveGroup: sceneInputGroup
     activeFocusOnPress: true
     onClicked: {
-        console.log("Twilight")
         seecam130.setSceneMode(See3Cam130.SCENE_TWILIGHT)
     }
     }
@@ -225,7 +218,6 @@
     exclusiveGroup: sceneInputGroup
     activeFocusOnPress: true
     onClicked: {
-        console.log("BackLight")
         seecam130.setSceneMode(See3Cam130.SCENE_BACKLIGHT)
     }
     }
@@ -236,7 +228,6 @@
     exclusiveGroup: sceneInputGroup
     activeFocusOnPress: true
     onClicked: {
-        console.log("High Sensitive")
         seecam130.setSceneMode(See3Cam130.SCENE_HIGH_SENSITIVE)
     }
     }
@@ -247,7 +238,6 @@
     exclusiveGroup: sceneInputGroup
     activeFocusOnPress: true
     onClicked: {
-        console.log("Night Portrait")
         seecam130.setSceneMode(See3Cam130.SCENE_NIGHT_PORTRAIT)
     }
     }
@@ -258,7 +248,6 @@
     exclusiveGroup: sceneInputGroup
     activeFocusOnPress: true
     onClicked: {
-        console.log("Beach")
         seecam130.setSceneMode(See3Cam130.SCENE_BEACH)
     }
     }
@@ -269,7 +258,6 @@
     exclusiveGroup: sceneInputGroup
     activeFocusOnPress: true
     onClicked: {
-        console.log("Document")
         seecam130.setSceneMode(See3Cam130.SCENE_BEACH)
     }
     }
@@ -280,7 +268,6 @@
     exclusiveGroup: sceneInputGroup
     activeFocusOnPress: true
     onClicked: {
-        console.log("Party")
         seecam130.setSceneMode(See3Cam130.SCENE_PARTY)
     }
     }
@@ -291,7 +278,6 @@
     exclusiveGroup: sceneInputGroup
     activeFocusOnPress: true
     onClicked: {
-        console.log("Fire works")
         seecam130.setSceneMode(See3Cam130.SCENE_FIREWORKS)
     }
     }
@@ -302,7 +288,6 @@
     exclusiveGroup: sceneInputGroup
     activeFocusOnPress: true
     onClicked: {
-        console.log("Sunset")
         seecam130.setSceneMode(See3Cam130.SCENE_SUNSET)
     }
     }
@@ -313,7 +298,6 @@
     exclusiveGroup: sceneInputGroup
     activeFocusOnPress: true
     onClicked: {
-        console.log("Auto Detect")
         seecam130.setSceneMode(See3Cam130.SCENE_AUTO_DETECT)
     }
     }
@@ -331,7 +315,6 @@
 
     Component.onCompleted:
     {
-    console.log("effectScroll completed")
     }
     Grid {
     columns: 2
@@ -346,7 +329,6 @@
 
     //checked: true
     onClicked: {
-        console.log("Normal")
         seecam130.setEffectMode(See3Cam130.EFFECT_NORMAL)
     }
     }
@@ -357,7 +339,6 @@
     exclusiveGroup: effectInputGroup
     activeFocusOnPress: true
     onClicked: {
-        console.log("Alien")
         seecam130.setEffectMode(See3Cam130.EFFECT_ALIEN)
     }
     }
@@ -368,7 +349,6 @@
     exclusiveGroup: effectInputGroup
     activeFocusOnPress: true
     onClicked: {
-        console.log("Antique")
         seecam130.setEffectMode(See3Cam130.EFFECT_ANTIQUE)
     }
     }
@@ -379,7 +359,6 @@
     exclusiveGroup: effectInputGroup
     activeFocusOnPress: true
     onClicked: {
-        console.log("Black & White")
         seecam130.setEffectMode(See3Cam130.EFFECT_BLACK_WHITE)
     }
     }
@@ -391,7 +370,6 @@
     exclusiveGroup: effectInputGroup
     activeFocusOnPress: true
     onClicked: {
-        console.log("Emboss")
         seecam130.setEffectMode(See3Cam130.EFFECT_EMBOSS)
     }
     }
@@ -402,7 +380,6 @@
     exclusiveGroup: effectInputGroup
     activeFocusOnPress: true
     onClicked: {
-        console.log("Emboss Colored")
         seecam130.setEffectMode(See3Cam130.EFFECT_EMBOSS_COLORED)
     }
     }
@@ -413,7 +390,6 @@
     exclusiveGroup: effectInputGroup
     activeFocusOnPress: true
     onClicked: {
-        console.log("Grey")
         seecam130.setEffectMode(See3Cam130.EFFECT_GRAY)
     }
     }
@@ -425,7 +401,6 @@
     exclusiveGroup: effectInputGroup    
     activeFocusOnPress: true
     onClicked: {
-        console.log("Negative")
         seecam130.setEffectMode(See3Cam130.EFFECT_NEGATIVE)
     }
     }
@@ -436,7 +411,6 @@
     exclusiveGroup: effectInputGroup
     activeFocusOnPress: true
     onClicked: {
-        console.log("Blue")
         seecam130.setEffectMode(See3Cam130.EFFECT_BLUE)
     }
     }
@@ -447,7 +421,6 @@
     exclusiveGroup: effectInputGroup
     activeFocusOnPress: true
     onClicked: {
-        console.log("Green")
         seecam130.setEffectMode(See3Cam130.EFFECT_GREEN)
     }
     }
@@ -458,7 +431,6 @@
     exclusiveGroup: effectInputGroup
     activeFocusOnPress: true
     onClicked: {
-        console.log("Red")
         seecam130.setEffectMode(See3Cam130.EFFECT_RED)
     }
     }
@@ -469,7 +441,6 @@
     exclusiveGroup: effectInputGroup
     activeFocusOnPress: true
     onClicked: {
-        console.log("Posterize1")
         seecam130.setEffectMode(See3Cam130.EFFECT_POSTERIZE_1)
     }
     }
@@ -481,7 +452,6 @@
     exclusiveGroup: effectInputGroup
     activeFocusOnPress: true
     onClicked: {
-        console.log("Posterize2")
         seecam130.setEffectMode(See3Cam130.EFFECT_POSTERIZE_2)
     }
     }
@@ -492,7 +462,6 @@
     exclusiveGroup: effectInputGroup
     activeFocusOnPress: true
     onClicked: {
-        console.log("Sepia1")
         seecam130.setEffectMode(See3Cam130.EFFECT_SEPIA_1)
     }
     }
@@ -503,7 +472,6 @@
     exclusiveGroup: effectInputGroup
     activeFocusOnPress: true
     onClicked: {
-        console.log("Sepia2")
         seecam130.setEffectMode(See3Cam130.EFFECT_SEPIA_2)
     }
     }
@@ -514,7 +482,6 @@
     exclusiveGroup: effectInputGroup
     activeFocusOnPress: true
     onClicked: {
-        console.log("Sketch")
         seecam130.setEffectMode(See3Cam130.EFFECT_SKETCH)
     }
     }
@@ -525,7 +492,6 @@
     exclusiveGroup: effectInputGroup
     activeFocusOnPress: true
     onClicked: {
-        console.log("Solarize")
         seecam130.setEffectMode(See3Cam130.EFFECT_SOLARIZE)
     }
     }
@@ -536,7 +502,6 @@
     exclusiveGroup: effectInputGroup
     activeFocusOnPress: true
     onClicked: {
-        console.log("Foggy")
         seecam130.setEffectMode(See3Cam130.EFFECT_FOGGY)
     }
     }
@@ -610,11 +575,9 @@ See3Cam130 {
     id: seecam130
 
     onSendSceneMode: {
-        console.log("scenemode:",sceneMode)
         defaultSceneMode(sceneMode)
     }
     onSendEffectMode: {
-        console.log("effectMode:",effectMode)
         defaultEffectMode(effectMode)
     }
 }

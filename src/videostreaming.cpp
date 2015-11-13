@@ -1195,7 +1195,7 @@ void Videostreaming::cameraFilterControls(bool actualValue) {
     qctrl.id = V4L2_CTRL_FLAG_NEXT_CTRL;
     emit logDebugHandle("Available Controls:");    
     while(queryctrl(qctrl)) {
-        emit logDebugHandle((char*)qctrl.name);                
+        emit logDebugHandle((char*)qctrl.name);
         switch (qctrl.type) {
         case V4L2_CTRL_TYPE_BOOLEAN:
             ctrlName = (char*)qctrl.name;

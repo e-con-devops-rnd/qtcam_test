@@ -28,7 +28,8 @@ SOURCES += main.cpp \
     videoencoder.cpp \
     seecam_cu51.cpp \
     see3cam_cu130.cpp \
-    h264decoder.cpp
+    h264decoder.cpp \
+    ascella.cpp
 
 # Installation path
 # target.path =
@@ -55,14 +56,23 @@ HEADERS += \
     videoencoder.h \
     seecam_cu51.h \
     see3cam_cu130.h \
-    h264decoder.h
+    h264decoder.h \
+    ascella.h
 
 
 INCLUDEPATH +=  $$PWD/v4l2headers/include \
-                /usr/include
+                /usr/include \
+                /usr/include/libusb-1.0
+
+
 
 LIBS += -lv4l2 -lv4lconvert \
-        -L/usr/lib/ -lavutil -lavcodec -lavformat -lswscale -ludev  \
+        -lavutil \
+        -lavcodec \
+        -lavformat \
+        -lswscale \
+        -ludev \
+        -lusb-1.0 \
         -L/usr/lib/ -lturbojpeg
 
 

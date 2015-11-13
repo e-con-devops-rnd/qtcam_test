@@ -15,10 +15,10 @@ CXX           = g++
 DEFINES       = -DQT_NO_DEBUG -DQT_QUICK_LIB -DQT_QML_LIB -DQT_WIDGETS_LIB -DQT_NETWORK_LIB -DQT_GUI_LIB -DQT_CORE_LIB
 CFLAGS        = -pipe -O2 -Wall -W -D__STDC_CONSTANT_MACROS -fPIE $(DEFINES)
 CXXFLAGS      = -pipe -O2 -Wall -W -D__STDC_CONSTANT_MACROS -fPIE $(DEFINES)
-INCPATH       = -I../../../../Qt5.2.1/5.2.1/gcc_64/mkspecs/linux-g++ -I. -Iqtquick2applicationviewer -Iv4l2headers/include -I../../../qtcam_kausik/src/avpackage/include -I../../../qtcam_kausik/src/udevpackage/include -I/usr/include -I../../../../Qt5.2.1/5.2.1/gcc_64/include -I../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQuick -I../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQml -I../../../../Qt5.2.1/5.2.1/gcc_64/include/QtWidgets -I../../../../Qt5.2.1/5.2.1/gcc_64/include/QtNetwork -I../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui -I../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore -I.
+INCPATH       = -I../../../../Qt5.2.1/5.2.1/gcc_64/mkspecs/linux-g++ -I. -Iqtquick2applicationviewer -Iv4l2headers/include -I/usr/include -I/usr/include/libusb-1.0 -I../../../../Qt5.2.1/5.2.1/gcc_64/include -I../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQuick -I../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQml -I../../../../Qt5.2.1/5.2.1/gcc_64/include/QtWidgets -I../../../../Qt5.2.1/5.2.1/gcc_64/include/QtNetwork -I../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui -I../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore -I.
 LINK          = g++
 LFLAGS        = -Wl,-O1 -Wl,-rpath,/home/che/Qt5.2.1/5.2.1/gcc_64 -Wl,-rpath,/home/che/Qt5.2.1/5.2.1/gcc_64/lib
-LIBS          = $(SUBLIBS) -lv4l2 -lv4lconvert -L/home/che/sankari/qtcam_kausik/src/avpackage/lib -lavutil -lavcodec -lavformat -lswscale -lavresample -L/home/che/sankari/qtcam_kausik/src/udevpackage/lib -ludev -L/usr/lib/ -lturbojpeg -L/home/che/Qt5.2.1/5.2.1/gcc_64/lib -lQt5Quick -lQt5Qml -lQt5Widgets -lQt5Network -lQt5Gui -lQt5Core -lGL -lpthread 
+LIBS          = $(SUBLIBS) -lv4l2 -lv4lconvert -lavutil -lavcodec -lavformat -lswscale -ludev -lusb-1.0 -L/usr/lib/ -lturbojpeg -L/home/che/Qt5.2.1/5.2.1/gcc_64/lib -lQt5Quick -lQt5Qml -lQt5Widgets -lQt5Network -lQt5Gui -lQt5Core -lGL -lpthread 
 AR            = ar cqs
 RANLIB        = 
 QMAKE         = /home/che/Qt5.2.1/5.2.1/gcc_64/bin/qmake
@@ -61,6 +61,8 @@ SOURCES       = main.cpp \
 		videoencoder.cpp \
 		seecam_cu51.cpp \
 		see3cam_cu130.cpp \
+		h264decoder.cpp \
+		ascella.cpp \
 		qtquick2applicationviewer/qtquick2applicationviewer.cpp moc_qtquick2applicationviewer.cpp \
 		moc_about.cpp \
 		moc_cameraproperty.cpp \
@@ -73,7 +75,8 @@ SOURCES       = main.cpp \
 		moc_seecam_cu50.cpp \
 		moc_seecam_ar0130.cpp \
 		moc_seecam_cu51.cpp \
-		moc_see3cam_cu130.cpp
+		moc_see3cam_cu130.cpp \
+		moc_ascella.cpp
 OBJECTS       = main.o \
 		logger.o \
 		about.o \
@@ -90,6 +93,8 @@ OBJECTS       = main.o \
 		videoencoder.o \
 		seecam_cu51.o \
 		see3cam_cu130.o \
+		h264decoder.o \
+		ascella.o \
 		qtquick2applicationviewer.o \
 		moc_qtquick2applicationviewer.o \
 		moc_about.o \
@@ -103,7 +108,8 @@ OBJECTS       = main.o \
 		moc_seecam_cu50.o \
 		moc_seecam_ar0130.o \
 		moc_seecam_cu51.o \
-		moc_see3cam_cu130.o
+		moc_see3cam_cu130.o \
+		moc_ascella.o
 DIST          = ../../../../Qt5.2.1/5.2.1/gcc_64/mkspecs/features/spec_pre.prf \
 		../../../../Qt5.2.1/5.2.1/gcc_64/mkspecs/common/shell-unix.conf \
 		../../../../Qt5.2.1/5.2.1/gcc_64/mkspecs/common/unix.conf \
@@ -475,7 +481,7 @@ qmake_all: FORCE
 
 dist: 
 	@test -d .tmp/Qtcam1.0.0 || mkdir -p .tmp/Qtcam1.0.0
-	$(COPY_FILE) --parents $(SOURCES) $(DIST) .tmp/Qtcam1.0.0/ && $(COPY_FILE) --parents qtquick2applicationviewer/qtquick2applicationviewer.h logger.h about.h cameraproperty.h videostreaming.h uvccamera.h v4l2-api.h seecam_10cug_m.h seecam_10cug_bayer.h seecam_11cug.h seecam_cu80.h seecam_cu50.h seecam_ar0130.h videoencoder.h seecam_cu51.h see3cam_cu130.h common.h .tmp/Qtcam1.0.0/ && $(COPY_FILE) --parents main.cpp logger.cpp about.cpp cameraproperty.cpp videostreaming.cpp uvccamera.cpp v4l2-api.cpp seecam_10cug_m.cpp seecam_10cug_bayer.cpp seecam_11cug.cpp seecam_cu80.cpp seecam_cu50.cpp seecam_ar0130.cpp videoencoder.cpp seecam_cu51.cpp see3cam_cu130.cpp qtquick2applicationviewer/qtquick2applicationviewer.cpp .tmp/Qtcam1.0.0/ && (cd `dirname .tmp/Qtcam1.0.0` && $(TAR) Qtcam1.0.0.tar Qtcam1.0.0 && $(COMPRESS) Qtcam1.0.0.tar) && $(MOVE) `dirname .tmp/Qtcam1.0.0`/Qtcam1.0.0.tar.gz . && $(DEL_FILE) -r .tmp/Qtcam1.0.0
+	$(COPY_FILE) --parents $(SOURCES) $(DIST) .tmp/Qtcam1.0.0/ && $(COPY_FILE) --parents qtquick2applicationviewer/qtquick2applicationviewer.h logger.h about.h cameraproperty.h videostreaming.h uvccamera.h v4l2-api.h seecam_10cug_m.h seecam_10cug_bayer.h seecam_11cug.h seecam_cu80.h seecam_cu50.h seecam_ar0130.h videoencoder.h seecam_cu51.h see3cam_cu130.h h264decoder.h ascella.h .tmp/Qtcam1.0.0/ && $(COPY_FILE) --parents main.cpp logger.cpp about.cpp cameraproperty.cpp videostreaming.cpp uvccamera.cpp v4l2-api.cpp seecam_10cug_m.cpp seecam_10cug_bayer.cpp seecam_11cug.cpp seecam_cu80.cpp seecam_cu50.cpp seecam_ar0130.cpp videoencoder.cpp seecam_cu51.cpp see3cam_cu130.cpp h264decoder.cpp ascella.cpp qtquick2applicationviewer/qtquick2applicationviewer.cpp .tmp/Qtcam1.0.0/ && (cd `dirname .tmp/Qtcam1.0.0` && $(TAR) Qtcam1.0.0.tar Qtcam1.0.0 && $(COMPRESS) Qtcam1.0.0.tar) && $(MOVE) `dirname .tmp/Qtcam1.0.0`/Qtcam1.0.0.tar.gz . && $(DEL_FILE) -r .tmp/Qtcam1.0.0
 
 
 clean:compiler_clean 
@@ -498,9 +504,9 @@ check: first
 
 compiler_rcc_make_all:
 compiler_rcc_clean:
-compiler_moc_header_make_all: moc_qtquick2applicationviewer.cpp moc_about.cpp moc_cameraproperty.cpp moc_videostreaming.cpp moc_uvccamera.cpp moc_seecam_10cug_m.cpp moc_seecam_10cug_bayer.cpp moc_seecam_11cug.cpp moc_seecam_cu80.cpp moc_seecam_cu50.cpp moc_seecam_ar0130.cpp moc_seecam_cu51.cpp moc_see3cam_cu130.cpp
+compiler_moc_header_make_all: moc_qtquick2applicationviewer.cpp moc_about.cpp moc_cameraproperty.cpp moc_videostreaming.cpp moc_uvccamera.cpp moc_seecam_10cug_m.cpp moc_seecam_10cug_bayer.cpp moc_seecam_11cug.cpp moc_seecam_cu80.cpp moc_seecam_cu50.cpp moc_seecam_ar0130.cpp moc_seecam_cu51.cpp moc_see3cam_cu130.cpp moc_ascella.cpp
 compiler_moc_header_clean:
-	-$(DEL_FILE) moc_qtquick2applicationviewer.cpp moc_about.cpp moc_cameraproperty.cpp moc_videostreaming.cpp moc_uvccamera.cpp moc_seecam_10cug_m.cpp moc_seecam_10cug_bayer.cpp moc_seecam_11cug.cpp moc_seecam_cu80.cpp moc_seecam_cu50.cpp moc_seecam_ar0130.cpp moc_seecam_cu51.cpp moc_see3cam_cu130.cpp
+	-$(DEL_FILE) moc_qtquick2applicationviewer.cpp moc_about.cpp moc_cameraproperty.cpp moc_videostreaming.cpp moc_uvccamera.cpp moc_seecam_10cug_m.cpp moc_seecam_10cug_bayer.cpp moc_seecam_11cug.cpp moc_seecam_cu80.cpp moc_seecam_cu50.cpp moc_seecam_ar0130.cpp moc_seecam_cu51.cpp moc_see3cam_cu130.cpp moc_ascella.cpp
 moc_qtquick2applicationviewer.cpp: ../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQuick/QQuickView \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQuick/qquickview.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQuick/qquickwindow.h \
@@ -1143,7 +1149,8 @@ moc_cameraproperty.cpp: ../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQuick/QQuickP
 		/usr/include/linux/input.h \
 		/usr/include/linux/hidraw.h \
 		/usr/include/linux/hid.h \
-		../../../qtcam_kausik/src/udevpackage/include/libudev.h \
+		/usr/include/libudev.h \
+		/usr/include/libusb-1.0/libusb.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QMap \
 		videostreaming.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QDateTime \
@@ -1160,27 +1167,10 @@ moc_cameraproperty.cpp: ../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQuick/QQuickP
 		videoencoder.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QIODevice \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QFile \
-		../../../qtcam_kausik/src/avpackage/include/libavcodec/avcodec.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/samplefmt.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/avutil.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/error.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/rational.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/attributes.h \
-		../../../qtcam_kausik/src/avpackage/include/libavcodec/version.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/version.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/macros.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/buffer.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/cpu.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/dict.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/frame.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/pixfmt.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/avconfig.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/old_pix_fmts.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/log.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/mem.h \
-		../../../qtcam_kausik/src/avpackage/include/libavformat/avformat.h \
-		../../../qtcam_kausik/src/avpackage/include/libavformat/avio.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/common.h \
+		/usr/include/libavcodec/avcodec.h \
+		/usr/include/libavutil/samplefmt.h \
+		/usr/include/libavutil/avutil.h \
+		/usr/include/libavutil/common.h \
 		/usr/include/math.h \
 		/usr/include/x86_64-linux-gnu/bits/huge_val.h \
 		/usr/include/x86_64-linux-gnu/bits/huge_valf.h \
@@ -1191,13 +1181,26 @@ moc_cameraproperty.cpp: ../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQuick/QQuickP
 		/usr/include/x86_64-linux-gnu/bits/mathcalls.h \
 		/usr/include/x86_64-linux-gnu/bits/mathinline.h \
 		/usr/include/x86_64-linux-gnu/bits/math-finite.h \
-		../../../qtcam_kausik/src/avpackage/include/libavformat/version.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/mathematics.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/intfloat.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/avstring.h \
-		../../../qtcam_kausik/src/avpackage/include/libswscale/swscale.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/intreadwrite.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/bswap.h \
+		/usr/include/libavutil/attributes.h \
+		/usr/include/libavutil/avconfig.h \
+		/usr/include/libavutil/mem.h \
+		/usr/include/libavutil/error.h \
+		/usr/include/libavutil/cpu.h \
+		/usr/include/libavutil/dict.h \
+		/usr/include/libavutil/log.h \
+		/usr/include/libavutil/pixfmt.h \
+		/usr/include/libavutil/rational.h \
+		/usr/include/libavcodec/version.h \
+		/usr/include/libavutil/audioconvert.h \
+		/usr/include/libavformat/avformat.h \
+		/usr/include/libavformat/avio.h \
+		/usr/include/libavformat/version.h \
+		/usr/include/libavutil/mathematics.h \
+		/usr/include/libavutil/avstring.h \
+		/usr/include/libswscale/swscale.h \
+		/usr/include/libavutil/intreadwrite.h \
+		/usr/include/libavutil/bswap.h \
+		h264decoder.h \
 		logger.h \
 		cameraproperty.h
 	/home/che/Qt5.2.1/5.2.1/gcc_64/bin/moc $(DEFINES) $(INCPATH) cameraproperty.h -o moc_cameraproperty.cpp
@@ -1454,27 +1457,10 @@ moc_videostreaming.cpp: ../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQuick/QQuickP
 		videoencoder.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QIODevice \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QFile \
-		../../../qtcam_kausik/src/avpackage/include/libavcodec/avcodec.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/samplefmt.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/avutil.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/error.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/rational.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/attributes.h \
-		../../../qtcam_kausik/src/avpackage/include/libavcodec/version.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/version.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/macros.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/buffer.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/cpu.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/dict.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/frame.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/pixfmt.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/avconfig.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/old_pix_fmts.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/log.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/mem.h \
-		../../../qtcam_kausik/src/avpackage/include/libavformat/avformat.h \
-		../../../qtcam_kausik/src/avpackage/include/libavformat/avio.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/common.h \
+		/usr/include/libavcodec/avcodec.h \
+		/usr/include/libavutil/samplefmt.h \
+		/usr/include/libavutil/avutil.h \
+		/usr/include/libavutil/common.h \
 		/usr/include/inttypes.h \
 		/usr/include/math.h \
 		/usr/include/x86_64-linux-gnu/bits/huge_val.h \
@@ -1486,13 +1472,26 @@ moc_videostreaming.cpp: ../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQuick/QQuickP
 		/usr/include/x86_64-linux-gnu/bits/mathcalls.h \
 		/usr/include/x86_64-linux-gnu/bits/mathinline.h \
 		/usr/include/x86_64-linux-gnu/bits/math-finite.h \
-		../../../qtcam_kausik/src/avpackage/include/libavformat/version.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/mathematics.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/intfloat.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/avstring.h \
-		../../../qtcam_kausik/src/avpackage/include/libswscale/swscale.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/intreadwrite.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/bswap.h \
+		/usr/include/libavutil/attributes.h \
+		/usr/include/libavutil/avconfig.h \
+		/usr/include/libavutil/mem.h \
+		/usr/include/libavutil/error.h \
+		/usr/include/libavutil/cpu.h \
+		/usr/include/libavutil/dict.h \
+		/usr/include/libavutil/log.h \
+		/usr/include/libavutil/pixfmt.h \
+		/usr/include/libavutil/rational.h \
+		/usr/include/libavcodec/version.h \
+		/usr/include/libavutil/audioconvert.h \
+		/usr/include/libavformat/avformat.h \
+		/usr/include/libavformat/avio.h \
+		/usr/include/libavformat/version.h \
+		/usr/include/libavutil/mathematics.h \
+		/usr/include/libavutil/avstring.h \
+		/usr/include/libswscale/swscale.h \
+		/usr/include/libavutil/intreadwrite.h \
+		/usr/include/libavutil/bswap.h \
+		h264decoder.h \
 		videostreaming.h
 	/home/che/Qt5.2.1/5.2.1/gcc_64/bin/moc $(DEFINES) $(INCPATH) videostreaming.h -o moc_videostreaming.cpp
 
@@ -1676,7 +1675,9 @@ moc_uvccamera.cpp: ../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QtGlobal \
 		/usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
 		/usr/include/linux/hidraw.h \
 		/usr/include/linux/hid.h \
-		../../../qtcam_kausik/src/udevpackage/include/libudev.h \
+		/usr/include/libudev.h \
+		/usr/include/libusb-1.0/libusb.h \
+		/usr/include/stdint.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QMap \
 		uvccamera.h
 	/home/che/Qt5.2.1/5.2.1/gcc_64/bin/moc $(DEFINES) $(INCPATH) uvccamera.h -o moc_uvccamera.cpp
@@ -1862,7 +1863,9 @@ moc_seecam_10cug_m.cpp: uvccamera.h \
 		/usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
 		/usr/include/linux/hidraw.h \
 		/usr/include/linux/hid.h \
-		../../../qtcam_kausik/src/udevpackage/include/libudev.h \
+		/usr/include/libudev.h \
+		/usr/include/libusb-1.0/libusb.h \
+		/usr/include/stdint.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QMap \
 		seecam_10cug_m.h
 	/home/che/Qt5.2.1/5.2.1/gcc_64/bin/moc $(DEFINES) $(INCPATH) seecam_10cug_m.h -o moc_seecam_10cug_m.cpp
@@ -2048,7 +2051,9 @@ moc_seecam_10cug_bayer.cpp: uvccamera.h \
 		/usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
 		/usr/include/linux/hidraw.h \
 		/usr/include/linux/hid.h \
-		../../../qtcam_kausik/src/udevpackage/include/libudev.h \
+		/usr/include/libudev.h \
+		/usr/include/libusb-1.0/libusb.h \
+		/usr/include/stdint.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QMap \
 		seecam_10cug_bayer.h
 	/home/che/Qt5.2.1/5.2.1/gcc_64/bin/moc $(DEFINES) $(INCPATH) seecam_10cug_bayer.h -o moc_seecam_10cug_bayer.cpp
@@ -2234,7 +2239,9 @@ moc_seecam_11cug.cpp: uvccamera.h \
 		/usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
 		/usr/include/linux/hidraw.h \
 		/usr/include/linux/hid.h \
-		../../../qtcam_kausik/src/udevpackage/include/libudev.h \
+		/usr/include/libudev.h \
+		/usr/include/libusb-1.0/libusb.h \
+		/usr/include/stdint.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QMap \
 		seecam_11cug.h
 	/home/che/Qt5.2.1/5.2.1/gcc_64/bin/moc $(DEFINES) $(INCPATH) seecam_11cug.h -o moc_seecam_11cug.cpp
@@ -2433,7 +2440,9 @@ moc_seecam_cu80.cpp: ../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQml/QQmlComponen
 		/usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
 		/usr/include/linux/hidraw.h \
 		/usr/include/linux/hid.h \
-		../../../qtcam_kausik/src/udevpackage/include/libudev.h \
+		/usr/include/libudev.h \
+		/usr/include/libusb-1.0/libusb.h \
+		/usr/include/stdint.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QMap \
 		seecam_cu80.h
 	/home/che/Qt5.2.1/5.2.1/gcc_64/bin/moc $(DEFINES) $(INCPATH) seecam_cu80.h -o moc_seecam_cu80.cpp
@@ -2619,7 +2628,9 @@ moc_seecam_cu50.cpp: uvccamera.h \
 		/usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
 		/usr/include/linux/hidraw.h \
 		/usr/include/linux/hid.h \
-		../../../qtcam_kausik/src/udevpackage/include/libudev.h \
+		/usr/include/libudev.h \
+		/usr/include/libusb-1.0/libusb.h \
+		/usr/include/stdint.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QMap \
 		seecam_cu50.h
 	/home/che/Qt5.2.1/5.2.1/gcc_64/bin/moc $(DEFINES) $(INCPATH) seecam_cu50.h -o moc_seecam_cu50.cpp
@@ -2805,7 +2816,9 @@ moc_seecam_ar0130.cpp: uvccamera.h \
 		/usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
 		/usr/include/linux/hidraw.h \
 		/usr/include/linux/hid.h \
-		../../../qtcam_kausik/src/udevpackage/include/libudev.h \
+		/usr/include/libudev.h \
+		/usr/include/libusb-1.0/libusb.h \
+		/usr/include/stdint.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QMap \
 		seecam_ar0130.h
 	/home/che/Qt5.2.1/5.2.1/gcc_64/bin/moc $(DEFINES) $(INCPATH) seecam_ar0130.h -o moc_seecam_ar0130.cpp
@@ -2991,7 +3004,9 @@ moc_seecam_cu51.cpp: uvccamera.h \
 		/usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
 		/usr/include/linux/hidraw.h \
 		/usr/include/linux/hid.h \
-		../../../qtcam_kausik/src/udevpackage/include/libudev.h \
+		/usr/include/libudev.h \
+		/usr/include/libusb-1.0/libusb.h \
+		/usr/include/stdint.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QMap \
 		seecam_cu51.h
 	/home/che/Qt5.2.1/5.2.1/gcc_64/bin/moc $(DEFINES) $(INCPATH) seecam_cu51.h -o moc_seecam_cu51.cpp
@@ -3177,10 +3192,200 @@ moc_see3cam_cu130.cpp: ../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QObject \
 		/usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
 		/usr/include/linux/hidraw.h \
 		/usr/include/linux/hid.h \
-		../../../qtcam_kausik/src/udevpackage/include/libudev.h \
+		/usr/include/libudev.h \
+		/usr/include/libusb-1.0/libusb.h \
+		/usr/include/stdint.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QMap \
 		see3cam_cu130.h
 	/home/che/Qt5.2.1/5.2.1/gcc_64/bin/moc $(DEFINES) $(INCPATH) see3cam_cu130.h -o moc_see3cam_cu130.cpp
+
+moc_ascella.cpp: uvccamera.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QtGlobal \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qglobal.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qconfig.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qfeatures.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qsystemdetection.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qprocessordetection.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qcompilerdetection.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qglobalstatic.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qbasicatomic.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_bootstrap.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qgenericatomic.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_msvc.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_integrity.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qoldbasicatomic.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_vxworks.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_power.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_alpha.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_armv7.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_armv6.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_armv5.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_bfin.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_ia64.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_mips.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_s390.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_sh4a.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_sparc.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_x86.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_cxx11.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_gcc.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_unix.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qmutex.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qlogging.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qflags.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qtypeinfo.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qtypetraits.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qsysinfo.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QObject \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qobject.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qobjectdefs.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qnamespace.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qobjectdefs_impl.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qstring.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qchar.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qbytearray.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qrefcount.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qarraydata.h \
+		/usr/include/string.h \
+		/usr/include/features.h \
+		/usr/include/x86_64-linux-gnu/bits/predefs.h \
+		/usr/include/x86_64-linux-gnu/sys/cdefs.h \
+		/usr/include/x86_64-linux-gnu/bits/wordsize.h \
+		/usr/include/x86_64-linux-gnu/gnu/stubs.h \
+		/usr/include/x86_64-linux-gnu/gnu/stubs-32.h \
+		/usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+		/usr/include/xlocale.h \
+		/usr/include/x86_64-linux-gnu/bits/string.h \
+		/usr/include/x86_64-linux-gnu/bits/string2.h \
+		/usr/include/endian.h \
+		/usr/include/x86_64-linux-gnu/bits/endian.h \
+		/usr/include/x86_64-linux-gnu/bits/byteswap.h \
+		/usr/include/x86_64-linux-gnu/bits/types.h \
+		/usr/include/x86_64-linux-gnu/bits/typesizes.h \
+		/usr/include/stdlib.h \
+		/usr/include/x86_64-linux-gnu/bits/waitflags.h \
+		/usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+		/usr/include/x86_64-linux-gnu/sys/types.h \
+		/usr/include/time.h \
+		/usr/include/x86_64-linux-gnu/bits/time.h \
+		/usr/include/x86_64-linux-gnu/bits/timex.h \
+		/usr/include/x86_64-linux-gnu/sys/select.h \
+		/usr/include/x86_64-linux-gnu/bits/select.h \
+		/usr/include/x86_64-linux-gnu/bits/sigset.h \
+		/usr/include/x86_64-linux-gnu/bits/select2.h \
+		/usr/include/x86_64-linux-gnu/sys/sysmacros.h \
+		/usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+		/usr/include/alloca.h \
+		/usr/include/x86_64-linux-gnu/bits/stdlib.h \
+		/usr/include/x86_64-linux-gnu/bits/stdlib-ldbl.h \
+		/usr/include/x86_64-linux-gnu/bits/string3.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qstringbuilder.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qlist.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qalgorithms.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qiterator.h \
+		/usr/include/limits.h \
+		/usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+		/usr/include/x86_64-linux-gnu/bits/local_lim.h \
+		/usr/include/linux/limits.h \
+		/usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+		/usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
+		/usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qcoreevent.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qscopedpointer.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qmetatype.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qvarlengtharray.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qcontainerfwd.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qisenum.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qobject_impl.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QDebug \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qdebug.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qhash.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qpair.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qmap.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qtextstream.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qiodevice.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qlocale.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qvariant.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qstringlist.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qdatastream.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qregexp.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qstringmatcher.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qshareddata.h \
+		/usr/include/stdio.h \
+		/usr/include/libio.h \
+		/usr/include/_G_config.h \
+		/usr/include/wchar.h \
+		/usr/include/x86_64-linux-gnu/bits/wchar.h \
+		/usr/include/wctype.h \
+		/usr/include/x86_64-linux-gnu/bits/wchar2.h \
+		/usr/include/x86_64-linux-gnu/bits/wchar-ldbl.h \
+		/usr/include/gconv.h \
+		/usr/include/x86_64-linux-gnu/bits/stdio-lock.h \
+		/usr/include/x86_64-linux-gnu/bits/libc-lock.h \
+		/usr/include/pthread.h \
+		/usr/include/sched.h \
+		/usr/include/x86_64-linux-gnu/bits/sched.h \
+		/usr/include/x86_64-linux-gnu/bits/setjmp.h \
+		/usr/include/errno.h \
+		/usr/include/x86_64-linux-gnu/bits/errno.h \
+		/usr/include/linux/errno.h \
+		/usr/include/x86_64-linux-gnu/asm/errno.h \
+		/usr/include/asm-generic/errno.h \
+		/usr/include/asm-generic/errno-base.h \
+		/usr/include/x86_64-linux-gnu/gnu/option-groups.h \
+		/usr/include/x86_64-linux-gnu/bits/libio-ldbl.h \
+		/usr/include/x86_64-linux-gnu/bits/sys_errlist.h \
+		/usr/include/getopt.h \
+		/usr/include/ctype.h \
+		/usr/include/x86_64-linux-gnu/bits/stdio.h \
+		/usr/include/x86_64-linux-gnu/bits/stdio2.h \
+		/usr/include/x86_64-linux-gnu/bits/stdio-ldbl.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qvector.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qpoint.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qset.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qcontiguouscache.h \
+		/usr/include/unistd.h \
+		/usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+		/usr/include/x86_64-linux-gnu/bits/environments.h \
+		/usr/include/x86_64-linux-gnu/bits/confname.h \
+		/usr/include/x86_64-linux-gnu/bits/unistd.h \
+		/usr/include/fcntl.h \
+		/usr/include/x86_64-linux-gnu/bits/fcntl.h \
+		/usr/include/x86_64-linux-gnu/bits/uio.h \
+		/usr/include/x86_64-linux-gnu/bits/stat.h \
+		/usr/include/x86_64-linux-gnu/bits/fcntl2.h \
+		/usr/include/x86_64-linux-gnu/sys/stat.h \
+		/usr/include/x86_64-linux-gnu/sys/ioctl.h \
+		/usr/include/x86_64-linux-gnu/bits/ioctls.h \
+		/usr/include/x86_64-linux-gnu/asm/ioctls.h \
+		/usr/include/asm-generic/ioctls.h \
+		/usr/include/linux/ioctl.h \
+		/usr/include/x86_64-linux-gnu/asm/ioctl.h \
+		/usr/include/asm-generic/ioctl.h \
+		/usr/include/x86_64-linux-gnu/bits/ioctl-types.h \
+		/usr/include/x86_64-linux-gnu/sys/ttydefaults.h \
+		/usr/include/x86_64-linux-gnu/sys/time.h \
+		/usr/include/linux/input.h \
+		/usr/include/linux/types.h \
+		/usr/include/x86_64-linux-gnu/asm/types.h \
+		/usr/include/asm-generic/types.h \
+		/usr/include/asm-generic/int-ll64.h \
+		/usr/include/x86_64-linux-gnu/asm/bitsperlong.h \
+		/usr/include/asm-generic/bitsperlong.h \
+		/usr/include/linux/posix_types.h \
+		/usr/include/linux/stddef.h \
+		/usr/include/x86_64-linux-gnu/asm/posix_types.h \
+		/usr/include/x86_64-linux-gnu/asm/posix_types_32.h \
+		/usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
+		/usr/include/linux/hidraw.h \
+		/usr/include/linux/hid.h \
+		/usr/include/libudev.h \
+		/usr/include/libusb-1.0/libusb.h \
+		/usr/include/stdint.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QMap \
+		ascella.h
+	/home/che/Qt5.2.1/5.2.1/gcc_64/bin/moc $(DEFINES) $(INCPATH) ascella.h -o moc_ascella.cpp
 
 compiler_moc_source_make_all:
 compiler_moc_source_clean:
@@ -3379,22 +3584,6 @@ main.o: main.cpp ../../../../Qt5.2.1/5.2.1/gcc_64/include/QtWidgets/QApplication
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/qtouchdevice.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/qguiapplication.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/qinputmethod.h \
-		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQml/QQmlApplicationEngine \
-		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQml/qqmlapplicationengine.h \
-		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQml/qqmlengine.h \
-		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQml/qjsengine.h \
-		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQml/qjsvalue.h \
-		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQml/qtqmlglobal.h \
-		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQml/qqmlerror.h \
-		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQml/qqmldebug.h \
-		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQml/QQmlComponent \
-		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQml/qqmlcomponent.h \
-		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQml/qqml.h \
-		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQml/qqmlprivate.h \
-		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQml/qqmlparserstatus.h \
-		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQml/qqmlpropertyvaluesource.h \
-		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQml/qqmllist.h \
-		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qmetaobject.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QDateTime \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qdatetime.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtWidgets/QWidget \
@@ -3423,14 +3612,27 @@ main.o: main.cpp ../../../../Qt5.2.1/5.2.1/gcc_64/include/QtWidgets/QApplication
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QRect \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/qsurface.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/qsurfaceformat.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQml/qqmldebug.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQml/qtqmlglobal.h \
 		cameraproperty.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQuick/QQuickPaintedItem \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQuick/qquickpainteditem.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQuick/qquickitem.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQml/qqml.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQml/qqmlprivate.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQml/qqmlparserstatus.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQml/qqmlpropertyvaluesource.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQml/qqmllist.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qmetaobject.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQml/qqmlcomponent.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQml/qqmlerror.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQml/qjsvalue.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QList \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/qaccessible.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQuick/QQuickImageProvider \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQuick/qquickimageprovider.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQml/qqmlengine.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQml/qjsengine.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/QPainter \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/qpainter.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/qtextoption.h \
@@ -3496,7 +3698,8 @@ main.o: main.cpp ../../../../Qt5.2.1/5.2.1/gcc_64/include/QtWidgets/QApplication
 		/usr/include/linux/input.h \
 		/usr/include/linux/hidraw.h \
 		/usr/include/linux/hid.h \
-		../../../qtcam_kausik/src/udevpackage/include/libudev.h \
+		/usr/include/libudev.h \
+		/usr/include/libusb-1.0/libusb.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QMap \
 		videostreaming.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QSocketNotifier \
@@ -3509,27 +3712,10 @@ main.o: main.cpp ../../../../Qt5.2.1/5.2.1/gcc_64/include/QtWidgets/QApplication
 		videoencoder.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QIODevice \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QFile \
-		../../../qtcam_kausik/src/avpackage/include/libavcodec/avcodec.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/samplefmt.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/avutil.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/error.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/rational.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/attributes.h \
-		../../../qtcam_kausik/src/avpackage/include/libavcodec/version.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/version.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/macros.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/buffer.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/cpu.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/dict.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/frame.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/pixfmt.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/avconfig.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/old_pix_fmts.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/log.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/mem.h \
-		../../../qtcam_kausik/src/avpackage/include/libavformat/avformat.h \
-		../../../qtcam_kausik/src/avpackage/include/libavformat/avio.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/common.h \
+		/usr/include/libavcodec/avcodec.h \
+		/usr/include/libavutil/samplefmt.h \
+		/usr/include/libavutil/avutil.h \
+		/usr/include/libavutil/common.h \
 		/usr/include/math.h \
 		/usr/include/x86_64-linux-gnu/bits/huge_val.h \
 		/usr/include/x86_64-linux-gnu/bits/huge_valf.h \
@@ -3540,13 +3726,26 @@ main.o: main.cpp ../../../../Qt5.2.1/5.2.1/gcc_64/include/QtWidgets/QApplication
 		/usr/include/x86_64-linux-gnu/bits/mathcalls.h \
 		/usr/include/x86_64-linux-gnu/bits/mathinline.h \
 		/usr/include/x86_64-linux-gnu/bits/math-finite.h \
-		../../../qtcam_kausik/src/avpackage/include/libavformat/version.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/mathematics.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/intfloat.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/avstring.h \
-		../../../qtcam_kausik/src/avpackage/include/libswscale/swscale.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/intreadwrite.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/bswap.h \
+		/usr/include/libavutil/attributes.h \
+		/usr/include/libavutil/avconfig.h \
+		/usr/include/libavutil/mem.h \
+		/usr/include/libavutil/error.h \
+		/usr/include/libavutil/cpu.h \
+		/usr/include/libavutil/dict.h \
+		/usr/include/libavutil/log.h \
+		/usr/include/libavutil/pixfmt.h \
+		/usr/include/libavutil/rational.h \
+		/usr/include/libavcodec/version.h \
+		/usr/include/libavutil/audioconvert.h \
+		/usr/include/libavformat/avformat.h \
+		/usr/include/libavformat/avio.h \
+		/usr/include/libavformat/version.h \
+		/usr/include/libavutil/mathematics.h \
+		/usr/include/libavutil/avstring.h \
+		/usr/include/libswscale/swscale.h \
+		/usr/include/libavutil/intreadwrite.h \
+		/usr/include/libavutil/bswap.h \
+		h264decoder.h \
 		logger.h \
 		seecam_10cug_bayer.h \
 		seecam_10cug_m.h \
@@ -3554,8 +3753,10 @@ main.o: main.cpp ../../../../Qt5.2.1/5.2.1/gcc_64/include/QtWidgets/QApplication
 		seecam_cu50.h \
 		seecam_cu51.h \
 		seecam_cu80.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQml/QQmlComponent \
 		see3cam_cu130.h \
 		seecam_ar0130.h \
+		ascella.h \
 		about.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QSettings \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qsettings.h
@@ -4167,7 +4368,8 @@ cameraproperty.o: cameraproperty.cpp cameraproperty.h \
 		/usr/include/linux/input.h \
 		/usr/include/linux/hidraw.h \
 		/usr/include/linux/hid.h \
-		../../../qtcam_kausik/src/udevpackage/include/libudev.h \
+		/usr/include/libudev.h \
+		/usr/include/libusb-1.0/libusb.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QMap \
 		videostreaming.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QDateTime \
@@ -4184,27 +4386,10 @@ cameraproperty.o: cameraproperty.cpp cameraproperty.h \
 		videoencoder.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QIODevice \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QFile \
-		../../../qtcam_kausik/src/avpackage/include/libavcodec/avcodec.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/samplefmt.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/avutil.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/error.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/rational.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/attributes.h \
-		../../../qtcam_kausik/src/avpackage/include/libavcodec/version.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/version.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/macros.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/buffer.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/cpu.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/dict.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/frame.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/pixfmt.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/avconfig.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/old_pix_fmts.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/log.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/mem.h \
-		../../../qtcam_kausik/src/avpackage/include/libavformat/avformat.h \
-		../../../qtcam_kausik/src/avpackage/include/libavformat/avio.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/common.h \
+		/usr/include/libavcodec/avcodec.h \
+		/usr/include/libavutil/samplefmt.h \
+		/usr/include/libavutil/avutil.h \
+		/usr/include/libavutil/common.h \
 		/usr/include/math.h \
 		/usr/include/x86_64-linux-gnu/bits/huge_val.h \
 		/usr/include/x86_64-linux-gnu/bits/huge_valf.h \
@@ -4215,13 +4400,26 @@ cameraproperty.o: cameraproperty.cpp cameraproperty.h \
 		/usr/include/x86_64-linux-gnu/bits/mathcalls.h \
 		/usr/include/x86_64-linux-gnu/bits/mathinline.h \
 		/usr/include/x86_64-linux-gnu/bits/math-finite.h \
-		../../../qtcam_kausik/src/avpackage/include/libavformat/version.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/mathematics.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/intfloat.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/avstring.h \
-		../../../qtcam_kausik/src/avpackage/include/libswscale/swscale.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/intreadwrite.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/bswap.h \
+		/usr/include/libavutil/attributes.h \
+		/usr/include/libavutil/avconfig.h \
+		/usr/include/libavutil/mem.h \
+		/usr/include/libavutil/error.h \
+		/usr/include/libavutil/cpu.h \
+		/usr/include/libavutil/dict.h \
+		/usr/include/libavutil/log.h \
+		/usr/include/libavutil/pixfmt.h \
+		/usr/include/libavutil/rational.h \
+		/usr/include/libavcodec/version.h \
+		/usr/include/libavutil/audioconvert.h \
+		/usr/include/libavformat/avformat.h \
+		/usr/include/libavformat/avio.h \
+		/usr/include/libavformat/version.h \
+		/usr/include/libavutil/mathematics.h \
+		/usr/include/libavutil/avstring.h \
+		/usr/include/libswscale/swscale.h \
+		/usr/include/libavutil/intreadwrite.h \
+		/usr/include/libavutil/bswap.h \
+		h264decoder.h \
 		logger.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o cameraproperty.o cameraproperty.cpp
 
@@ -4478,27 +4676,10 @@ videostreaming.o: videostreaming.cpp videostreaming.h \
 		videoencoder.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QIODevice \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QFile \
-		../../../qtcam_kausik/src/avpackage/include/libavcodec/avcodec.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/samplefmt.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/avutil.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/error.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/rational.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/attributes.h \
-		../../../qtcam_kausik/src/avpackage/include/libavcodec/version.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/version.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/macros.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/buffer.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/cpu.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/dict.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/frame.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/pixfmt.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/avconfig.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/old_pix_fmts.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/log.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/mem.h \
-		../../../qtcam_kausik/src/avpackage/include/libavformat/avformat.h \
-		../../../qtcam_kausik/src/avpackage/include/libavformat/avio.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/common.h \
+		/usr/include/libavcodec/avcodec.h \
+		/usr/include/libavutil/samplefmt.h \
+		/usr/include/libavutil/avutil.h \
+		/usr/include/libavutil/common.h \
 		/usr/include/inttypes.h \
 		/usr/include/math.h \
 		/usr/include/x86_64-linux-gnu/bits/huge_val.h \
@@ -4510,13 +4691,26 @@ videostreaming.o: videostreaming.cpp videostreaming.h \
 		/usr/include/x86_64-linux-gnu/bits/mathcalls.h \
 		/usr/include/x86_64-linux-gnu/bits/mathinline.h \
 		/usr/include/x86_64-linux-gnu/bits/math-finite.h \
-		../../../qtcam_kausik/src/avpackage/include/libavformat/version.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/mathematics.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/intfloat.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/avstring.h \
-		../../../qtcam_kausik/src/avpackage/include/libswscale/swscale.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/intreadwrite.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/bswap.h \
+		/usr/include/libavutil/attributes.h \
+		/usr/include/libavutil/avconfig.h \
+		/usr/include/libavutil/mem.h \
+		/usr/include/libavutil/error.h \
+		/usr/include/libavutil/cpu.h \
+		/usr/include/libavutil/dict.h \
+		/usr/include/libavutil/log.h \
+		/usr/include/libavutil/pixfmt.h \
+		/usr/include/libavutil/rational.h \
+		/usr/include/libavcodec/version.h \
+		/usr/include/libavutil/audioconvert.h \
+		/usr/include/libavformat/avformat.h \
+		/usr/include/libavformat/avio.h \
+		/usr/include/libavformat/version.h \
+		/usr/include/libavutil/mathematics.h \
+		/usr/include/libavutil/avstring.h \
+		/usr/include/libswscale/swscale.h \
+		/usr/include/libavutil/intreadwrite.h \
+		/usr/include/libavutil/bswap.h \
+		h264decoder.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QCoreApplication \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/QGuiApplication \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/qguiapplication.h \
@@ -5030,7 +5224,9 @@ uvccamera.o: uvccamera.cpp uvccamera.h \
 		/usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
 		/usr/include/linux/hidraw.h \
 		/usr/include/linux/hid.h \
-		../../../qtcam_kausik/src/udevpackage/include/libudev.h \
+		/usr/include/libudev.h \
+		/usr/include/libusb-1.0/libusb.h \
+		/usr/include/stdint.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QMap \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QStringList
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o uvccamera.o uvccamera.cpp
@@ -5372,7 +5568,9 @@ seecam_10cug_m.o: seecam_10cug_m.cpp seecam_10cug_m.h \
 		/usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
 		/usr/include/linux/hidraw.h \
 		/usr/include/linux/hid.h \
-		../../../qtcam_kausik/src/udevpackage/include/libudev.h \
+		/usr/include/libudev.h \
+		/usr/include/libusb-1.0/libusb.h \
+		/usr/include/stdint.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QMap
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o seecam_10cug_m.o seecam_10cug_m.cpp
 
@@ -5558,7 +5756,9 @@ seecam_10cug_bayer.o: seecam_10cug_bayer.cpp seecam_10cug_bayer.h \
 		/usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
 		/usr/include/linux/hidraw.h \
 		/usr/include/linux/hid.h \
-		../../../qtcam_kausik/src/udevpackage/include/libudev.h \
+		/usr/include/libudev.h \
+		/usr/include/libusb-1.0/libusb.h \
+		/usr/include/stdint.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QMap
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o seecam_10cug_bayer.o seecam_10cug_bayer.cpp
 
@@ -5744,7 +5944,9 @@ seecam_11cug.o: seecam_11cug.cpp seecam_11cug.h \
 		/usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
 		/usr/include/linux/hidraw.h \
 		/usr/include/linux/hid.h \
-		../../../qtcam_kausik/src/udevpackage/include/libudev.h \
+		/usr/include/libudev.h \
+		/usr/include/libusb-1.0/libusb.h \
+		/usr/include/stdint.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QMap
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o seecam_11cug.o seecam_11cug.cpp
 
@@ -5943,7 +6145,9 @@ seecam_cu80.o: seecam_cu80.cpp seecam_cu80.h \
 		/usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
 		/usr/include/linux/hidraw.h \
 		/usr/include/linux/hid.h \
-		../../../qtcam_kausik/src/udevpackage/include/libudev.h \
+		/usr/include/libudev.h \
+		/usr/include/libusb-1.0/libusb.h \
+		/usr/include/stdint.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QMap
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o seecam_cu80.o seecam_cu80.cpp
 
@@ -6129,7 +6333,9 @@ seecam_cu50.o: seecam_cu50.cpp seecam_cu50.h \
 		/usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
 		/usr/include/linux/hidraw.h \
 		/usr/include/linux/hid.h \
-		../../../qtcam_kausik/src/udevpackage/include/libudev.h \
+		/usr/include/libudev.h \
+		/usr/include/libusb-1.0/libusb.h \
+		/usr/include/stdint.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QMap
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o seecam_cu50.o seecam_cu50.cpp
 
@@ -6315,7 +6521,9 @@ seecam_ar0130.o: seecam_ar0130.cpp seecam_ar0130.h \
 		/usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
 		/usr/include/linux/hidraw.h \
 		/usr/include/linux/hid.h \
-		../../../qtcam_kausik/src/udevpackage/include/libudev.h \
+		/usr/include/libudev.h \
+		/usr/include/libusb-1.0/libusb.h \
+		/usr/include/stdint.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QMap
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o seecam_ar0130.o seecam_ar0130.cpp
 
@@ -6485,29 +6693,12 @@ videoencoder.o: videoencoder.cpp ../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/
 		/usr/include/x86_64-linux-gnu/bits/stdio2.h \
 		/usr/include/x86_64-linux-gnu/bits/stdio-ldbl.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/QImage \
-		../../../qtcam_kausik/src/avpackage/include/libavcodec/avcodec.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/samplefmt.h \
-		/usr/include/stdint.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/avutil.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/error.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/rational.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/attributes.h \
-		../../../qtcam_kausik/src/avpackage/include/libavcodec/version.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/version.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/macros.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/buffer.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/cpu.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/dict.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/frame.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/pixfmt.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/avconfig.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/old_pix_fmts.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/log.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/mem.h \
-		../../../qtcam_kausik/src/avpackage/include/libavformat/avformat.h \
-		../../../qtcam_kausik/src/avpackage/include/libavformat/avio.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/common.h \
+		/usr/include/libavcodec/avcodec.h \
+		/usr/include/libavutil/samplefmt.h \
+		/usr/include/libavutil/avutil.h \
+		/usr/include/libavutil/common.h \
 		/usr/include/inttypes.h \
+		/usr/include/stdint.h \
 		/usr/include/math.h \
 		/usr/include/x86_64-linux-gnu/bits/huge_val.h \
 		/usr/include/x86_64-linux-gnu/bits/huge_valf.h \
@@ -6518,13 +6709,25 @@ videoencoder.o: videoencoder.cpp ../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/
 		/usr/include/x86_64-linux-gnu/bits/mathcalls.h \
 		/usr/include/x86_64-linux-gnu/bits/mathinline.h \
 		/usr/include/x86_64-linux-gnu/bits/math-finite.h \
-		../../../qtcam_kausik/src/avpackage/include/libavformat/version.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/mathematics.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/intfloat.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/avstring.h \
-		../../../qtcam_kausik/src/avpackage/include/libswscale/swscale.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/intreadwrite.h \
-		../../../qtcam_kausik/src/avpackage/include/libavutil/bswap.h
+		/usr/include/libavutil/attributes.h \
+		/usr/include/libavutil/avconfig.h \
+		/usr/include/libavutil/mem.h \
+		/usr/include/libavutil/error.h \
+		/usr/include/libavutil/cpu.h \
+		/usr/include/libavutil/dict.h \
+		/usr/include/libavutil/log.h \
+		/usr/include/libavutil/pixfmt.h \
+		/usr/include/libavutil/rational.h \
+		/usr/include/libavcodec/version.h \
+		/usr/include/libavutil/audioconvert.h \
+		/usr/include/libavformat/avformat.h \
+		/usr/include/libavformat/avio.h \
+		/usr/include/libavformat/version.h \
+		/usr/include/libavutil/mathematics.h \
+		/usr/include/libavutil/avstring.h \
+		/usr/include/libswscale/swscale.h \
+		/usr/include/libavutil/intreadwrite.h \
+		/usr/include/libavutil/bswap.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o videoencoder.o videoencoder.cpp
 
 seecam_cu51.o: seecam_cu51.cpp seecam_cu51.h \
@@ -6709,7 +6912,9 @@ seecam_cu51.o: seecam_cu51.cpp seecam_cu51.h \
 		/usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
 		/usr/include/linux/hidraw.h \
 		/usr/include/linux/hid.h \
-		../../../qtcam_kausik/src/udevpackage/include/libudev.h \
+		/usr/include/libudev.h \
+		/usr/include/libusb-1.0/libusb.h \
+		/usr/include/stdint.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QMap
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o seecam_cu51.o seecam_cu51.cpp
 
@@ -6895,9 +7100,397 @@ see3cam_cu130.o: see3cam_cu130.cpp see3cam_cu130.h \
 		/usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
 		/usr/include/linux/hidraw.h \
 		/usr/include/linux/hid.h \
-		../../../qtcam_kausik/src/udevpackage/include/libudev.h \
+		/usr/include/libudev.h \
+		/usr/include/libusb-1.0/libusb.h \
+		/usr/include/stdint.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QMap
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o see3cam_cu130.o see3cam_cu130.cpp
+
+h264decoder.o: h264decoder.cpp ../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/QPainter \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/qpainter.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qnamespace.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qglobal.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qconfig.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qfeatures.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qsystemdetection.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qprocessordetection.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qcompilerdetection.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qglobalstatic.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qbasicatomic.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_bootstrap.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qgenericatomic.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_msvc.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_integrity.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qoldbasicatomic.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_vxworks.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_power.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_alpha.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_armv7.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_armv6.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_armv5.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_bfin.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_ia64.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_mips.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_s390.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_sh4a.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_sparc.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_x86.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_cxx11.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_gcc.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_unix.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qmutex.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qlogging.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qflags.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qtypeinfo.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qtypetraits.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qsysinfo.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qrect.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qsize.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qpoint.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qscopedpointer.h \
+		/usr/include/stdlib.h \
+		/usr/include/features.h \
+		/usr/include/x86_64-linux-gnu/bits/predefs.h \
+		/usr/include/x86_64-linux-gnu/sys/cdefs.h \
+		/usr/include/x86_64-linux-gnu/bits/wordsize.h \
+		/usr/include/x86_64-linux-gnu/gnu/stubs.h \
+		/usr/include/x86_64-linux-gnu/gnu/stubs-32.h \
+		/usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+		/usr/include/x86_64-linux-gnu/bits/waitflags.h \
+		/usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+		/usr/include/endian.h \
+		/usr/include/x86_64-linux-gnu/bits/endian.h \
+		/usr/include/x86_64-linux-gnu/bits/byteswap.h \
+		/usr/include/xlocale.h \
+		/usr/include/x86_64-linux-gnu/sys/types.h \
+		/usr/include/x86_64-linux-gnu/bits/types.h \
+		/usr/include/x86_64-linux-gnu/bits/typesizes.h \
+		/usr/include/time.h \
+		/usr/include/x86_64-linux-gnu/bits/time.h \
+		/usr/include/x86_64-linux-gnu/bits/timex.h \
+		/usr/include/x86_64-linux-gnu/sys/select.h \
+		/usr/include/x86_64-linux-gnu/bits/select.h \
+		/usr/include/x86_64-linux-gnu/bits/sigset.h \
+		/usr/include/x86_64-linux-gnu/bits/select2.h \
+		/usr/include/x86_64-linux-gnu/sys/sysmacros.h \
+		/usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+		/usr/include/alloca.h \
+		/usr/include/x86_64-linux-gnu/bits/stdlib.h \
+		/usr/include/x86_64-linux-gnu/bits/stdlib-ldbl.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/qpixmap.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/qpaintdevice.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/qwindowdefs.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qobjectdefs.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qobjectdefs_impl.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/qwindowdefs_win.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/qcolor.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/qrgb.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qstringlist.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qalgorithms.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qdatastream.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qiodevice.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qobject.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qstring.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qchar.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qbytearray.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qrefcount.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qarraydata.h \
+		/usr/include/string.h \
+		/usr/include/x86_64-linux-gnu/bits/string.h \
+		/usr/include/x86_64-linux-gnu/bits/string2.h \
+		/usr/include/x86_64-linux-gnu/bits/string3.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qstringbuilder.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qlist.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qiterator.h \
+		/usr/include/limits.h \
+		/usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+		/usr/include/x86_64-linux-gnu/bits/local_lim.h \
+		/usr/include/linux/limits.h \
+		/usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+		/usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
+		/usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qcoreevent.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qmetatype.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qvarlengtharray.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qcontainerfwd.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qisenum.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qobject_impl.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qpair.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qregexp.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qstringmatcher.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qsharedpointer.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qshareddata.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qsharedpointer_impl.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qhash.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/qimage.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/qtransform.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/qmatrix.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/qpolygon.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qvector.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/qregion.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qline.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/qpainterpath.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/qtextoption.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/qpen.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/qbrush.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/qfontinfo.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/qfont.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtGui/qfontmetrics.h \
+		h264decoder.h \
+		/usr/include/libavcodec/avcodec.h \
+		/usr/include/errno.h \
+		/usr/include/x86_64-linux-gnu/bits/errno.h \
+		/usr/include/linux/errno.h \
+		/usr/include/x86_64-linux-gnu/asm/errno.h \
+		/usr/include/asm-generic/errno.h \
+		/usr/include/asm-generic/errno-base.h \
+		/usr/include/libavutil/samplefmt.h \
+		/usr/include/libavutil/avutil.h \
+		/usr/include/libavutil/common.h \
+		/usr/include/ctype.h \
+		/usr/include/inttypes.h \
+		/usr/include/stdint.h \
+		/usr/include/x86_64-linux-gnu/bits/wchar.h \
+		/usr/include/math.h \
+		/usr/include/x86_64-linux-gnu/bits/huge_val.h \
+		/usr/include/x86_64-linux-gnu/bits/huge_valf.h \
+		/usr/include/x86_64-linux-gnu/bits/huge_vall.h \
+		/usr/include/x86_64-linux-gnu/bits/inf.h \
+		/usr/include/x86_64-linux-gnu/bits/nan.h \
+		/usr/include/x86_64-linux-gnu/bits/mathdef.h \
+		/usr/include/x86_64-linux-gnu/bits/mathcalls.h \
+		/usr/include/x86_64-linux-gnu/bits/mathinline.h \
+		/usr/include/x86_64-linux-gnu/bits/math-finite.h \
+		/usr/include/stdio.h \
+		/usr/include/libio.h \
+		/usr/include/_G_config.h \
+		/usr/include/wchar.h \
+		/usr/include/wctype.h \
+		/usr/include/x86_64-linux-gnu/bits/wchar2.h \
+		/usr/include/x86_64-linux-gnu/bits/wchar-ldbl.h \
+		/usr/include/gconv.h \
+		/usr/include/x86_64-linux-gnu/bits/stdio-lock.h \
+		/usr/include/x86_64-linux-gnu/bits/libc-lock.h \
+		/usr/include/pthread.h \
+		/usr/include/sched.h \
+		/usr/include/x86_64-linux-gnu/bits/sched.h \
+		/usr/include/x86_64-linux-gnu/bits/setjmp.h \
+		/usr/include/x86_64-linux-gnu/gnu/option-groups.h \
+		/usr/include/x86_64-linux-gnu/bits/libio-ldbl.h \
+		/usr/include/x86_64-linux-gnu/bits/sys_errlist.h \
+		/usr/include/getopt.h \
+		/usr/include/x86_64-linux-gnu/bits/stdio.h \
+		/usr/include/x86_64-linux-gnu/bits/stdio2.h \
+		/usr/include/x86_64-linux-gnu/bits/stdio-ldbl.h \
+		/usr/include/libavutil/attributes.h \
+		/usr/include/libavutil/avconfig.h \
+		/usr/include/libavutil/mem.h \
+		/usr/include/libavutil/error.h \
+		/usr/include/libavutil/cpu.h \
+		/usr/include/libavutil/dict.h \
+		/usr/include/libavutil/log.h \
+		/usr/include/libavutil/pixfmt.h \
+		/usr/include/libavutil/rational.h \
+		/usr/include/libavcodec/version.h \
+		/usr/include/libavutil/audioconvert.h \
+		/usr/include/libavformat/avformat.h \
+		/usr/include/libavformat/avio.h \
+		/usr/include/libavformat/version.h \
+		/usr/include/libavutil/mathematics.h \
+		/usr/include/libavutil/avstring.h \
+		/usr/include/libswscale/swscale.h \
+		/usr/include/libavutil/intreadwrite.h \
+		/usr/include/libavutil/bswap.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o h264decoder.o h264decoder.cpp
+
+ascella.o: ascella.cpp ascella.h \
+		uvccamera.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QtGlobal \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qglobal.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qconfig.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qfeatures.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qsystemdetection.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qprocessordetection.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qcompilerdetection.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qglobalstatic.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qbasicatomic.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_bootstrap.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qgenericatomic.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_msvc.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_integrity.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qoldbasicatomic.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_vxworks.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_power.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_alpha.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_armv7.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_armv6.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_armv5.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_bfin.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_ia64.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_mips.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_s390.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_sh4a.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_sparc.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_x86.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_cxx11.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_gcc.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qatomic_unix.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qmutex.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qlogging.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qflags.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qtypeinfo.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qtypetraits.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qsysinfo.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QObject \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qobject.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qobjectdefs.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qnamespace.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qobjectdefs_impl.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qstring.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qchar.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qbytearray.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qrefcount.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qarraydata.h \
+		/usr/include/string.h \
+		/usr/include/features.h \
+		/usr/include/x86_64-linux-gnu/bits/predefs.h \
+		/usr/include/x86_64-linux-gnu/sys/cdefs.h \
+		/usr/include/x86_64-linux-gnu/bits/wordsize.h \
+		/usr/include/x86_64-linux-gnu/gnu/stubs.h \
+		/usr/include/x86_64-linux-gnu/gnu/stubs-32.h \
+		/usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+		/usr/include/xlocale.h \
+		/usr/include/x86_64-linux-gnu/bits/string.h \
+		/usr/include/x86_64-linux-gnu/bits/string2.h \
+		/usr/include/endian.h \
+		/usr/include/x86_64-linux-gnu/bits/endian.h \
+		/usr/include/x86_64-linux-gnu/bits/byteswap.h \
+		/usr/include/x86_64-linux-gnu/bits/types.h \
+		/usr/include/x86_64-linux-gnu/bits/typesizes.h \
+		/usr/include/stdlib.h \
+		/usr/include/x86_64-linux-gnu/bits/waitflags.h \
+		/usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+		/usr/include/x86_64-linux-gnu/sys/types.h \
+		/usr/include/time.h \
+		/usr/include/x86_64-linux-gnu/bits/time.h \
+		/usr/include/x86_64-linux-gnu/bits/timex.h \
+		/usr/include/x86_64-linux-gnu/sys/select.h \
+		/usr/include/x86_64-linux-gnu/bits/select.h \
+		/usr/include/x86_64-linux-gnu/bits/sigset.h \
+		/usr/include/x86_64-linux-gnu/bits/select2.h \
+		/usr/include/x86_64-linux-gnu/sys/sysmacros.h \
+		/usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+		/usr/include/alloca.h \
+		/usr/include/x86_64-linux-gnu/bits/stdlib.h \
+		/usr/include/x86_64-linux-gnu/bits/stdlib-ldbl.h \
+		/usr/include/x86_64-linux-gnu/bits/string3.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qstringbuilder.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qlist.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qalgorithms.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qiterator.h \
+		/usr/include/limits.h \
+		/usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+		/usr/include/x86_64-linux-gnu/bits/local_lim.h \
+		/usr/include/linux/limits.h \
+		/usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+		/usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
+		/usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qcoreevent.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qscopedpointer.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qmetatype.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qvarlengtharray.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qcontainerfwd.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qisenum.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qobject_impl.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QDebug \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qdebug.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qhash.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qpair.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qmap.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qtextstream.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qiodevice.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qlocale.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qvariant.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qstringlist.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qdatastream.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qregexp.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qstringmatcher.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qshareddata.h \
+		/usr/include/stdio.h \
+		/usr/include/libio.h \
+		/usr/include/_G_config.h \
+		/usr/include/wchar.h \
+		/usr/include/x86_64-linux-gnu/bits/wchar.h \
+		/usr/include/wctype.h \
+		/usr/include/x86_64-linux-gnu/bits/wchar2.h \
+		/usr/include/x86_64-linux-gnu/bits/wchar-ldbl.h \
+		/usr/include/gconv.h \
+		/usr/include/x86_64-linux-gnu/bits/stdio-lock.h \
+		/usr/include/x86_64-linux-gnu/bits/libc-lock.h \
+		/usr/include/pthread.h \
+		/usr/include/sched.h \
+		/usr/include/x86_64-linux-gnu/bits/sched.h \
+		/usr/include/x86_64-linux-gnu/bits/setjmp.h \
+		/usr/include/errno.h \
+		/usr/include/x86_64-linux-gnu/bits/errno.h \
+		/usr/include/linux/errno.h \
+		/usr/include/x86_64-linux-gnu/asm/errno.h \
+		/usr/include/asm-generic/errno.h \
+		/usr/include/asm-generic/errno-base.h \
+		/usr/include/x86_64-linux-gnu/gnu/option-groups.h \
+		/usr/include/x86_64-linux-gnu/bits/libio-ldbl.h \
+		/usr/include/x86_64-linux-gnu/bits/sys_errlist.h \
+		/usr/include/getopt.h \
+		/usr/include/ctype.h \
+		/usr/include/x86_64-linux-gnu/bits/stdio.h \
+		/usr/include/x86_64-linux-gnu/bits/stdio2.h \
+		/usr/include/x86_64-linux-gnu/bits/stdio-ldbl.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qvector.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qpoint.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qset.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/qcontiguouscache.h \
+		/usr/include/unistd.h \
+		/usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+		/usr/include/x86_64-linux-gnu/bits/environments.h \
+		/usr/include/x86_64-linux-gnu/bits/confname.h \
+		/usr/include/x86_64-linux-gnu/bits/unistd.h \
+		/usr/include/fcntl.h \
+		/usr/include/x86_64-linux-gnu/bits/fcntl.h \
+		/usr/include/x86_64-linux-gnu/bits/uio.h \
+		/usr/include/x86_64-linux-gnu/bits/stat.h \
+		/usr/include/x86_64-linux-gnu/bits/fcntl2.h \
+		/usr/include/x86_64-linux-gnu/sys/stat.h \
+		/usr/include/x86_64-linux-gnu/sys/ioctl.h \
+		/usr/include/x86_64-linux-gnu/bits/ioctls.h \
+		/usr/include/x86_64-linux-gnu/asm/ioctls.h \
+		/usr/include/asm-generic/ioctls.h \
+		/usr/include/linux/ioctl.h \
+		/usr/include/x86_64-linux-gnu/asm/ioctl.h \
+		/usr/include/asm-generic/ioctl.h \
+		/usr/include/x86_64-linux-gnu/bits/ioctl-types.h \
+		/usr/include/x86_64-linux-gnu/sys/ttydefaults.h \
+		/usr/include/x86_64-linux-gnu/sys/time.h \
+		/usr/include/linux/input.h \
+		/usr/include/linux/types.h \
+		/usr/include/x86_64-linux-gnu/asm/types.h \
+		/usr/include/asm-generic/types.h \
+		/usr/include/asm-generic/int-ll64.h \
+		/usr/include/x86_64-linux-gnu/asm/bitsperlong.h \
+		/usr/include/asm-generic/bitsperlong.h \
+		/usr/include/linux/posix_types.h \
+		/usr/include/linux/stddef.h \
+		/usr/include/x86_64-linux-gnu/asm/posix_types.h \
+		/usr/include/x86_64-linux-gnu/asm/posix_types_32.h \
+		/usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
+		/usr/include/linux/hidraw.h \
+		/usr/include/linux/hid.h \
+		/usr/include/libudev.h \
+		/usr/include/libusb-1.0/libusb.h \
+		/usr/include/stdint.h \
+		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtCore/QMap
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ascella.o ascella.cpp
 
 qtquick2applicationviewer.o: qtquick2applicationviewer/qtquick2applicationviewer.cpp qtquick2applicationviewer/qtquick2applicationviewer.h \
 		../../../../Qt5.2.1/5.2.1/gcc_64/include/QtQuick/QQuickView \
@@ -7144,25 +7737,28 @@ moc_seecam_cu51.o: moc_seecam_cu51.cpp
 moc_see3cam_cu130.o: moc_see3cam_cu130.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_see3cam_cu130.o moc_see3cam_cu130.cpp
 
+moc_ascella.o: moc_ascella.cpp 
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_ascella.o moc_ascella.cpp
+
 ####### Install
 
 install_itemfolder_01: first FORCE
-	@test -d $(INSTALL_ROOT)/opt/Qtcam/qml || mkdir -p $(INSTALL_ROOT)/opt/Qtcam/qml
-	-$(INSTALL_DIR) /home/che/sankari/global_git/qtcam/src/qml/qtcam $(INSTALL_ROOT)/opt/Qtcam/qml/
+	@test -d $(INSTALL_ROOT)/usr//qml || mkdir -p $(INSTALL_ROOT)/usr//qml
+	-$(INSTALL_DIR) /home/che/sankari/global_git/qtcam/src/qml/qtcam $(INSTALL_ROOT)/usr//qml/
 
 uninstall_itemfolder_01: FORCE
-	-$(DEL_FILE) -r $(INSTALL_ROOT)/opt/Qtcam/qml/qtcam
-	-$(DEL_DIR) $(INSTALL_ROOT)/opt/Qtcam/qml/ 
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/usr//qml/qtcam
+	-$(DEL_DIR) $(INSTALL_ROOT)/usr//qml/ 
 
 
 install_target: first FORCE
-	@test -d $(INSTALL_ROOT)/opt/Qtcam/bin || mkdir -p $(INSTALL_ROOT)/opt/Qtcam/bin
-	-$(INSTALL_PROGRAM) "$(QMAKE_TARGET)" "$(INSTALL_ROOT)/opt/Qtcam/bin/$(QMAKE_TARGET)"
-	-$(STRIP) "$(INSTALL_ROOT)/opt/Qtcam/bin/$(QMAKE_TARGET)"
+	@test -d $(INSTALL_ROOT)/usr/ || mkdir -p $(INSTALL_ROOT)/usr/
+	-$(INSTALL_PROGRAM) "$(QMAKE_TARGET)" "$(INSTALL_ROOT)/usr/$(QMAKE_TARGET)"
+	-$(STRIP) "$(INSTALL_ROOT)/usr/$(QMAKE_TARGET)"
 
 uninstall_target: FORCE
-	-$(DEL_FILE) "$(INSTALL_ROOT)/opt/Qtcam/bin/$(QMAKE_TARGET)"
-	-$(DEL_DIR) $(INSTALL_ROOT)/opt/Qtcam/bin/ 
+	-$(DEL_FILE) "$(INSTALL_ROOT)/usr/$(QMAKE_TARGET)"
+	-$(DEL_DIR) $(INSTALL_ROOT)/usr/ 
 
 
 install:  install_itemfolder_01 install_target  FORCE
