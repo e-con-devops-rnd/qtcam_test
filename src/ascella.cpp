@@ -21,9 +21,10 @@
 #include <stdio.h>
 
 
-void ASCELLA::setLEDStatusMode(camledmode ledMode, QString brightnessVal){
+void ASCELLA::setLEDStatusMode(camLedMode ledMode, QString brightnessVal){
 
     int bytesSent;
+    u_int8_t brightnessIntVal;
 
     if(uvccamera::handle == NULL){
         return void();
@@ -40,7 +41,7 @@ void ASCELLA::setLEDStatusMode(camledmode ledMode, QString brightnessVal){
         else if(ledMode == LedManual)
             g_out_packet_buf[2] = 0x02;
 
-        u_int8_t brightnessIntVal = brightnessVal.toInt();
+        brightnessIntVal = brightnessVal.toInt();
 
         g_out_packet_buf[3] = (unsigned char)(brightnessIntVal & 0xFF);
 
@@ -62,8 +63,7 @@ void ASCELLA::setLEDStatusMode(camledmode ledMode, QString brightnessVal){
 
 }
 
-
-void ASCELLA::setAutoFocusMode(u_int8_t afMode){
+void ASCELLA::setAutoFocusMode(camAfMode afMode){
 
     int bytesSent;
 
@@ -72,16 +72,88 @@ void ASCELLA::setAutoFocusMode(u_int8_t afMode){
         return void();
     }
 
-    if(afMode == continuous || afMode == oneShot)
+    if(afMode == Continuous || afMode == OneShot)
     {
-        memset(g_out_packet_buf, 0x00, BUFFER_LENGTH);
+        memset(g_out_packet_buf, 0x00, ASCELLA_BUFLEN);
 
         g_out_packet_buf[1] = 0x02;
         g_out_packet_buf[2] = 0x04;
-        if(afMode == 0x01)
+        if(afMode == Continuous)
             g_out_packet_buf[3] = 0x03;
-        else if(afMode == 0x02)
+        else if(afMode == OneShot)
             g_out_packet_buf[3] = 0x00;
+
+        qDebug()<<"afmode "<<afMode;
+        bytesSent = libusb_control_transfer(uvccamera::handle,
+                                            0x21,
+                                            0x09,
+                                            0x200,
+                                            0x2,
+                                            g_out_packet_buf,
+                                            ASCELLA_BUFLEN,
+                                            ASCELLA_TIMEOUT);
+        if(0 > bytesSent){
+            return void();
+        }
+    }
+    else{
+        return void();
+    }
+}
+
+void ASCELLA::setExposureCompensation(QString exposureVal){
+
+    int bytesSent;
+    u_int8_t exposureIntVal;
+
+    if(uvccamera::handle == NULL)
+    {
+        return void();
+    }
+
+    memset(g_out_packet_buf, 0x00, ASCELLA_BUFLEN);
+
+    g_out_packet_buf[1] = 0x02;
+    g_out_packet_buf[2] = 0x03;
+
+    exposureIntVal = exposureVal.toInt();
+
+    g_out_packet_buf[3] = (unsigned char)(exposureIntVal & 0xFF);
+
+    qDebug()<<"exposureIntVal "<<exposureIntVal;
+    bytesSent = libusb_control_transfer(uvccamera::handle,
+                                        0x21,
+                                        0x09,
+                                        0x200,
+                                        0x2,
+                                        g_out_packet_buf,
+                                        ASCELLA_BUFLEN,
+                                        ASCELLA_TIMEOUT);
+    qDebug()<<"bytesSent"<<bytesSent;
+    if(0 > bytesSent){
+        return void();
+    }
+}
+
+
+void ASCELLA::setSceneMode(camSceneMode sceneMode){
+
+    int bytesSent;
+
+    if(uvccamera::handle == NULL)
+    {
+        return void();
+    }
+
+    if(sceneMode == SceneNormal || sceneMode == SceneDocScan){
+        memset(g_out_packet_buf, 0x00, ASCELLA_BUFLEN);
+
+        g_out_packet_buf[1] = 0x02;
+        g_out_packet_buf[2] = 0x09;
+        if(sceneMode == 0x01)
+            g_out_packet_buf[3] = 0x00;
+        else if(sceneMode == 0x02)
+            g_out_packet_buf[3] = 0x20;
 
         bytesSent = libusb_control_transfer(uvccamera::handle,
                                             0x21,
@@ -89,14 +161,15 @@ void ASCELLA::setAutoFocusMode(u_int8_t afMode){
                                             0x200,
                                             0x2,
                                             g_out_packet_buf,
-                                            BUFFER_LENGTH,
-                                            0);
-
-        // need to check bytesSent
+                                            ASCELLA_BUFLEN,
+                                            ASCELLA_TIMEOUT);
+        qDebug()<<"bytesSent"<<bytesSent;
+        if(0 > bytesSent){
+            return void();
+        }
     }
     else{
         return void();
     }
+
 }
-
-

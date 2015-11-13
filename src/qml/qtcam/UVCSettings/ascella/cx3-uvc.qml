@@ -9,6 +9,21 @@ import econ.camera.uvcsettings 1.0
 Item {    
     width:268
     height:720    
+
+    Action {
+        id: triggerAction
+        onTriggered: {
+            console.log("triggerAction")
+            ascella.setAutoFocusMode(Ascella.OneShot)
+        }
+    }
+    Action {
+        id: firmwareVersion
+        onTriggered: {
+            displayFirmwareVersion()
+        }
+    }
+
     Image {
         id: bg
         source: "images/bg.png"
@@ -16,6 +31,7 @@ Item {
         y: 0
         opacity: 0
     }
+
     ScrollView{
         id: cx3_scrollview
         x: 2
@@ -66,8 +82,7 @@ Item {
                     text: "Off"
                     activeFocusOnPress: true
                     style: econRadioButtonStyle                    
-                    onClicked:{
-                        ledSlider.enabled = false
+                    onClicked:{                        
                         ascella.setLEDStatusMode(Ascella.LedOff, "0x00");
                     }
                     Keys.onReturnPressed: {
@@ -80,8 +95,7 @@ Item {
                     text: "Auto"
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
-                    onClicked: {
-                        ledSlider.enabled = true                        
+                    onClicked: {                        
                         ascella.setLEDStatusMode(Ascella.LedAuto, led_value.text.toString());
                     }
                     Keys.onReturnPressed: {
@@ -94,8 +108,7 @@ Item {
                     text: "Manual"
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
-                    onClicked: {
-                        ledSlider.enabled = true
+                    onClicked: {                        
                         ascella.setLEDStatusMode(Ascella.LedManual, led_value.text.toString());
                     }
                     Keys.onReturnPressed: {
@@ -111,6 +124,7 @@ Item {
                     activeFocusOnPress: true
                     updateValueWhileDragging: false
                     id: ledSlider
+                    enabled: (radioAuto.checked || radioManual.checked) ? 1 : 0
                     opacity: enabled ? 1 : 0.1
                     width: 150
                     stepSize: 1
@@ -164,7 +178,7 @@ Item {
                       activeFocusOnPress: true
                       style: econRadioButtonStyle
                       onClicked: {
-
+                        ascella.setAutoFocusMode(Ascella.Continuous);
                       }
                       Keys.onReturnPressed: {
 
@@ -180,22 +194,24 @@ Item {
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked: {
-
+                        ascella.setAutoFocusMode(Ascella.OneShot);
                     }
                     Keys.onReturnPressed: {
 
                     }
                 }
                 Button {
-                    id: trigger
-                    opacity: 1
+                    id: trigger                    
                     activeFocusOnPress : true
                     text: "Trigger"
                     style: econcx3ButtonStyle
+                    enabled: radioOneshot.checked ? 1 : 0
+                    opacity: enabled ? 1 : 0.1
                     implicitHeight: 25
                     implicitWidth: 120
+                    action: radioOneshot.checked ? triggerAction : null
                     Keys.onReturnPressed: {
-
+                        ascella.setAutoFocusMode(Ascella.OneShot);
                     }
                 }
             }
@@ -385,7 +401,7 @@ Item {
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked: {
-
+                        ascella.setSceneMode(Ascella.SceneNormal);
                     }
                     Keys.onReturnPressed: {
 
@@ -398,7 +414,7 @@ Item {
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked: {
-
+                        ascella.setSceneMode(Ascella.SceneDocScan);
                     }
                     Keys.onReturnPressed: {
 
@@ -602,6 +618,8 @@ Item {
                     width: 150
                     stepSize: 1
                     style:econSliderStyle
+                    minimumValue:0
+                    maximumValue: 12
                     onValueChanged:  {
 
                     }
@@ -613,10 +631,14 @@ Item {
                     font.family: "Ubuntu"
                     smooth: true
                     horizontalAlignment: TextInput.AlignHCenter
-                    opacity: 1
+                    enabled: exposureCompSlider.enabled ? 1 : 0
+                    opacity: enabled ? 1 : 0.1
                     style: econTextFieldStyle
                     onTextChanged: {
-
+                        if(text != ""){
+                            exposureCompSlider.value = exposureCompTextValue.text
+                            ascella.setExposureCompensation(exposureCompTextValue.text)
+                        }
                     }
                 }
             }
@@ -796,6 +818,7 @@ Item {
                     activeFocusOnPress : true
                     text: "F/W Version"
                     tooltip: "Click to see firmware version"
+                    action: firmwareVersion
                     style: econcx3ButtonStyle
                     Keys.onReturnPressed: {
 
@@ -897,6 +920,10 @@ Item {
         id:ascella
     }
 
+    function displayFirmwareVersion() {
+
+    }
+
     Uvccamera {
             id: uvccamera
             onTitleTextChanged: {
@@ -905,6 +932,7 @@ Item {
                 messageDialog.open()
             }
          }
+
 
     Component.onCompleted:{
         uvccamera.initExtensionUnitAscella()

@@ -2047,7 +2047,7 @@ Rectangle {
                                         opacity: 0.1
                                     }
                                     CheckBox {
-                                        id: autoSelect_focus
+                                        id: autoSelect_focus                                        
                                         style: CheckBoxStyle {
                                             label: Text {
                                                 id: autofocus

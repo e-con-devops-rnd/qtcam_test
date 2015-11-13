@@ -24,23 +24,29 @@
 
 class ASCELLA: public QObject {
     Q_OBJECT
-    Q_ENUMS(camledmode)
+    Q_ENUMS(camLedMode)
+    Q_ENUMS(camAfMode)
+    Q_ENUMS(camSceneMode)
 
 private:
     unsigned char g_out_packet_buf[BUFFER_LENGTH];
     uvccamera uvc;
 
 public:
-    enum camledmode {
+    enum camLedMode {
         LedOff = 1,
         LedAuto = 2,
         LedManual = 3
     };
 
+    enum camAfMode {
+        Continuous = 1,
+        OneShot = 2
+    };
 
-    enum camAfmode {
-        continuous = 1,
-        oneShot = 2
+    enum camSceneMode {
+        SceneNormal = 1,
+        SceneDocScan = 2
     };
 
 signals:
@@ -49,14 +55,27 @@ public slots:
     /**
      * @brief   Sets the led status mode.
      * @param ledMode  set the led mode of the camera (off/Auto/Manual)
+     * @param brightnessVal - set the brightness of led in the camera
      */
-    void setLEDStatusMode(camledmode ledMode, QString brightnessVal);
+    void setLEDStatusMode(camLedMode ledMode, QString brightnessVal);
 
     /**
      * @brief   Sets the auto focus mode.
      * @param afMode  set the auto focus mode of the camera (continous/one shot)
      */
-    void setAutoFocusMode(u_int8_t afMode);
+    void setAutoFocusMode(camAfMode afMode);
+
+    /**
+     * @brief   Sets the offset required for auto exposure.
+     * @param exposureVal  set the exposure value in auto exposure in the camera.
+     */
+    void setExposureCompensation(QString exposureVal);
+
+    /**
+     * @brief   Sets the scene mode in the camera.
+     * @param sceneMode  set the scene mode in the camera(normal/Document scanner).
+     */
+    void setSceneMode(camSceneMode sceneMode);
 
 };
 
