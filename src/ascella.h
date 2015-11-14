@@ -27,6 +27,9 @@ class ASCELLA: public QObject {
     Q_ENUMS(camLedMode)
     Q_ENUMS(camAfMode)
     Q_ENUMS(camSceneMode)
+    Q_ENUMS(camNoiseReduceMode)
+    Q_ENUMS(camLimitMaxFRMode)
+    Q_ENUMS(camColorMode)
 
 private:
     unsigned char g_out_packet_buf[BUFFER_LENGTH];
@@ -49,13 +52,30 @@ public:
         SceneDocScan = 2
     };
 
+    enum camNoiseReduceMode {
+        NoiseReduceNormal = 1,
+        NoiseReduceFix = 2
+    };
+
+    enum camLimitMaxFRMode{
+        Disable = 1,
+        ApplyMaxFrameRate = 2
+    };
+
+    enum camColorMode{
+        ColorModeNormal = 1,
+        ColorModeMono = 2,
+        ColorModeNegative = 3,
+        ColorModeBlackWhite = 4
+    };
+
 signals:
 
 public slots:
     /**
      * @brief   Sets the led status mode.
      * @param ledMode  set the led mode of the camera (off/Auto/Manual)
-     * @param brightnessVal - set the brightness of led in the camera
+     * @param brightnessVal - set the brightness of led in the camera if auto or manual selected
      */
     void setLEDStatusMode(camLedMode ledMode, QString brightnessVal);
 
@@ -77,6 +97,26 @@ public slots:
      */
     void setSceneMode(camSceneMode sceneMode);
 
+    /**
+      * @brief set the noise reduction mode
+      * @param noiseReduceMode - set the noise reduction mode(Auto/Fix)
+      * @param noiseReduceFixVal - set the amount of noise is to be reduced when Fix mode is selected
+      */
+    void setNoiseReduceMode(camNoiseReduceMode noiseReduceMode, QString noiseReduceFixVal);
+
+    /**
+      * @brief set the limit maximum frame rate reduction mode
+      * @param LimitMaxFRMode - set the maximium frame rate limit mode(Disable/Apply Maximum Frame Rate)
+      * @param maxFrameRateVal - set the max frame rate choosen when Apply Maximum Frame Rate mode is selected
+      */
+    void setLimitMaxFrameRateMode(camLimitMaxFRMode LimitMaxFRMode, QString maxFrameRateVal);
+
+    /**
+      * @brief set the color mode
+      * @param colorMode - set the color mode(Normal/Mono/Negative/Black and White)
+      * @param blackwhiteThreshold - set the black and white threshold value
+      */
+    void setColorMode(camColorMode colorMode, QString blackwhiteThreshold);
 };
 
 #endif // ASCELLA_H

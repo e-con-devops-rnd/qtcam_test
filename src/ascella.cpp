@@ -173,3 +173,125 @@ void ASCELLA::setSceneMode(camSceneMode sceneMode){
     }
 
 }
+
+
+void ASCELLA::setNoiseReduceMode(camNoiseReduceMode NoiseReduceMode, QString NoiseReduceFixVal){
+
+    int bytesSent;
+    u_int8_t noiseReduceFixIntVal;
+
+    if(uvccamera::handle == NULL){
+        return void();
+    }
+    if(NoiseReduceMode == NoiseReduceNormal || NoiseReduceMode == NoiseReduceFix){
+        memset(g_out_packet_buf, 0x00, ASCELLA_BUFLEN);
+
+        g_out_packet_buf[1] = 2;
+        g_out_packet_buf[2] = 8;
+        if(NoiseReduceMode == NoiseReduceNormal)
+            g_out_packet_buf[3] = 0x00;
+        else if(NoiseReduceMode == NoiseReduceFix){
+            noiseReduceFixIntVal = NoiseReduceFixVal.toInt();
+            noiseReduceFixIntVal |= 0x80;
+            g_out_packet_buf[3] = (unsigned char)(noiseReduceFixIntVal & 0xFF);
+        }
+
+        bytesSent = libusb_control_transfer(uvccamera::handle,
+                                            0x21,
+                                            0x09,
+                                            0x200,
+                                            0x2,
+                                            g_out_packet_buf,
+                                            ASCELLA_BUFLEN,
+                                            ASCELLA_TIMEOUT);
+        qDebug()<<"setnoiseReduceMode:bytesSent"<<bytesSent;
+        if(0 > bytesSent){
+            return void();
+        }
+    }
+    else{
+        return void();
+    }
+}
+
+void ASCELLA::setLimitMaxFrameRateMode(camLimitMaxFRMode LimitMaxFRMode, QString maxFrameRateVal){
+
+    int bytesSent;
+    u_int8_t maxFRIntVal;
+
+    if(uvccamera::handle == NULL){
+        return void();
+    }
+    if(LimitMaxFRMode == Disable || LimitMaxFRMode == ApplyMaxFrameRate){
+        memset(g_out_packet_buf, 0x00, ASCELLA_BUFLEN);
+
+        g_out_packet_buf[1] = 2;
+        g_out_packet_buf[2] = 10;
+        if(LimitMaxFRMode == Disable)
+            g_out_packet_buf[3] = 0x00;
+        else if(LimitMaxFRMode == ApplyMaxFrameRate){
+            maxFRIntVal = maxFrameRateVal.toInt();
+            g_out_packet_buf[3] = (unsigned char)(maxFRIntVal & 0xFF);
+        }
+        qDebug()<< "g_out_packet_buf[3]" << g_out_packet_buf[3];
+        bytesSent = libusb_control_transfer(uvccamera::handle,
+                                            0x21,
+                                            0x09,
+                                            0x200,
+                                            0x2,
+                                            g_out_packet_buf,
+                                            ASCELLA_BUFLEN,
+                                            ASCELLA_TIMEOUT);
+        qDebug()<<"setLimitMaxFrameRateMode:bytesSent"<<bytesSent;
+        if(0 > bytesSent){
+            return void();
+        }
+    }
+    else{
+        return void();
+    }
+}
+
+void ASCELLA::setColorMode(camColorMode colorMode, QString blackwhiteThreshold){
+
+    int bytesSent;
+    u_int8_t bwThresholdIntVal;
+
+    if(uvccamera::handle == NULL){
+        return void();
+    }
+    if(colorMode == ColorModeNormal || colorMode == ColorModeMono || colorMode == ColorModeNegative || colorMode == ColorModeBlackWhite){
+        memset(g_out_packet_buf, 0x00, ASCELLA_BUFLEN);
+
+        g_out_packet_buf[1] = 0x06;
+        g_out_packet_buf[2] = 0x06;
+        if(colorMode == ColorModeNormal)
+            g_out_packet_buf[3] = 0x00;
+        else if(colorMode == ColorModeMono)
+            g_out_packet_buf[3] = 0x01;
+        else if(colorMode == ColorModeNegative)
+            g_out_packet_buf[3] = 0x03;
+        else if(colorMode == ColorModeBlackWhite){
+            bwThresholdIntVal = blackwhiteThreshold.toInt();
+            g_out_packet_buf[3] = 0x0A;
+            g_out_packet_buf[4] = bwThresholdIntVal;
+        }
+        qDebug()<< "setColorMode:g_out_packet_buf[4]" << g_out_packet_buf[4];
+        bytesSent = libusb_control_transfer(uvccamera::handle,
+                                            0x21,
+                                            0x09,
+                                            0x200,
+                                            0x2,
+                                            g_out_packet_buf,
+                                            ASCELLA_BUFLEN,
+                                            ASCELLA_TIMEOUT);
+        qDebug()<<"setColorMode:bytesSent"<<bytesSent;
+        if(0 > bytesSent){
+            return void();
+        }
+    }
+    else{
+        return void();
+    }
+
+}

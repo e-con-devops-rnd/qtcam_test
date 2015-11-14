@@ -6,14 +6,13 @@ import QtQuick.Dialogs 1.1
 import econ.camera.ascella 1.0
 import econ.camera.uvcsettings 1.0
 
-Item {    
+Item {
     width:268
-    height:720    
+    height:720
 
     Action {
         id: triggerAction
         onTriggered: {
-            console.log("triggerAction")
             ascella.setAutoFocusMode(Ascella.OneShot)
         }
     }
@@ -81,8 +80,8 @@ Item {
                     id: radioOff
                     text: "Off"
                     activeFocusOnPress: true
-                    style: econRadioButtonStyle                    
-                    onClicked:{                        
+                    style: econRadioButtonStyle
+                    onClicked:{
                         ascella.setLEDStatusMode(Ascella.LedOff, "0x00");
                     }
                     Keys.onReturnPressed: {
@@ -92,10 +91,10 @@ Item {
                 RadioButton {
                     exclusiveGroup: ledgroup
                     id: radioAuto
-                    text: "Auto"
+                    text: "Auto on"
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
-                    onClicked: {                        
+                    onClicked: {
                         ascella.setLEDStatusMode(Ascella.LedAuto, led_value.text.toString());
                     }
                     Keys.onReturnPressed: {
@@ -105,10 +104,10 @@ Item {
                 RadioButton {
                     exclusiveGroup: ledgroup
                     id: radioManual
-                    text: "Manual"
+                    text: "Manual on"
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
-                    onClicked: {                        
+                    onClicked: {
                         ascella.setLEDStatusMode(Ascella.LedManual, led_value.text.toString());
                     }
                     Keys.onReturnPressed: {
@@ -130,7 +129,7 @@ Item {
                     stepSize: 1
                     style:econSliderStyle
                     minimumValue: 1
-                    maximumValue: 100                    
+                    maximumValue: 100
                     onValueChanged:  {
 
                     }
@@ -201,7 +200,7 @@ Item {
                     }
                 }
                 Button {
-                    id: trigger                    
+                    id: trigger
                     activeFocusOnPress : true
                     text: "Trigger"
                     style: econcx3ButtonStyle
@@ -443,7 +442,7 @@ Item {
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked: {
-
+                        ascella.setColorMode(Ascella.ColorModeNormal, "0x00")
                     }
                     Keys.onReturnPressed: {
 
@@ -456,7 +455,7 @@ Item {
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked: {
-
+                        ascella.setColorMode(Ascella.ColorModeMono, "0x00")
                     }
                     Keys.onReturnPressed: {
 
@@ -472,7 +471,7 @@ Item {
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked: {
-
+                        ascella.setColorMode(Ascella.ColorModeNegative, "0x00")
                     }
                     Keys.onReturnPressed: {
 
@@ -485,7 +484,10 @@ Item {
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked: {
-
+                        if(colorModeBwAuto.checked)
+                            ascella.setColorMode(Ascella.ColorModeBlackWhite, "0x00")
+                        else if(colorModeBwManual.checked)
+                            ascella.setColorMode(Ascella.ColorModeBlackWhite, bwvalue.text)
                     }
                     Keys.onReturnPressed: {
 
@@ -500,7 +502,7 @@ Item {
                      font.family: "Ubuntu"
                      color: "#ffffff"
                      smooth: true
-                     opacity: 0.1
+                     opacity: colorModeBw.checked ? 1 : 0.1
                  }
             }
             RowLayout{
@@ -511,7 +513,8 @@ Item {
                     id: colorModeBwAuto
                     text: "Auto"
                     activeFocusOnPress: true
-                    opacity: 0.1
+                    enabled: colorModeBw.checked ? 1 : 0
+                    opacity: enabled ? 1 : 0.1
                     style: econRadioButtonStyle
                     onClicked: {
 
@@ -525,7 +528,8 @@ Item {
                     id: colorModeBwManual
                     text: "Manual"
                     activeFocusOnPress: true
-                    opacity: 0.1
+                    enabled: colorModeBw.checked ? 1 : 0
+                    opacity: enabled ? 1 : 0.1
                     style: econRadioButtonStyle
                     onClicked: {
 
@@ -541,10 +545,13 @@ Item {
                     activeFocusOnPress: true
                     updateValueWhileDragging: false
                     id: bwManualSlider
-                    opacity: 0.1
+                    enabled: colorModeBwManual.checked ? 1 : 0
+                    opacity: enabled ? 1 : 0.1
                     width: 150
                     stepSize: 1
                     style:econSliderStyle
+                    minimumValue: 0
+                    maximumValue: 255
                     onValueChanged:  {
 
                     }
@@ -556,9 +563,16 @@ Item {
                     font.family: "Ubuntu"
                     smooth: true
                     horizontalAlignment: TextInput.AlignHCenter
-                    opacity: 0.1
+                    enabled: bwManualSlider.enabled ? 1 : 0
+                    opacity: enabled ? 1 : 0.1
                     style: econTextFieldStyle
+                    validator: IntValidator {bottom: bwManualSlider.minimumValue; top: bwManualSlider.maximumValue}
                     onTextChanged: {
+                        if(text != ""){
+                            bwManualSlider.value = bwvalue.text
+                            if(colorModeBwManual.enabled)
+                                ascella.setColorMode(Ascella.ColorModeBlackWhite, bwvalue.text)
+                        }
 
                     }
                 }
@@ -664,7 +678,7 @@ Item {
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked:{
-
+                        ascella.setNoiseReduceMode(Ascella.NoiseReduceAuto, "0x00");
                     }
                     Keys.onReturnPressed: {
 
@@ -677,7 +691,7 @@ Item {
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked: {
-
+                        ascella.setNoiseReduceMode(Ascella.NoiseReduceFix, reduceNoiseFixvalue.text);
                     }
                     Keys.onReturnPressed: {
 
@@ -692,10 +706,13 @@ Item {
                     activeFocusOnPress: true
                     updateValueWhileDragging: false
                     id: reduceNoiseFixSlider
+                    enabled: reduceNoiseFix.checked ? 1 : 0
                     opacity: enabled ? 1 : 0.1
                     width: 150
                     stepSize: 1
                     style:econSliderStyle
+                    minimumValue: 0
+                    maximumValue: 10
                     onValueChanged:  {
 
                     }
@@ -707,10 +724,16 @@ Item {
                     font.family: "Ubuntu"
                     smooth: true
                     horizontalAlignment: TextInput.AlignHCenter
-                    opacity: 1
+                    enabled: reduceNoiseFixSlider.enabled ? 1 : 0
+                    opacity: enabled ? 1 : 0.1
                     style: econTextFieldStyle
+                    validator: IntValidator {bottom: reduceNoiseFixSlider.minimumValue; top: reduceNoiseFixSlider.maximumValue}
                     onTextChanged: {
-
+                        if(text != ""){
+                            reduceNoiseFixSlider.value = reduceNoiseFixvalue.text
+                            if(reduceNoiseFix.enabled)
+                                ascella.setNoiseReduceMode(Ascella.NoiseReduceFix, reduceNoiseFixvalue.text)
+                        }
                     }
                 }
             }
@@ -736,7 +759,7 @@ Item {
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked:{
-
+                        ascella.setLimitMaxFrameRateMode(Ascella.Disable, "0x00");
                     }
                     Keys.onReturnPressed: {
 
@@ -749,7 +772,7 @@ Item {
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked: {
-
+                        ascella.setLimitMaxFrameRateMode(Ascella.ApplyMaxFrameRate, applyMaxFrameRatevalue.text);
                     }
                     Keys.onReturnPressed: {
 
@@ -764,10 +787,13 @@ Item {
                     activeFocusOnPress: true
                     updateValueWhileDragging: false
                     id: applyMaxFrameRateSlider
+                    enabled: applyMaxFrameRate.checked ? 1 : 0
                     opacity: enabled ? 1 : 0.1
                     width: 150
                     stepSize: 1
                     style:econSliderStyle
+                    minimumValue: 3
+                    maximumValue: 119
                     onValueChanged:  {
 
                     }
@@ -778,10 +804,17 @@ Item {
                     font.pixelSize: 10
                     font.family: "Ubuntu"
                     smooth: true
+                    enabled: applyMaxFrameRateSlider.enabled ? 1 : 0
+                    opacity: enabled ? 1 : 0.1
                     horizontalAlignment: TextInput.AlignHCenter
-                    opacity: 1
                     style: econTextFieldStyle
+                    validator: IntValidator {bottom: applyMaxFrameRateSlider.minimumValue; top: applyMaxFrameRateSlider.maximumValue}
                     onTextChanged: {
+                       if(text != ""){
+                           applyMaxFrameRateSlider.value = applyMaxFrameRatevalue.text
+                           if(applyMaxFrameRate.enabled)
+                               ascella.setLimitMaxFrameRateMode(Ascella.ApplyMaxFrameRate, applyMaxFrameRatevalue.text)
+                       }
 
                     }
                 }
@@ -833,7 +866,7 @@ Item {
                     opacity: 0  // Just for layout
                 }
             }
-        }        
+        }
     }
     Component {
         id: econRadioButtonStyle
