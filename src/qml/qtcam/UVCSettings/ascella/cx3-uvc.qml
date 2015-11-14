@@ -517,7 +517,7 @@ Item {
                     opacity: enabled ? 1 : 0.1
                     style: econRadioButtonStyle
                     onClicked: {
-
+                        ascella.setColorMode(Ascella.ColorModeBlackWhite, "0x00")
                     }
                     Keys.onReturnPressed: {
 

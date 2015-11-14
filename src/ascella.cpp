@@ -32,7 +32,6 @@ void ASCELLA::setLEDStatusMode(camLedMode ledMode, QString brightnessVal){
     if(ledMode == LedAuto || ledMode == LedManual || ledMode == LedOff){
         memset(g_out_packet_buf, 0x00, ASCELLA_BUFLEN);
 
-        g_out_packet_buf[0] = 0x00;
         g_out_packet_buf[1] = 0x01;
         if(ledMode == LedOff)
             g_out_packet_buf[2] = 0x00;
@@ -76,12 +75,11 @@ void ASCELLA::setAutoFocusMode(camAfMode afMode){
     {
         memset(g_out_packet_buf, 0x00, ASCELLA_BUFLEN);
 
-        g_out_packet_buf[1] = 0x02;
-        g_out_packet_buf[2] = 0x04;
+        g_out_packet_buf[1] = 0x04;
         if(afMode == Continuous)
-            g_out_packet_buf[3] = 0x03;
+            g_out_packet_buf[2] = 0x03;
         else if(afMode == OneShot)
-            g_out_packet_buf[3] = 0x00;
+            g_out_packet_buf[2] = 0x00;
 
         qDebug()<<"afmode "<<afMode;
         bytesSent = libusb_control_transfer(uvccamera::handle,
@@ -113,12 +111,9 @@ void ASCELLA::setExposureCompensation(QString exposureVal){
 
     memset(g_out_packet_buf, 0x00, ASCELLA_BUFLEN);
 
-    g_out_packet_buf[1] = 0x02;
-    g_out_packet_buf[2] = 0x03;
-
+    g_out_packet_buf[1] = 0x03;
     exposureIntVal = exposureVal.toInt();
-
-    g_out_packet_buf[3] = (unsigned char)(exposureIntVal & 0xFF);
+    g_out_packet_buf[2] = (unsigned char)(exposureIntVal & 0xFF);
 
     qDebug()<<"exposureIntVal "<<exposureIntVal;
     bytesSent = libusb_control_transfer(uvccamera::handle,
@@ -148,12 +143,11 @@ void ASCELLA::setSceneMode(camSceneMode sceneMode){
     if(sceneMode == SceneNormal || sceneMode == SceneDocScan){
         memset(g_out_packet_buf, 0x00, ASCELLA_BUFLEN);
 
-        g_out_packet_buf[1] = 0x02;
-        g_out_packet_buf[2] = 0x09;
+        g_out_packet_buf[1] = 0x09;
         if(sceneMode == 0x01)
-            g_out_packet_buf[3] = 0x00;
+            g_out_packet_buf[2] = 0x00;
         else if(sceneMode == 0x02)
-            g_out_packet_buf[3] = 0x20;
+            g_out_packet_buf[2] = 0x20;
 
         bytesSent = libusb_control_transfer(uvccamera::handle,
                                             0x21,
@@ -186,14 +180,13 @@ void ASCELLA::setNoiseReduceMode(camNoiseReduceMode NoiseReduceMode, QString Noi
     if(NoiseReduceMode == NoiseReduceNormal || NoiseReduceMode == NoiseReduceFix){
         memset(g_out_packet_buf, 0x00, ASCELLA_BUFLEN);
 
-        g_out_packet_buf[1] = 2;
-        g_out_packet_buf[2] = 8;
+        g_out_packet_buf[1] = 8;
         if(NoiseReduceMode == NoiseReduceNormal)
-            g_out_packet_buf[3] = 0x00;
+            g_out_packet_buf[2] = 0x00;
         else if(NoiseReduceMode == NoiseReduceFix){
             noiseReduceFixIntVal = NoiseReduceFixVal.toInt();
             noiseReduceFixIntVal |= 0x80;
-            g_out_packet_buf[3] = (unsigned char)(noiseReduceFixIntVal & 0xFF);
+            g_out_packet_buf[2] = (unsigned char)(noiseReduceFixIntVal & 0xFF);
         }
 
         bytesSent = libusb_control_transfer(uvccamera::handle,
@@ -225,15 +218,14 @@ void ASCELLA::setLimitMaxFrameRateMode(camLimitMaxFRMode LimitMaxFRMode, QString
     if(LimitMaxFRMode == Disable || LimitMaxFRMode == ApplyMaxFrameRate){
         memset(g_out_packet_buf, 0x00, ASCELLA_BUFLEN);
 
-        g_out_packet_buf[1] = 2;
-        g_out_packet_buf[2] = 10;
+        g_out_packet_buf[1] = 10;
         if(LimitMaxFRMode == Disable)
-            g_out_packet_buf[3] = 0x00;
+            g_out_packet_buf[2] = 0x00;
         else if(LimitMaxFRMode == ApplyMaxFrameRate){
             maxFRIntVal = maxFrameRateVal.toInt();
-            g_out_packet_buf[3] = (unsigned char)(maxFRIntVal & 0xFF);
+            g_out_packet_buf[2] = (unsigned char)(maxFRIntVal & 0xFF);
         }
-        qDebug()<< "g_out_packet_buf[3]" << g_out_packet_buf[3];
+        qDebug()<< "g_out_packet_buf[2]" << g_out_packet_buf[2];
         bytesSent = libusb_control_transfer(uvccamera::handle,
                                             0x21,
                                             0x09,
@@ -264,19 +256,18 @@ void ASCELLA::setColorMode(camColorMode colorMode, QString blackwhiteThreshold){
         memset(g_out_packet_buf, 0x00, ASCELLA_BUFLEN);
 
         g_out_packet_buf[1] = 0x06;
-        g_out_packet_buf[2] = 0x06;
         if(colorMode == ColorModeNormal)
-            g_out_packet_buf[3] = 0x00;
+            g_out_packet_buf[2] = 0x00;
         else if(colorMode == ColorModeMono)
-            g_out_packet_buf[3] = 0x01;
+            g_out_packet_buf[2] = 0x01;
         else if(colorMode == ColorModeNegative)
-            g_out_packet_buf[3] = 0x03;
+            g_out_packet_buf[2] = 0x03;
         else if(colorMode == ColorModeBlackWhite){
             bwThresholdIntVal = blackwhiteThreshold.toInt();
-            g_out_packet_buf[3] = 0x0A;
-            g_out_packet_buf[4] = bwThresholdIntVal;
+            g_out_packet_buf[2] = 0x0A;
+            g_out_packet_buf[3] = bwThresholdIntVal;
         }
-        qDebug()<< "setColorMode:g_out_packet_buf[4]" << g_out_packet_buf[4];
+        qDebug()<< "setColorMode:g_out_packet_buf[3]" << g_out_packet_buf[3];
         bytesSent = libusb_control_transfer(uvccamera::handle,
                                             0x21,
                                             0x09,
