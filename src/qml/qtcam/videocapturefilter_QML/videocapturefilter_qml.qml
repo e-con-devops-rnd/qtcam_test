@@ -1664,11 +1664,13 @@ Rectangle {
                                         if(exposureComboEnable) {
                                             vidstreamproperty.selectMenuIndex(exposureAutoControlId,currentIndex)
                                             if(currentText.toString() == "Manual Mode") {
+                                                JS.autoExposureSelected = false
                                                 exposure_Slider.opacity = 1
                                                 exposure_Slider.enabled = true
                                                 exposure_value.opacity = 1
                                                 exposure_value.enabled = true
                                             } else {
+                                                JS.autoExposureSelected = true
                                                 exposure_Slider.opacity = 0.1
                                                 exposure_Slider.enabled = false
                                                 exposure_value.opacity = 0
@@ -2061,6 +2063,7 @@ Rectangle {
                                         }
                                         onCheckedChanged: {
                                             if(checked) {
+                                                JS.autoFocusChecked = true
                                                 camproperty.logDebugWriter("Focus control set in Auto Mode")
                                                 vidstreamproperty.changeSettings(focusControlAutoId,1)
                                                 focus_Slider.opacity = 0.1
@@ -2068,6 +2071,7 @@ Rectangle {
                                                 focus_value.opacity = 0
                                                 focus_value.enabled = false
                                             } else {
+                                                JS.autoFocusChecked = false
                                                 camproperty.logDebugWriter("Focus control set in Manual Mode")
                                                 vidstreamproperty.changeSettings(focusControlAutoId,0)
                                                 focus_Slider.opacity = 1
@@ -3453,6 +3457,7 @@ Rectangle {
                 autoSelect_focus.checked = controlDefaultValue
                 focusControlAutoId = ctrlID
                 if(!autoSelect_focus.checked) {
+                    JS.autoFocusChecked = false
                     focus_Slider.opacity = 1
                     focus_Slider.enabled = true
                     focus_value.opacity = 1
@@ -3496,10 +3501,13 @@ Rectangle {
                 exposureComboEnable =  true
                 exposureCombo.currentIndex = controlDefaultValue
                 if(exposureCombo.currentText == "Manual Mode"){
+                    JS.autoExposureSelected = false
                     exposure_Slider.enabled = true
                     exposure_Slider.opacity = 1
                     exposure_value.opacity = 1
                     exposure_value.enabled = true
+                }else{
+                    JS.autoExposureSelected = true
                 }
             }
             break;

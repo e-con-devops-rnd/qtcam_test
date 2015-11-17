@@ -30,9 +30,11 @@ class ASCELLA: public QObject {
     Q_ENUMS(camNoiseReduceMode)
     Q_ENUMS(camLimitMaxFRMode)
     Q_ENUMS(camColorMode)
+    Q_ENUMS(camBinnResizeMode)
 
 private:
-    unsigned char g_out_packet_buf[BUFFER_LENGTH];
+    unsigned char g_out_packet_buf[ASCELLA_BUFLEN];
+    unsigned char g_in_packet_buf[ASCELLA_BUFLEN];
     uvccamera uvc;
 
 public:
@@ -69,7 +71,20 @@ public:
         ColorModeBlackWhite = 4
     };
 
+    enum camBinnResizeMode{
+        Binned = 1,
+        Resized = 2
+    };
+
 signals:
+    void deviceStatus(QString title, QString message);
+
+    void ledOffEnable();
+
+    void autoExposureEnable(QString exposureValue);
+
+    void afContinuousEnable();
+
 
 public slots:
     /**
@@ -117,6 +132,37 @@ public slots:
       * @param blackwhiteThreshold - set the black and white threshold value
       */
     void setColorMode(camColorMode colorMode, QString blackwhiteThreshold);
+
+    /**
+      * @brief set the auto focus area as center weighted
+      */
+    void setCenterWeightedAutoFocus();
+
+    /**
+      * @brief set the auto focus area as custom weighted
+      * @param afHoriStart - Auto focus area horizontal start position
+      * @param afHoriEnd - Auto focus area horizontal end position
+      * @param afVertiStart - Auto focus area vertical start position
+      * @param afVertiEnd - Auto focus area vertical end position
+      */
+    void setCustomAreaAutoFocus(QString afHoriStart, QString afHoriEnd, QString afVertiStart, QString afVertiEnd);
+
+    /**
+     * @brief setBinnedResizedMode
+     * @param mode - Set binned or resized mode
+     */
+    void setBinnedResizedMode(camBinnResizeMode mode);
+
+    /**
+     * @brief setDefaultValues when Default button pressed in extension settings
+     */
+    void setDefaultValues();
+
+    /**
+     * @brief getDefaultValues
+     */
+    void getDefaultValues(u_int8_t *pDefaultValue);
+
 };
 
 #endif // ASCELLA_H

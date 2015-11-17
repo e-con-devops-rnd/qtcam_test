@@ -5,10 +5,16 @@ import QtQuick.Layouts 1.1
 import QtQuick.Dialogs 1.1
 import econ.camera.ascella 1.0
 import econ.camera.uvcsettings 1.0
+//import "../../videocapturefilter_QML/"
+import "../../JavaScriptFiles/tempValue.js" as JS
 
 Item {
     width:268
     height:720
+
+    property string vidResln;
+    property int vidWidth;
+    property int vidHeight;
 
     Action {
         id: triggerAction
@@ -16,6 +22,21 @@ Item {
             ascella.setAutoFocusMode(Ascella.OneShot)
         }
     }
+
+    Action {
+        id: afAreaSet
+        onTriggered: {
+            ascella.setCustomAreaAutoFocus(afhori_start_box_value.text, afhori_end_box_value.text, afverti_start_box_value.text, afverti_end_box_value.text)
+        }
+    }
+
+    Action {
+        id: setDefault
+        onTriggered: {
+            ascella.setDefaultValues()
+        }
+    }
+
     Action {
         id: firmwareVersion
         onTriggered: {
@@ -176,6 +197,8 @@ Item {
                       text: "Continuous"
                       activeFocusOnPress: true
                       style: econRadioButtonStyle
+                      enabled: JS.autoFocusChecked ? 1 : 0
+                      opacity: enabled ? 1 : 0.1
                       onClicked: {
                         ascella.setAutoFocusMode(Ascella.Continuous);
                       }
@@ -192,6 +215,8 @@ Item {
                     text: "One-Shot"
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
+                    enabled: JS.autoFocusChecked ? 1 : 0
+                    opacity: enabled ? 1 : 0.1
                     onClicked: {
                         ascella.setAutoFocusMode(Ascella.OneShot);
                     }
@@ -234,8 +259,10 @@ Item {
                     text: "Center \nWeighted AF"
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
+                    enabled: JS.autoFocusChecked ? 1 : 0
+                    opacity: enabled ? 1 : 0.1
                     onClicked:{
-
+                        ascella.setCenterWeightedAutoFocus();
                     }
                     Keys.onReturnPressed: {
 
@@ -247,8 +274,15 @@ Item {
                     text: "Custom \nWeighted AF"
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
+                    enabled: JS.autoFocusChecked ? 1 : 0
+                    opacity: enabled ? 1 : 0.1
                     onClicked: {
-
+                        console.log("In qml =======================")
+                        vidResln = JS.videoCaptureResolution
+                        vidWidth = vidResln.split('x')[0]
+                        vidHeight = vidResln.split('x')[1]
+                        console.log(vidWidth)
+                        console.log(vidHeight)
                     }
                     Keys.onReturnPressed: {
 
@@ -265,16 +299,18 @@ Item {
                   font.family: "Ubuntu"
                   color: "#ffffff"
                   smooth: true
-                  opacity: 1
+                  opacity: radiocustom.checked ? 1 : 0.1
                 }
                 TextField {
-                    id: afhori_start_value
+                    id: afhori_start_box_value
                     font.pixelSize: 10
                     font.family: "Ubuntu"
                     smooth: true
                     horizontalAlignment: TextInput.AlignHCenter
-                    opacity: 1
                     style: econTextFieldStyle
+                    enabled: radiocustom.checked ? 1 : 0
+                    opacity: enabled ? 1 : 0.1
+                    validator: IntValidator {bottom: 1; top: vidWidth;}
                     implicitWidth: 70
                     onTextChanged: {
 
@@ -292,16 +328,18 @@ Item {
                     smooth: true
                     x: 14
                     y: 578.5
-                    opacity: 1
+                    opacity: radiocustom.checked ? 1 : 0.1
                 }
                 TextField {
-                    id: afhoriend_box_value
+                    id: afhori_end_box_value
                     font.pixelSize: 10
                     font.family: "Ubuntu"
                     smooth: true
                     horizontalAlignment: TextInput.AlignHCenter
-                    opacity: 1
                     style: econTextFieldStyle
+                    enabled: radiocustom.checked ? 1 : 0
+                    opacity: enabled ? 1 : 0.1
+                    validator: IntValidator {bottom: 1; top: vidWidth;}
                     implicitWidth: 70
                     onTextChanged: {
 
@@ -317,18 +355,20 @@ Item {
                     font.family: "Ubuntu"
                     color: "#ffffff"
                     smooth: true
-                    opacity: 1
+                    opacity: radiocustom.checked ? 1 : 0.1
                     Layout.preferredWidth: 140
                 }
                 TextField {
-                    id: afvertistart_box_value
+                    id: afverti_start_box_value
                     font.pixelSize: 10
                     font.family: "Ubuntu"
                     smooth: true
                     horizontalAlignment: TextInput.AlignHCenter
-                    opacity: 1
                     style: econTextFieldStyle
+                    enabled: radiocustom.checked ? 1 : 0
+                    opacity: enabled ? 1 : 0.1
                     implicitWidth: 70
+                    validator: IntValidator {bottom: 1; top: vidHeight;}
                     onTextChanged: {
 
                     }
@@ -343,7 +383,7 @@ Item {
                     font.family: "Ubuntu"
                     color: "#ffffff"
                     smooth: true
-                    opacity: 1
+                    opacity: radiocustom.checked ? 1 : 0.1
                     Layout.preferredWidth: 140
                 }
                 TextField {
@@ -352,9 +392,11 @@ Item {
                     font.family: "Ubuntu"
                     smooth: true
                     horizontalAlignment: TextInput.AlignHCenter
-                    opacity: 1
                     style: econTextFieldStyle
+                    enabled: radiocustom.checked ? 1 : 0
+                    opacity: enabled ? 1 : 0.1
                     implicitWidth: 70
+                    validator: IntValidator {bottom: 1; top: vidHeight;}
                     onTextChanged: {
 
                     }
@@ -369,13 +411,15 @@ Item {
                 }
                 Button {
                     id: setFocusPosition
-                    opacity: 1
                     activeFocusOnPress : true
                     text: "Set"
                     tooltip: "Click to set focus position entered in text box"
                     style: econcx3ButtonStyle
+                    enabled: radiocustom.checked ? 1 : 0
+                    opacity: enabled ? 1 : 0.1
+                    action: radiocustom.checked ? afAreaSet : null
                     Keys.onReturnPressed: {
-
+                        ascella.setCustomAreaAutoFocus(afhori_start_box_value.text, afhori_end_box_value.text, afverti_start_box_value.text, afverti_end_box_value.text)
                     }
                 }
             }
@@ -502,7 +546,7 @@ Item {
                      font.family: "Ubuntu"
                      color: "#ffffff"
                      smooth: true
-                     opacity: colorModeBw.checked ? 1 : 0.1
+                     opacity: 0.50196078431373
                  }
             }
             RowLayout{
@@ -586,10 +630,13 @@ Item {
                     id: colorModeBinned
                     text: "Binned"
                     activeFocusOnPress: true
-                    opacity: 1
+                    enabled: (JS.videoCaptureResolution === "1920x1080" || JS.videoCaptureResolution === "2048x1536") ? 1 : 0
+                    opacity: enabled ? 1 : 0.1
                     style: econRadioButtonStyle
                     onClicked: {
-
+                        console.log(JS.videoCaptureResolution)
+                        console.log(Ascella.Binned)
+                        ascella.setBinnedResizedMode(Ascella.Binned)
                     }
                     Keys.onReturnPressed: {
 
@@ -600,10 +647,12 @@ Item {
                     id: colorModeResized
                     text: "Resized"
                     activeFocusOnPress: true
-                    opacity: 1
+                    enabled: (JS.videoCaptureResolution === "1920x1080" || JS.videoCaptureResolution === "2048x1536") ? 1 : 0
+                    opacity: enabled ? 1 : 0.1
                     style: econRadioButtonStyle
                     onClicked: {
-
+                        console.log(Ascella.Resized)
+                        ascella.setBinnedResizedMode(Ascella.Resized)
                     }
                     Keys.onReturnPressed: {
 
@@ -628,6 +677,7 @@ Item {
                     activeFocusOnPress: true
                     updateValueWhileDragging: false
                     id: exposureCompSlider
+                    enabled: JS.autoExposureSelected ? 1 : 0
                     opacity: enabled ? 1 : 0.1
                     width: 150
                     stepSize: 1
@@ -832,6 +882,7 @@ Item {
                     activeFocusOnPress : true
                     text: "Default"
                     tooltip: "Click to set default values in extension controls"
+                    action: setDefault
                     style: econcx3ButtonStyle
                     Keys.onReturnPressed: {
 
@@ -930,7 +981,6 @@ Item {
         id: econcx3ButtonStyle
         ButtonStyle {
             background: Rectangle {
-
                 implicitHeight: 38
                 implicitWidth: 104
                 border.width: control.activeFocus ? 3 :0
@@ -951,6 +1001,24 @@ Item {
 
     Ascella{
         id:ascella
+        onDeviceStatus:{
+            messageDialog.title = title.toString()
+            messageDialog.text = message.toString()
+            messageDialog.open()
+        }
+        onLedOffEnable:{
+            radioOff.checked = true
+        }
+        onAutoExposureEnable:{
+            if(JS.autoExposureSelected){
+                exposureCompTextValue.text = exposureValue
+            }
+        }
+        onafContinuousEnable:{
+            if(JS.autoFocusChecked){
+                radioContin.checked = true
+            }
+        }
     }
 
     function displayFirmwareVersion() {
@@ -964,8 +1032,7 @@ Item {
                 messageDialog.text = _text.toString()
                 messageDialog.open()
             }
-         }
-
+     }
 
     Component.onCompleted:{
         uvccamera.initExtensionUnitAscella()
