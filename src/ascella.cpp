@@ -1,5 +1,5 @@
 /*
- * ascella.cpp -- Handling special feature of ascella camera
+ * ascella.cpp -- Handling special features of ascella camera
  * Copyright © 2015  e-con Systems India Pvt. Limited
  *
  * This file is part of Qtcam.
@@ -421,20 +421,42 @@ void ASCELLA::setDefaultValues(){
     u_int8_t defaultValue[30];
 
     memset(defaultValue, 0x00, sizeof(defaultValue));
+
     /* get default values */
     getDefaultValues(defaultValue);
     qDebug()<<"here";
 
-    /* enable led off */
+    /* Enabling led off */
     emit ledOffEnable();
 
-    /*exposure compensation is enabled if auto exposure is selected */
+    /* Enabling exposure compensation if auto exposure is selected in Image Quality Settings menu */
     QString exposureValue = QString::number(defaultValue[2]);
     emit autoExposureEnable(exposureValue);
 
-    /*auto focus mode control is enabled if auto focus is checked in Image Quality Settings */
+    /* Enabling normal color mode */
+    emit normalColorModeEnable();
 
+    /* Enabling black and white color mode auto and setting manual default slider value */
+    QString bwThresholdValue = QString::number(defaultValue[18]);
+    qDebug()<<"bwThresholdValue"<<bwThresholdValue;
+    emit bwColorModeAutoEnable(bwThresholdValue);
 
+    /* Enabling auto focus mode control if auto focus is checked in Image Quality Settings menu*/
+    emit afContinuousEnable();
+
+    /* Enabling noise reduction auto mode */
+    emit noiseReductionAutoEnable();
+
+    /* Enabling normal scene mode */
+    emit normalSceneModeEnable();
+
+    /* Enabling limit max frame rate disable mode and setting max frame rate value*/
+    QString frameRateValue = QString::number(ASCELLA_DEFAULT_MAXFRAMERATE);
+    emit limitMaxFRDisableMode(frameRateValue);
+
+    qDebug()<<"defaultValue[19]"<<defaultValue[19];
+    /* Enabling binned mode */
+    emit binnModeEnable();
 }
 
 void ASCELLA::getDefaultValues(u_int8_t *pDefaultValue){
@@ -468,28 +490,161 @@ void ASCELLA::getDefaultValues(u_int8_t *pDefaultValue){
     }
     qDebug()<<"Before sending libusb_control_transfer get ";
     // Getting the response - in buffer
-//    bytesSent = libusb_control_transfer(uvccamera::handle,
-//                                        0x21,
-//                                        0x01,
-//                                        0x200,
-//                                        0x2,
-//                                        g_in_packet_buf,
-//                                        ASCELLA_BUFLEN,
-//                                        ASCELLA_TIMEOUT);
+    bytesSent = libusb_control_transfer(uvccamera::handle,
+                                        0xA1,
+                                        0x01,
+                                        0x100,
+                                        0x2,
+                                        g_in_packet_buf,
+                                        ASCELLA_BUFLEN,
+                                        ASCELLA_TIMEOUT);
 
-    pDefaultValue[0] = 0x01; //0 - 0x00 //Torch Status: 0 for OFF, 1 for Auto ON, 2 for Manual ON
+    pDefaultValue[0] = 0x00; //0 - 0x00 //Torch Status: 0 for OFF, 1 for Auto ON, 2 for Manual ON
     pDefaultValue[1] = 0x01; //1 - 0x01 //Torch level: 0-100 supported
     pDefaultValue[2] = 0x06; //2 - 0x06 //Exposure Compensation level: 0-12 supported
     pDefaultValue[3] = 0x03; //3 - 0x03 //AF mode: 0 for one-shot AF, 3 for continuous
-    pDefaultValue[4] = 0x01; //4 - 0x00 //Color Mode: 0 for Normal, 1 for Mono, 3 for Negative, 10 for B&W
+    pDefaultValue[4] = 0x00; //4 - 0x00 //Color Mode: 0 for Normal, 1 for Mono, 3 for Negative, 10 for B&W
     pDefaultValue[5] = 0x00; //5 - 0x00 //B&W Threshold: 0 for Auto, 1-255 for Fix Threshold value
     pDefaultValue[6] = 0x00; //6 - 0x00 //bit 7: 0 for Auto, 1 for Fix level; bit 0-6: 1-10 supported
-    pDefaultValue[7] = 0x01; //7 - 0x00 //Scene mode: 00 for normal, 0x20 for Document Scanner
-    pDefaultValue[8] = 0x01; //8 - 0x00 //Max Frame Rate Control: 0 for Disabling MAx Frame Rate Control, 3-119 for Fixing the frame rate
+    pDefaultValue[7] = 0x00; //7 - 0x00 //Scene mode: 00 for normal, 0x20 for Document Scanner
+    pDefaultValue[8] = 0x00; //8 - 0x00 //Max Frame Rate Control: 0 for Disabling MAx Frame Rate Control, 3-119 for Fixing the frame rate
     pDefaultValue[9] = 0x01;  //9 - 0x01 //AF mode: 1 for center weighted, 2 for custom weighted
     for(int i = 10;i < 18;i++)
         pDefaultValue[i] = 0x00; // 10 to 17 - 0x00 // Auto focus area horizontal and vertical position
     pDefaultValue[18] = 0x01; //18 - 0x01 //B&W: Previous B&W Fix Threshold Value
-    pDefaultValue[19] = 0x00;//g_in_packet_buf[21]; //19 - Enable binning/resize; 0 for disable, 1 for enable
-    pDefaultValue[20] = 0x01;//g_in_packet_buf[22]; //20 - 1 for binning, 2 for resize
+    pDefaultValue[19] = g_in_packet_buf[21]; //19 - Enable binning/resize; 0 for disable, 1 for enable
+    pDefaultValue[20] = g_in_packet_buf[22]; //20 - 1 for binning, 2 for resize
+}
+
+
+//void ASCELLA::getFirmwareVersion(){
+
+//}
+
+//void ASCELLA::setInitialValues(){
+
+//}
+
+void ASCELLA::getCurrentValues(u_int8_t *pCurrentValue){
+    int bytesSent;
+
+    if(uvccamera::handle == NULL){
+        return void();
+    }
+
+    memset(g_out_packet_buf, 0x00, ASCELLA_BUFLEN);
+    memset(g_in_packet_buf, 0x00, ASCELLA_BUFLEN);
+
+    g_out_packet_buf[1] = 0xCC;
+    g_out_packet_buf[2] = 2;
+
+    // Sending the request command to get current values - output buffer
+    qDebug()<< "setcurrentvalue:" << g_out_packet_buf[2];
+    bytesSent = libusb_control_transfer(uvccamera::handle,
+                                        0x21,
+                                        0x09,
+                                        0x200,
+                                        0x2,
+                                        g_out_packet_buf,
+                                        ASCELLA_BUFLEN,
+                                        ASCELLA_TIMEOUT);
+    qDebug()<<"setCurrentValue:bytesSent"<<bytesSent;
+    if(0 > bytesSent){
+        qDebug()<<"set command failed";
+        return void();
+    }
+    qDebug()<<"Before sending libusb_control_transfer get ";
+    // Getting the response - in buffer
+    bytesSent = libusb_control_transfer(uvccamera::handle,
+                                        0xA1,
+                                        0x01,
+                                        0x100,
+                                        0x2,
+                                        g_in_packet_buf,
+                                        ASCELLA_BUFLEN,
+                                        ASCELLA_TIMEOUT);
+    int i=0;
+    /* pCurrentValue[0] - led status mode */
+    switch(g_in_packet_buf[1]){
+        case 0x00:
+            pCurrentValue[i++] = 0x01; break;
+        case 0x01:
+            pCurrentValue[i++] = 0x02; break;
+        case 0x02:
+            pCurrentValue[i++] = 0x03; break;
+    }
+
+    /* pCurrentValue[1] - Led Brightness value */
+    pCurrentValue[i++] = g_in_packet_buf[2];
+
+    /* pCurrentValue[2] - Exposure */
+    pCurrentValue[i++] = g_in_packet_buf[4];
+
+    /* pCurrentValue[3] - Auto focus mode */
+    switch(g_in_packet_buf[5]){
+        case 0x03:
+            pCurrentValue[i++] = 0x01; break;
+        case 0x00:
+            pCurrentValue[i++] = 0x02; break;
+    }
+
+    /* pCurrentValue[4] - color mode */
+    switch(g_in_packet_buf[6]){
+        case 0x00:
+            pCurrentValue[i++] = 0x01; break;
+        case 0x01:
+            pCurrentValue[i++] = 0x02; break;
+        case 0x03:
+            pCurrentValue[i++] = 0x03; break;
+        case 0x0A:
+            pCurrentValue[i++] = 0x04; break;
+    }
+
+    /* pCurrentValue[5] - Black and white mode */
+    if(g_in_packet_buf[7] == 0x00)
+        pCurrentValue[i++] = 0x00;      //Black&White Auto
+    else if(g_in_packet_buf[7] >= 0x01)
+        pCurrentValue[i++] = g_in_packet_buf[7]; //black and white thresold
+
+    /* pCurrentValue[6] - noise reduction mode */
+    pCurrentValue[i++] = g_in_packet_buf[8];
+
+    /* pCurrentValue[7] - scene mode */
+    switch(g_in_packet_buf[9]){
+        case 0x00:
+            pCurrentValue[i++] = 0x01; break;
+        case 0x20:
+            pCurrentValue[i++] = 0x02; break;
+    }
+
+    /* pCurrentValue[8] - limit max frame rate */
+    if(g_in_packet_buf[10] >= 0x03){            // Max frame rate
+        pCurrentValue[i++] = g_in_packet_buf[10];
+    }else if(g_in_packet_buf[10] == 0x00)       // Disable
+        pCurrentValue[i++] = 0x01;
+
+    // pCurrentValue[9] - Auto Focus area either  center or custom
+    pCurrentValue[i++] = g_in_packet_buf[11];
+
+    // pCurrentValue[10 - 27] - Auto focus area position  and firmware version */
+    for(int j = 0;j < 18 ; j++)
+        pCurrentValue[i++] = g_in_packet_buf[12 + j];
+
+}
+
+void ASCELLA::setCurrentValues(){
+    u_int8_t currentValue[30];
+
+    memset(currentValue, 0x00, sizeof(currentValue));
+    getCurrentValues(currentValue);
+
+    QString ledCurMode = QString::number(currentValue[0]);
+    QString ledCurBrightness = QString::number(currentValue[1]);
+    qDebug()<<"ledCurMode"<<ledCurMode;
+    qDebug()<<"ledCurBrightness"<<ledCurBrightness;
+    if(currentValue[1] < 1)
+        emit setCurrentLedValue(ledCurMode, "0x0A");
+    else
+        emit setCurrentLedValue(ledCurMode, ledCurBrightness);
+
 }

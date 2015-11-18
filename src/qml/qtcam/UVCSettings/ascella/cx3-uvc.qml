@@ -25,7 +25,7 @@ Item {
 
     Action {
         id: afAreaSet
-        onTriggered: {
+        onTriggered: {         
             ascella.setCustomAreaAutoFocus(afhori_start_box_value.text, afhori_end_box_value.text, afverti_start_box_value.text, afverti_end_box_value.text)
         }
     }
@@ -185,7 +185,7 @@ Item {
                      font.pixelSize: 14
                      font.family: "Ubuntu"
                      color: "#ffffff"
-                     smooth: true
+                     smooth: true                     
                      opacity: 0.50196078431373
                  }
             }
@@ -306,7 +306,7 @@ Item {
                     font.pixelSize: 10
                     font.family: "Ubuntu"
                     smooth: true
-                    horizontalAlignment: TextInput.AlignHCenter
+                    horizontalAlignment: TextInput.AlignHCenter                    
                     style: econTextFieldStyle
                     enabled: radiocustom.checked ? 1 : 0
                     opacity: enabled ? 1 : 0.1
@@ -335,7 +335,7 @@ Item {
                     font.pixelSize: 10
                     font.family: "Ubuntu"
                     smooth: true
-                    horizontalAlignment: TextInput.AlignHCenter
+                    horizontalAlignment: TextInput.AlignHCenter                    
                     style: econTextFieldStyle
                     enabled: radiocustom.checked ? 1 : 0
                     opacity: enabled ? 1 : 0.1
@@ -391,7 +391,7 @@ Item {
                     font.pixelSize: 10
                     font.family: "Ubuntu"
                     smooth: true
-                    horizontalAlignment: TextInput.AlignHCenter
+                    horizontalAlignment: TextInput.AlignHCenter                    
                     style: econTextFieldStyle
                     enabled: radiocustom.checked ? 1 : 0
                     opacity: enabled ? 1 : 0.1
@@ -410,7 +410,7 @@ Item {
                     opacity: 0  // Just for layout
                 }
                 Button {
-                    id: setFocusPosition
+                    id: setFocusPosition                    
                     activeFocusOnPress : true
                     text: "Set"
                     tooltip: "Click to set focus position entered in text box"
@@ -649,7 +649,7 @@ Item {
                     activeFocusOnPress: true
                     enabled: (JS.videoCaptureResolution === "1920x1080" || JS.videoCaptureResolution === "2048x1536") ? 1 : 0
                     opacity: enabled ? 1 : 0.1
-                    style: econRadioButtonStyle
+                    style: econRadioButtonStyle                    
                     onClicked: {
                         console.log(Ascella.Resized)
                         ascella.setBinnedResizedMode(Ascella.Resized)
@@ -681,7 +681,7 @@ Item {
                     opacity: enabled ? 1 : 0.1
                     width: 150
                     stepSize: 1
-                    style:econSliderStyle
+                    style:econSliderStyle                    
                     minimumValue:0
                     maximumValue: 12
                     onValueChanged:  {
@@ -1014,10 +1014,41 @@ Item {
                 exposureCompTextValue.text = exposureValue
             }
         }
-        onafContinuousEnable:{
+        onAfContinuousEnable:{
             if(JS.autoFocusChecked){
                 radioContin.checked = true
             }
+        }
+        onNoiseReductionAutoEnable:{
+            reduceNoiseAuto.checked = true
+        }
+        onNormalSceneModeEnable:{
+            scenenormal.checked = true
+        }
+        onLimitMaxFRDisableMode:{
+            limitMaxFrameRateDisable.checked = true
+            applyMaxFrameRatevalue.text = frameRateValue
+        }
+        onNormalColorModeEnable:{
+            colorModeNormal.checked = true
+        }
+        onBwColorModeAutoEnable:{
+            colorModeBwAuto.checked = true
+            bwvalue.text = bwThresholdValue
+        }
+        onBinnModeEnable:{
+            colorModeBinned.checked = true
+        }
+
+        onSetCurrentLedValue:{
+            if(ledCurMode == Ascella.LedOff){
+                radioOff.checked = true
+            }else if(ledCurMode == Ascella.LedAuto){
+                radioAuto.checked = true
+            }else if(ledCurMode == Ascella.LedManual){
+                radioManual.checked = true
+            }
+            led_value.text = ledCurBrightness
         }
     }
 
@@ -1036,6 +1067,7 @@ Item {
 
     Component.onCompleted:{
         uvccamera.initExtensionUnitAscella()
+        ascella.setCurrentValues()
     }
     Component.onDestruction: {
         uvccamera.exitExtensionUnitAscella()

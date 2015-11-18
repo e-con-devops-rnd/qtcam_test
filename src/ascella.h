@@ -85,6 +85,19 @@ signals:
 
     void afContinuousEnable();
 
+    void noiseReductionAutoEnable();
+
+    void normalSceneModeEnable();
+
+    void limitMaxFRDisableMode(QString frameRateValue);
+
+    void normalColorModeEnable();
+
+    void bwColorModeAutoEnable(QString bwThresholdValue);
+
+    void binnModeEnable();
+
+    void setCurrentLedValue(QString ledCurMode, QString ledCurBrightness);
 
 public slots:
     /**
@@ -162,6 +175,17 @@ public slots:
      * @brief getDefaultValues
      */
     void getDefaultValues(u_int8_t *pDefaultValue);
+
+    /**
+     * @brief getCurrentValues
+     * @param pCurrentValue - pointer to getting current value
+     */
+    void getCurrentValues(u_int8_t *pCurrentValue);
+
+    /**
+     * @brief setCurrentValues
+     */
+    void setCurrentValues();
 
 };
 
