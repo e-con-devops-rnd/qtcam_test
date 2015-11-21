@@ -38,6 +38,9 @@ private:
     uvccamera uvc;
 
 public:
+    QString _title;
+    QString _text;
+
     enum camLedMode {
         LedOff = 1,
         LedAuto = 2,
@@ -77,8 +80,13 @@ public:
     };
 
 signals:
+    void logHandle(QtMsgType,QString);
+
+    void titleTextChanged(QString _title,QString _text);
+
     void deviceStatus(QString title, QString message);
 
+    /* Set Default values */
     void ledOffEnable();
 
     void autoExposureEnable(QString exposureValue);
@@ -97,7 +105,30 @@ signals:
 
     void binnModeEnable();
 
-    void setCurrentLedValue(QString ledCurMode, QString ledCurBrightness);
+    /* Set Current values */
+
+    void setCurrentLedValue(camLedMode ledCurMode, QString ledCurBrightness);
+
+    void setCurrentAfMode(QString afMode);
+
+    void setCurrentColorMode(QString curColorMode);
+
+    void setCurrentBwMode(QString curBWMode, QString CurBWthreshold);
+
+    void setCurNoiseReductionMode(QString curNoiseValue, camNoiseReduceMode curNoiseMode);
+
+    void setCurSceneMode(QString curSceneMode);
+
+    void setCurFRMode(camLimitMaxFRMode curFRMode, QString curMaxFRLimit);
+
+    void setCurrentAfAreaCustomMode(QString curPosition, QString afTextBoxNumber);
+
+    void setCurbinnResizeSelect(QString binResizeSelect);
+
+    /* Used in both set current and default values */
+    void binnResizeEnableDisable(QString mode);
+
+    void setAfAreaCenterMode();
 
 public slots:
     /**
@@ -185,7 +216,12 @@ public slots:
     /**
      * @brief setCurrentValues
      */
-    void setCurrentValues();
+    void setCurrentValues(QString vidResolution);
+
+    /**
+     * @brief getFirmwareVersion
+     */
+    void getFirmwareVersion();
 
 };
 

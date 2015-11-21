@@ -26,25 +26,27 @@ void ASCELLA::setLEDStatusMode(camLedMode ledMode, QString brightnessVal){
     int bytesSent;
     u_int8_t brightnessIntVal;
 
+    qDebug()<<"SetLEDStatusMode"<<ledMode;
     if(uvccamera::handle == NULL){
+        qDebug()<<"SetLEDStatusMode - handle null";
         return void();
     }
+
     if(ledMode == LedAuto || ledMode == LedManual || ledMode == LedOff){
         memset(g_out_packet_buf, 0x00, ASCELLA_BUFLEN);
 
-        g_out_packet_buf[1] = 0x01;
-        if(ledMode == LedOff)
-            g_out_packet_buf[2] = 0x00;
-        else if(ledMode == LedAuto)
-            g_out_packet_buf[2] = 0x01;
-        else if(ledMode == LedManual)
-            g_out_packet_buf[2] = 0x02;
-
-        qDebug()<<"ledMode"<<ledMode;
-
         brightnessIntVal = brightnessVal.toInt();
-
-        g_out_packet_buf[3] = (unsigned char)(brightnessIntVal & 0xFF);
+        g_out_packet_buf[1] = 0x01;
+        if(ledMode == LedOff){
+            g_out_packet_buf[2] = 0x00;
+            g_out_packet_buf[3] = 0x00;
+        }else if(ledMode == LedAuto){
+            g_out_packet_buf[2] = 0x01;
+            g_out_packet_buf[3] = (unsigned char)(brightnessIntVal & 0xFF);
+        }else if(ledMode == LedManual){
+            g_out_packet_buf[2] = 0x02;
+            g_out_packet_buf[3] = (unsigned char)(brightnessIntVal & 0xFF);
+        }
 
         bytesSent = libusb_control_transfer(uvccamera::handle,
                                             0x21,
@@ -54,6 +56,7 @@ void ASCELLA::setLEDStatusMode(camLedMode ledMode, QString brightnessVal){
                                             g_out_packet_buf,
                                             ASCELLA_BUFLEN,
                                             ASCELLA_TIMEOUT);
+        qDebug()<<"set led status mode: bytesSent"<<bytesSent;
         if(0 > bytesSent){
             return void();
         }
@@ -83,7 +86,6 @@ void ASCELLA::setAutoFocusMode(camAfMode afMode){
         else if(afMode == OneShot)
             g_out_packet_buf[2] = 0x00;
 
-        qDebug()<<"afmode "<<afMode;
         bytesSent = libusb_control_transfer(uvccamera::handle,
                                             0x21,
                                             0x09,
@@ -117,7 +119,6 @@ void ASCELLA::setExposureCompensation(QString exposureVal){
     exposureIntVal = exposureVal.toInt();
     g_out_packet_buf[2] = (unsigned char)(exposureIntVal & 0xFF);
 
-    qDebug()<<"exposureIntVal "<<exposureIntVal;
     bytesSent = libusb_control_transfer(uvccamera::handle,
                                         0x21,
                                         0x09,
@@ -126,7 +127,6 @@ void ASCELLA::setExposureCompensation(QString exposureVal){
                                         g_out_packet_buf,
                                         ASCELLA_BUFLEN,
                                         ASCELLA_TIMEOUT);
-    qDebug()<<"bytesSent"<<bytesSent;
     if(0 > bytesSent){
         return void();
     }
@@ -159,7 +159,7 @@ void ASCELLA::setSceneMode(camSceneMode sceneMode){
                                             g_out_packet_buf,
                                             ASCELLA_BUFLEN,
                                             ASCELLA_TIMEOUT);
-        qDebug()<<"bytesSent"<<bytesSent;
+
         if(0 > bytesSent){
             return void();
         }
@@ -179,6 +179,7 @@ void ASCELLA::setNoiseReduceMode(camNoiseReduceMode NoiseReduceMode, QString Noi
     if(uvccamera::handle == NULL){
         return void();
     }
+
     if(NoiseReduceMode == NoiseReduceNormal || NoiseReduceMode == NoiseReduceFix){
         memset(g_out_packet_buf, 0x00, ASCELLA_BUFLEN);
 
@@ -190,6 +191,7 @@ void ASCELLA::setNoiseReduceMode(camNoiseReduceMode NoiseReduceMode, QString Noi
             noiseReduceFixIntVal |= 0x80;
             g_out_packet_buf[2] = (unsigned char)(noiseReduceFixIntVal & 0xFF);
         }
+        qDebug()<<"noise reduce mode:g_out_packet_buf[2]"<<g_out_packet_buf[2];
 
         bytesSent = libusb_control_transfer(uvccamera::handle,
                                             0x21,
@@ -199,7 +201,9 @@ void ASCELLA::setNoiseReduceMode(camNoiseReduceMode NoiseReduceMode, QString Noi
                                             g_out_packet_buf,
                                             ASCELLA_BUFLEN,
                                             ASCELLA_TIMEOUT);
-        qDebug()<<"setnoiseReduceMode:bytesSent"<<bytesSent;
+
+        qDebug()<<"Bytes sent::"<<bytesSent;
+
         if(0 > bytesSent){
             return void();
         }
@@ -227,7 +231,7 @@ void ASCELLA::setLimitMaxFrameRateMode(camLimitMaxFRMode LimitMaxFRMode, QString
             maxFRIntVal = maxFrameRateVal.toInt();
             g_out_packet_buf[2] = (unsigned char)(maxFRIntVal & 0xFF);
         }
-        qDebug()<< "g_out_packet_buf[2]" << g_out_packet_buf[2];
+        qDebug()<<"g_out_packet_buf[2]"<<g_out_packet_buf[2];
         bytesSent = libusb_control_transfer(uvccamera::handle,
                                             0x21,
                                             0x09,
@@ -236,7 +240,7 @@ void ASCELLA::setLimitMaxFrameRateMode(camLimitMaxFRMode LimitMaxFRMode, QString
                                             g_out_packet_buf,
                                             ASCELLA_BUFLEN,
                                             ASCELLA_TIMEOUT);
-        qDebug()<<"setLimitMaxFrameRateMode:bytesSent"<<bytesSent;
+
         if(0 > bytesSent){
             return void();
         }
@@ -269,7 +273,7 @@ void ASCELLA::setColorMode(camColorMode colorMode, QString blackwhiteThreshold){
             g_out_packet_buf[2] = 0x0A;
             g_out_packet_buf[3] = bwThresholdIntVal;
         }
-        qDebug()<< "setColorMode:g_out_packet_buf[3]" << g_out_packet_buf[3];
+
         bytesSent = libusb_control_transfer(uvccamera::handle,
                                             0x21,
                                             0x09,
@@ -278,7 +282,7 @@ void ASCELLA::setColorMode(camColorMode colorMode, QString blackwhiteThreshold){
                                             g_out_packet_buf,
                                             ASCELLA_BUFLEN,
                                             ASCELLA_TIMEOUT);
-        qDebug()<<"setColorMode:bytesSent"<<bytesSent;
+
         if(0 > bytesSent){
             return void();
         }
@@ -302,7 +306,6 @@ void ASCELLA::setCenterWeightedAutoFocus(){
     g_out_packet_buf[1] = 0xFF;
     g_out_packet_buf[2] = 0x01;
 
-    qDebug()<< "setcenterweighted af:g_out_packet_buf[2]" << g_out_packet_buf[2];
     bytesSent = libusb_control_transfer(uvccamera::handle,
                                         0x21,
                                         0x09,
@@ -311,7 +314,7 @@ void ASCELLA::setCenterWeightedAutoFocus(){
                                         g_out_packet_buf,
                                         ASCELLA_BUFLEN,
                                         ASCELLA_TIMEOUT);
-    qDebug()<<"setcenterweightedaf:bytesSent"<<bytesSent;
+
     if(0 > bytesSent){
         return void();
     }
@@ -352,21 +355,6 @@ void ASCELLA::setCustomAreaAutoFocus(QString afHoriStart, QString afHoriEnd, QSt
     g_out_packet_buf[9] = (afVertiEndIntVal >> 8);
     g_out_packet_buf[10] = (afVertiEndIntVal >> 0);
 
-    qDebug()<< "setcustomweighted af";
-    qDebug()<< "afHoriStartIntVal"<<afHoriStartIntVal;
-    qDebug()<< "afHoriEndIntVal"<<afHoriEndIntVal;
-    qDebug()<< "afVertiStartIntVal"<<afVertiStartIntVal;
-    qDebug()<< "afVertiStartIntVal"<<afVertiEndIntVal;
-    qDebug()<< "g_out_packet_buf[3]"<<g_out_packet_buf[3];
-    qDebug()<< "g_out_packet_buf[4]"<<g_out_packet_buf[4];
-    qDebug()<< "g_out_packet_buf[5]"<<g_out_packet_buf[5];
-    qDebug()<< "g_out_packet_buf[6]"<<g_out_packet_buf[6];
-    qDebug()<< "g_out_packet_buf[7]"<<g_out_packet_buf[7];
-    qDebug()<< "g_out_packet_buf[8]"<<g_out_packet_buf[8];
-    qDebug()<< "g_out_packet_buf[9]"<<g_out_packet_buf[9];
-    qDebug()<< "g_out_packet_buf[10]"<<g_out_packet_buf[10];
-
-
     bytesSent = libusb_control_transfer(uvccamera::handle,
                                         0x21,
                                         0x09,
@@ -375,7 +363,6 @@ void ASCELLA::setCustomAreaAutoFocus(QString afHoriStart, QString afHoriEnd, QSt
                                         g_out_packet_buf,
                                         ASCELLA_BUFLEN,
                                         ASCELLA_TIMEOUT);
-    qDebug()<<"setcustomweightedaf:bytesSent"<<bytesSent;
     if(0 > bytesSent){
         return void();
     }
@@ -396,7 +383,6 @@ void ASCELLA::setBinnedResizedMode(camBinnResizeMode mode){
         g_out_packet_buf[1] = 0xEE;
         g_out_packet_buf[2] = mode;
 
-        qDebug()<< "setBinnedResized:g_out_packet_buf[2]" << g_out_packet_buf[2];
         bytesSent = libusb_control_transfer(uvccamera::handle,
                                             0x21,
                                             0x09,
@@ -405,7 +391,6 @@ void ASCELLA::setBinnedResizedMode(camBinnResizeMode mode){
                                             g_out_packet_buf,
                                             ASCELLA_BUFLEN,
                                             ASCELLA_TIMEOUT);
-        qDebug()<<"setBinnedResizedMode:bytesSent"<<bytesSent;
         if(0 > bytesSent){
             return void();
         }
@@ -424,7 +409,6 @@ void ASCELLA::setDefaultValues(){
 
     /* get default values */
     getDefaultValues(defaultValue);
-    qDebug()<<"here";
 
     /* Enabling led off */
     emit ledOffEnable();
@@ -438,7 +422,6 @@ void ASCELLA::setDefaultValues(){
 
     /* Enabling black and white color mode auto and setting manual default slider value */
     QString bwThresholdValue = QString::number(defaultValue[18]);
-    qDebug()<<"bwThresholdValue"<<bwThresholdValue;
     emit bwColorModeAutoEnable(bwThresholdValue);
 
     /* Enabling auto focus mode control if auto focus is checked in Image Quality Settings menu*/
@@ -454,9 +437,15 @@ void ASCELLA::setDefaultValues(){
     QString frameRateValue = QString::number(ASCELLA_DEFAULT_MAXFRAMERATE);
     emit limitMaxFRDisableMode(frameRateValue);
 
-    qDebug()<<"defaultValue[19]"<<defaultValue[19];
-    /* Enabling binned mode */
+    /* Enabling binned/resized mode */
+    QString binResizeMode = QString::number(defaultValue[19]);
+    emit binnResizeEnableDisable(binResizeMode);
+
+    /* selecting binned mode */
     emit binnModeEnable();
+
+    /* Enabling auto focus area center mode */
+    emit setAfAreaCenterMode();
 }
 
 void ASCELLA::getDefaultValues(u_int8_t *pDefaultValue){
@@ -474,7 +463,6 @@ void ASCELLA::getDefaultValues(u_int8_t *pDefaultValue){
     g_out_packet_buf[2] = 1;
 
     // Sending the request command to get default values - output buffer
-    qDebug()<< "setDefaultvalue:" << g_out_packet_buf[2];
     bytesSent = libusb_control_transfer(uvccamera::handle,
                                         0x21,
                                         0x09,
@@ -483,12 +471,12 @@ void ASCELLA::getDefaultValues(u_int8_t *pDefaultValue){
                                         g_out_packet_buf,
                                         ASCELLA_BUFLEN,
                                         ASCELLA_TIMEOUT);
-    qDebug()<<"setDefaultValue:bytesSent"<<bytesSent;
+
     if(0 > bytesSent){
-        qDebug()<<"set command failed";
+        qDebug()<<"get default values:set command failed:bytesent"<<bytesSent;
         return void();
     }
-    qDebug()<<"Before sending libusb_control_transfer get ";
+
     // Getting the response - in buffer
     bytesSent = libusb_control_transfer(uvccamera::handle,
                                         0xA1,
@@ -512,23 +500,16 @@ void ASCELLA::getDefaultValues(u_int8_t *pDefaultValue){
     for(int i = 10;i < 18;i++)
         pDefaultValue[i] = 0x00; // 10 to 17 - 0x00 // Auto focus area horizontal and vertical position
     pDefaultValue[18] = 0x01; //18 - 0x01 //B&W: Previous B&W Fix Threshold Value
-    pDefaultValue[19] = g_in_packet_buf[21]; //19 - Enable binning/resize; 0 for disable, 1 for enable
-    pDefaultValue[20] = g_in_packet_buf[22]; //20 - 1 for binning, 2 for resize
+    pDefaultValue[19] = g_in_packet_buf[20]; //19 - Enable binning/resize; 0 for disable, 1 for enable
+    pDefaultValue[20] = g_in_packet_buf[21]; //20 - 1 for binning, 2 for resize
 }
 
-
-//void ASCELLA::getFirmwareVersion(){
-
-//}
-
-//void ASCELLA::setInitialValues(){
-
-//}
 
 void ASCELLA::getCurrentValues(u_int8_t *pCurrentValue){
     int bytesSent;
 
     if(uvccamera::handle == NULL){
+        qDebug()<<"getCurrentValues - NULL";
         return void();
     }
 
@@ -539,7 +520,6 @@ void ASCELLA::getCurrentValues(u_int8_t *pCurrentValue){
     g_out_packet_buf[2] = 2;
 
     // Sending the request command to get current values - output buffer
-    qDebug()<< "setcurrentvalue:" << g_out_packet_buf[2];
     bytesSent = libusb_control_transfer(uvccamera::handle,
                                         0x21,
                                         0x09,
@@ -548,12 +528,10 @@ void ASCELLA::getCurrentValues(u_int8_t *pCurrentValue){
                                         g_out_packet_buf,
                                         ASCELLA_BUFLEN,
                                         ASCELLA_TIMEOUT);
-    qDebug()<<"setCurrentValue:bytesSent"<<bytesSent;
     if(0 > bytesSent){
-        qDebug()<<"set command failed";
+        qDebug()<<"get current values:set command failed";
         return void();
     }
-    qDebug()<<"Before sending libusb_control_transfer get ";
     // Getting the response - in buffer
     bytesSent = libusb_control_transfer(uvccamera::handle,
                                         0xA1,
@@ -578,10 +556,10 @@ void ASCELLA::getCurrentValues(u_int8_t *pCurrentValue){
     pCurrentValue[i++] = g_in_packet_buf[2];
 
     /* pCurrentValue[2] - Exposure */
-    pCurrentValue[i++] = g_in_packet_buf[4];
+    pCurrentValue[i++] = g_in_packet_buf[3];
 
     /* pCurrentValue[3] - Auto focus mode */
-    switch(g_in_packet_buf[5]){
+    switch(g_in_packet_buf[4]){
         case 0x03:
             pCurrentValue[i++] = 0x01; break;
         case 0x00:
@@ -589,7 +567,7 @@ void ASCELLA::getCurrentValues(u_int8_t *pCurrentValue){
     }
 
     /* pCurrentValue[4] - color mode */
-    switch(g_in_packet_buf[6]){
+    switch(g_in_packet_buf[5]){
         case 0x00:
             pCurrentValue[i++] = 0x01; break;
         case 0x01:
@@ -601,16 +579,16 @@ void ASCELLA::getCurrentValues(u_int8_t *pCurrentValue){
     }
 
     /* pCurrentValue[5] - Black and white mode */
-    if(g_in_packet_buf[7] == 0x00)
+    if(g_in_packet_buf[6] == 0x00)
         pCurrentValue[i++] = 0x00;      //Black&White Auto
-    else if(g_in_packet_buf[7] >= 0x01)
-        pCurrentValue[i++] = g_in_packet_buf[7]; //black and white thresold
+    else if(g_in_packet_buf[6] >= 0x01)
+        pCurrentValue[i++] = g_in_packet_buf[6]; //black and white thresold
 
     /* pCurrentValue[6] - noise reduction mode */
-    pCurrentValue[i++] = g_in_packet_buf[8];
+    pCurrentValue[i++] = g_in_packet_buf[7];
 
     /* pCurrentValue[7] - scene mode */
-    switch(g_in_packet_buf[9]){
+    switch(g_in_packet_buf[8]){
         case 0x00:
             pCurrentValue[i++] = 0x01; break;
         case 0x20:
@@ -618,33 +596,160 @@ void ASCELLA::getCurrentValues(u_int8_t *pCurrentValue){
     }
 
     /* pCurrentValue[8] - limit max frame rate */
-    if(g_in_packet_buf[10] >= 0x03){            // Max frame rate
-        pCurrentValue[i++] = g_in_packet_buf[10];
-    }else if(g_in_packet_buf[10] == 0x00)       // Disable
+    if(g_in_packet_buf[9] >= 0x03){            // Max frame rate
+        pCurrentValue[i++] = g_in_packet_buf[9];
+    }else if(g_in_packet_buf[9] == 0x00)       // Disable
         pCurrentValue[i++] = 0x01;
 
     // pCurrentValue[9] - Auto Focus area either  center or custom
-    pCurrentValue[i++] = g_in_packet_buf[11];
+    pCurrentValue[i++] = g_in_packet_buf[10];
 
-    // pCurrentValue[10 - 27] - Auto focus area position  and firmware version */
-    for(int j = 0;j < 18 ; j++)
-        pCurrentValue[i++] = g_in_packet_buf[12 + j];
+    // pCurrentValue[10 - 17] - Auto focus area Horizontal, vertical position
+    // pCurrentValue[18] - black and white threshold
+    // pCurrentValue[19] - enable binning/resizing
+    // pCurrentValue[20] - select binn or resize mode
+    // pCurrentValue[21 - 27] -  firmware version
+    for(int j = 0;j < 18 ; j++){
+        pCurrentValue[i++] = g_in_packet_buf[11 + j];
+    }
 
 }
 
-void ASCELLA::setCurrentValues(){
-    u_int8_t currentValue[30];
+void ASCELLA::setCurrentValues(QString vidResolution){
+    u_int8_t currentValue[30], noiseValue;
+    u_int16_t position = 0;
+    QString curPosition, ledCurBrightness;
+    int vidWidth, vidHeight;
 
     memset(currentValue, 0x00, sizeof(currentValue));
     getCurrentValues(currentValue);
 
-    QString ledCurMode = QString::number(currentValue[0]);
-    QString ledCurBrightness = QString::number(currentValue[1]);
-    qDebug()<<"ledCurMode"<<ledCurMode;
-    qDebug()<<"ledCurBrightness"<<ledCurBrightness;
+    /* Set Led mode and led brightness */
     if(currentValue[1] < 1)
-        emit setCurrentLedValue(ledCurMode, "0x0A");
+        ledCurBrightness = QString::number(10);
     else
-        emit setCurrentLedValue(ledCurMode, ledCurBrightness);
+        ledCurBrightness = QString::number(currentValue[1]);
+
+    if(currentValue[0] == 0x01)
+        emit setCurrentLedValue(LedOff, ledCurBrightness);
+    else if(currentValue[0] == 0x02)
+        emit setCurrentLedValue(LedAuto, ledCurBrightness);
+    else if(currentValue[0] == 0x03)
+        emit setCurrentLedValue(LedManual, ledCurBrightness);
+
+    /* Set auto exposure mode */
+    QString curExposure = QString::number(currentValue[2]);
+    emit autoExposureEnable(curExposure);
+
+    /* Set Auto focus mode */
+    QString afMode = QString::number(currentValue[3]);
+    emit setCurrentAfMode(afMode);
+
+    /* Set current color mode */
+    QString curColorMode = QString::number(currentValue[4]);
+    emit setCurrentColorMode(curColorMode);
+
+    /* Set Black and white mode */
+    QString curBWMode = QString::number(currentValue[5]);
+    QString CurBWthreshold = QString::number(currentValue[18]);
+
+    emit setCurrentBwMode(curBWMode, CurBWthreshold);
+
+    /* Set noise reduction mode */
+    noiseValue = currentValue[6];
+    QString curNoiseValue = QString::number(noiseValue);
+
+    if(currentValue[6] >= 0x00 && currentValue[6] <= 0x0A){
+        emit setCurNoiseReductionMode(curNoiseValue, NoiseReduceNormal);
+    }else if(currentValue[6] >= 0x80){
+        noiseValue ^= 0x80;
+        QString curNoiseValue = QString::number(noiseValue);
+        emit setCurNoiseReductionMode(curNoiseValue, NoiseReduceFix);
+    }
+
+    /* scene mode */
+    QString curSceneMode = QString::number(currentValue[7]);
+    emit setCurSceneMode(curSceneMode);
+
+    /* set current limit frame rate mode */
+    QString curFRLimit = QString::number(currentValue[8]);
+    QString maxFrameRate = QString::number(ASCELLA_DEFAULT_MAXFRAMERATE);
+    if(currentValue[8] == 0x01){
+        emit setCurFRMode(Disable, maxFrameRate);
+    }else if(currentValue[8] >= 0x03){
+        emit setCurFRMode(ApplyMaxFrameRate, curFRLimit);
+    }
+
+    vidWidth = vidResolution.split('x')[0].toInt();
+    vidHeight = vidResolution.split('x')[1].toInt();
+
+    if(currentValue[9] == 0x01){ /* set auto focus area center mode */
+        emit setAfAreaCenterMode();
+    }else if(currentValue[9] == 0x02){ /* set auto focus area custom mode */
+        position = 256 * currentValue[10] + currentValue[11];
+        curPosition = QString::number(position);
+        if(position > 0){
+            if(position <= vidWidth){
+                emit setCurrentAfAreaCustomMode(curPosition, "0x01");   /* set auto focus area - Hori start position */
+            }
+        }
+
+        position = 256 * currentValue[12] + currentValue[13];
+        curPosition = QString::number(position);
+        if(position > 0){
+            if(position <= vidWidth){
+                emit setCurrentAfAreaCustomMode(curPosition, "0x02");   /* set auto focus area - Hori end position */
+            }
+        }
+
+        position = 256 * currentValue[14] + currentValue[15];
+        curPosition = QString::number(position);
+        if(position > 0){
+            if(position <= vidHeight){
+                emit setCurrentAfAreaCustomMode(curPosition, "0x03");   /* set auto focus area - Verti start position */
+            }
+        }
+
+        position = 256 * currentValue[16] + currentValue[17];
+        curPosition = QString::number(position);
+        if(position > 0){
+            if(position <= vidHeight){
+                emit setCurrentAfAreaCustomMode(curPosition, "0x04");   /* set auto focus area - Verti end position */
+            }
+        }
+    }
+    /* Enable/Disable binn resize modes */
+    QString binResizeMode = QString::number(currentValue[19]);
+    emit binnResizeEnableDisable(binResizeMode);
+
+    /* Select binn or resize mode */
+    QString binResizeSelect = QString::number(currentValue[20]);
+    emit setCurbinnResizeSelect(binResizeSelect);
 
 }
+
+
+void ASCELLA::getFirmwareVersion(){
+    u_int8_t currentValue[30];
+
+    emit logHandle(QtDebugMsg,"Firmware version:");
+    _title = tr("Firmware Version");
+
+    getCurrentValues(currentValue);
+    //currentValue[21]: CX3 Firmware Version-Major
+    //currentValue[22]: CX3 Firmware Version-Minor
+    //currentValue[23]: CX3 Build Date- Year
+    //currentValue[24]: CX3 Build Date- Month
+    //currentValue[25]: CX3 Build Date- Date
+    //currentValue[26]: THP7312 Firmware Version-Major
+    //currentValue[27]: THP7312 Firmware Version-Minor
+    _text.clear();
+    _text.append("Thine ISP Firmware Version: ");
+    _text.append(QString::number(currentValue[26]).append(".").append(QString::number(currentValue[27])));
+    _text.append("\nCypress CX3 Firmware Version: ");
+    _text.append(QString::number(currentValue[21]).append(".").append(QString::number(currentValue[22])));
+    _text.append("\nBuild Date: ");
+    _text.append(QString::number(currentValue[25]).append("/").append(QString::number(currentValue[24]).append("/").append(QString::number(currentValue[23]))));
+    emit titleTextChanged(_title,_text);
+}
+

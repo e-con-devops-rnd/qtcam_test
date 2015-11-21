@@ -5,7 +5,6 @@ import QtQuick.Layouts 1.1
 import QtQuick.Dialogs 1.1
 import econ.camera.ascella 1.0
 import econ.camera.uvcsettings 1.0
-//import "../../videocapturefilter_QML/"
 import "../../JavaScriptFiles/tempValue.js" as JS
 
 Item {
@@ -25,7 +24,7 @@ Item {
 
     Action {
         id: afAreaSet
-        onTriggered: {         
+        onTriggered: {
             ascella.setCustomAreaAutoFocus(afhori_start_box_value.text, afhori_end_box_value.text, afverti_start_box_value.text, afverti_end_box_value.text)
         }
     }
@@ -103,10 +102,12 @@ Item {
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked:{
+                        console.log("led off onClicked")
                         ascella.setLEDStatusMode(Ascella.LedOff, "0x00");
                     }
-                    Keys.onReturnPressed: {
 
+                    Keys.onReturnPressed: {
+                       // ascella.setLEDStatusMode(Ascella.LedOff, "0x00");
                     }
                 }
                 RadioButton {
@@ -116,8 +117,10 @@ Item {
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked: {
-                        ascella.setLEDStatusMode(Ascella.LedAuto, led_value.text.toString());
+                        console.log("led auto onClicked")
+                        ascella.setLEDStatusMode(Ascella.LedAuto, led_value.text);
                     }
+
                     Keys.onReturnPressed: {
 
                     }
@@ -129,8 +132,10 @@ Item {
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked: {
-                        ascella.setLEDStatusMode(Ascella.LedManual, led_value.text.toString());
+                        console.log("led manual onClicked")
+                        ascella.setLEDStatusMode(Ascella.LedManual, led_value.text);
                     }
+
                     Keys.onReturnPressed: {
 
                     }
@@ -169,10 +174,12 @@ Item {
                     onTextChanged: {
                         if(text != ""){
                             ledSlider.value = led_value.text
-                            if(radioAuto.enabled)
-                                ascella.setLEDStatusMode(Ascella.LedAuto, led_value.text)
-                            else if(radioManual.enabled)
-                                ascella.setLEDStatusMode(Ascella.LedManual, led_value.text)
+                            if(radioAuto.checked){
+                                console.log("text field auto checked")
+                                ascella.setLEDStatusMode(Ascella.LedAuto, led_value.text)}
+                            else if(radioManual.checked){
+                                console.log("text field manual checked")
+                                ascella.setLEDStatusMode(Ascella.LedManual, led_value.text)}
                         }
                     }
                 }
@@ -185,7 +192,7 @@ Item {
                      font.pixelSize: 14
                      font.family: "Ubuntu"
                      color: "#ffffff"
-                     smooth: true                     
+                     smooth: true
                      opacity: 0.50196078431373
                  }
             }
@@ -229,11 +236,11 @@ Item {
                     activeFocusOnPress : true
                     text: "Trigger"
                     style: econcx3ButtonStyle
-                    enabled: radioOneshot.checked ? 1 : 0
+                    enabled: (radioOneshot.enabled) ? 1 : 0
                     opacity: enabled ? 1 : 0.1
                     implicitHeight: 25
                     implicitWidth: 120
-                    action: radioOneshot.checked ? triggerAction : null
+                    action: (radioOneshot.checked) ? triggerAction : null
                     Keys.onReturnPressed: {
                         ascella.setAutoFocusMode(Ascella.OneShot);
                     }
@@ -277,12 +284,9 @@ Item {
                     enabled: JS.autoFocusChecked ? 1 : 0
                     opacity: enabled ? 1 : 0.1
                     onClicked: {
-                        console.log("In qml =======================")
                         vidResln = JS.videoCaptureResolution
                         vidWidth = vidResln.split('x')[0]
                         vidHeight = vidResln.split('x')[1]
-                        console.log(vidWidth)
-                        console.log(vidHeight)
                     }
                     Keys.onReturnPressed: {
 
@@ -306,7 +310,7 @@ Item {
                     font.pixelSize: 10
                     font.family: "Ubuntu"
                     smooth: true
-                    horizontalAlignment: TextInput.AlignHCenter                    
+                    horizontalAlignment: TextInput.AlignHCenter
                     style: econTextFieldStyle
                     enabled: radiocustom.checked ? 1 : 0
                     opacity: enabled ? 1 : 0.1
@@ -335,7 +339,7 @@ Item {
                     font.pixelSize: 10
                     font.family: "Ubuntu"
                     smooth: true
-                    horizontalAlignment: TextInput.AlignHCenter                    
+                    horizontalAlignment: TextInput.AlignHCenter
                     style: econTextFieldStyle
                     enabled: radiocustom.checked ? 1 : 0
                     opacity: enabled ? 1 : 0.1
@@ -391,7 +395,7 @@ Item {
                     font.pixelSize: 10
                     font.family: "Ubuntu"
                     smooth: true
-                    horizontalAlignment: TextInput.AlignHCenter                    
+                    horizontalAlignment: TextInput.AlignHCenter
                     style: econTextFieldStyle
                     enabled: radiocustom.checked ? 1 : 0
                     opacity: enabled ? 1 : 0.1
@@ -410,7 +414,7 @@ Item {
                     opacity: 0  // Just for layout
                 }
                 Button {
-                    id: setFocusPosition                    
+                    id: setFocusPosition
                     activeFocusOnPress : true
                     text: "Set"
                     tooltip: "Click to set focus position entered in text box"
@@ -589,7 +593,7 @@ Item {
                     activeFocusOnPress: true
                     updateValueWhileDragging: false
                     id: bwManualSlider
-                    enabled: colorModeBwManual.checked ? 1 : 0
+                    enabled: (colorModeBw.enabled && colorModeBwManual.enabled) ? 1 : 0
                     opacity: enabled ? 1 : 0.1
                     width: 150
                     stepSize: 1
@@ -634,8 +638,6 @@ Item {
                     opacity: enabled ? 1 : 0.1
                     style: econRadioButtonStyle
                     onClicked: {
-                        console.log(JS.videoCaptureResolution)
-                        console.log(Ascella.Binned)
                         ascella.setBinnedResizedMode(Ascella.Binned)
                     }
                     Keys.onReturnPressed: {
@@ -649,9 +651,8 @@ Item {
                     activeFocusOnPress: true
                     enabled: (JS.videoCaptureResolution === "1920x1080" || JS.videoCaptureResolution === "2048x1536") ? 1 : 0
                     opacity: enabled ? 1 : 0.1
-                    style: econRadioButtonStyle                    
+                    style: econRadioButtonStyle
                     onClicked: {
-                        console.log(Ascella.Resized)
                         ascella.setBinnedResizedMode(Ascella.Resized)
                     }
                     Keys.onReturnPressed: {
@@ -681,7 +682,7 @@ Item {
                     opacity: enabled ? 1 : 0.1
                     width: 150
                     stepSize: 1
-                    style:econSliderStyle                    
+                    style:econSliderStyle
                     minimumValue:0
                     maximumValue: 12
                     onValueChanged:  {
@@ -728,10 +729,9 @@ Item {
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked:{
-                        ascella.setNoiseReduceMode(Ascella.NoiseReduceAuto, "0x00");
+                        ascella.setNoiseReduceMode(Ascella.NoiseReduceNormal, "0x00");
                     }
                     Keys.onReturnPressed: {
-
                     }
                 }
                 RadioButton {
@@ -809,6 +809,7 @@ Item {
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked:{
+                        console.log("disable clicked")
                         ascella.setLimitMaxFrameRateMode(Ascella.Disable, "0x00");
                     }
                     Keys.onReturnPressed: {
@@ -822,6 +823,7 @@ Item {
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked: {
+                        console.log("max frame rate clicked")
                         ascella.setLimitMaxFrameRateMode(Ascella.ApplyMaxFrameRate, applyMaxFrameRatevalue.text);
                     }
                     Keys.onReturnPressed: {
@@ -862,8 +864,10 @@ Item {
                     onTextChanged: {
                        if(text != ""){
                            applyMaxFrameRateSlider.value = applyMaxFrameRatevalue.text
-                           if(applyMaxFrameRate.enabled)
+                           if(applyMaxFrameRateSlider.checked){
+                               console.log("max frame rate slider enabled")
                                ascella.setLimitMaxFrameRateMode(Ascella.ApplyMaxFrameRate, applyMaxFrameRatevalue.text)
+                           }
                        }
 
                     }
@@ -1006,6 +1010,11 @@ Item {
             messageDialog.text = message.toString()
             messageDialog.open()
         }
+        onTitleTextChanged: {
+            messageDialog.title = _title.toString()
+            messageDialog.text = _text.toString()
+            messageDialog.open()
+        }
         onLedOffEnable:{
             radioOff.checked = true
         }
@@ -1036,24 +1045,123 @@ Item {
             colorModeBwAuto.checked = true
             bwvalue.text = bwThresholdValue
         }
+        onBinnResizeEnableDisable:{
+            if(mode == "0x01"){
+                colorModeBinned.enabled = true
+                colorModeResized.enabled = true
+            }else if(mode == "0x00"){
+                colorModeBinned.enabled = false
+                colorModeResized.enabled = false
+            }
+        }
+        onSetCurbinnResizeSelect:{
+            if(binResizeSelect == "0x01"){
+                colorModeBinned.checked = true
+            }else{
+                colorModeResized.checked = true
+            }
+        }
+
         onBinnModeEnable:{
             colorModeBinned.checked = true
         }
 
         onSetCurrentLedValue:{
             if(ledCurMode == Ascella.LedOff){
+                console.log("ledoff")
                 radioOff.checked = true
             }else if(ledCurMode == Ascella.LedAuto){
                 radioAuto.checked = true
+                console.log("ledAuto")
+              //  led_value.text = ledCurBrightness
             }else if(ledCurMode == Ascella.LedManual){
                 radioManual.checked = true
+                console.log("ledManual")
+            //    led_value.text = ledCurBrightness
             }
             led_value.text = ledCurBrightness
+        }
+        onSetCurrentAfMode:{
+            if(afMode == Ascella.Continuous){
+                radioContin.checked = true
+            }else if(afMode == Ascella.OneShot){
+                radioOneshot.checked = true
+            }
+        }
+        onSetCurrentColorMode:{
+            if(curColorMode == Ascella.ColorModeNormal){
+                colorModeNormal.checked = true
+            }else if(curColorMode == Ascella.ColorModeMono){
+                colorModemono.checked = true
+            }else if(curColorMode == Ascella.ColorModeNegative){
+                colorModeNegative.checked = true
+            }else if(curColorMode == Ascella.ColorModeBlackWhite){
+                colorModeBw.checked = true
+            }
+        }
+        onSetCurrentBwMode:{
+            console.log("cur bw mode"+curBWMode)
+            if(curBWMode == "0x00"){
+                console.log("curBwmode auto")
+                colorModeBwAuto.checked = true
+            }else{
+                console.log("curBwmode manual")
+                colorModeBwManual.checked = true
+            }
+            bwvalue.text = CurBWthreshold
+        }
+        onSetCurNoiseReductionMode:{
+            if(curNoiseMode == Ascella.NoiseReduceNormal){
+                reduceNoiseAuto.checked = true
+                console.log("noise normal")
+            }else if(curNoiseMode == Ascella.NoiseReduceFix){
+                reduceNoiseFix.checked = true
+                console.log("noise fix  ")
+            }
+            reduceNoiseFixvalue.text = curNoiseValue
+        }
+        onSetCurSceneMode:{
+            if(curSceneMode == Ascella.SceneNormal){
+                scenenormal.checked = true
+            }else{
+                sceneDocScan.checked = true
+            }
+        }
+        onSetCurFRMode:{
+            if(curFRMode == Ascella.Disable){
+                limitMaxFrameRateDisable.checked = true
+            }else if(curFRMode == Ascella.ApplyMaxFrameRate){
+                applyMaxFrameRate.checked = true
+            }
+            applyMaxFrameRatevalue.text = curMaxFRLimit
+        }
+        onSetAfAreaCenterMode:{
+            if(JS.autoFocusChecked)
+                radiocenter.checked = true
+        }
+        onSetCurrentAfAreaCustomMode:{
+            if(JS.autoFocusChecked){
+                radiocustom.checked = true
+                switch(afTextBoxNumber){
+                case "0x01":
+                    afhori_start_box_value.text = curPosition;
+                    break;
+                case "0x02":
+                    afhori_end_box_value.text = curPosition;
+                    break;
+                case "0x03":
+                    afverti_start_box_value.text = curPosition;
+                    break;
+                case "0x04":
+                    afverti_end_box_value.text = curPosition;
+                    break;
+                }
+            }
         }
     }
 
     function displayFirmwareVersion() {
-
+        ascella.getFirmwareVersion()
     }
 
     Uvccamera {
@@ -1067,9 +1175,9 @@ Item {
 
     Component.onCompleted:{
         uvccamera.initExtensionUnitAscella()
-        ascella.setCurrentValues()
+        ascella.setCurrentValues(JS.videoCaptureResolution)
     }
-    Component.onDestruction: {
+    Component.onDestruction:{
         uvccamera.exitExtensionUnitAscella()
     }
 }

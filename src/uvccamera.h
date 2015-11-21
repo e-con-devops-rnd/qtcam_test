@@ -290,7 +290,7 @@ public slots:
      *  - This function will close the last opened HID device
      * @
      */
-    void exitExtensionUnitAscella();
+    int exitExtensionUnitAscella();
 };
 
 class See3CAM_Control: public uvccamera {
