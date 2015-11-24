@@ -1,4 +1,8 @@
-Qtcam version 7.0.0
+Qtcam version 8.0.0
+-------------------------------
+* Added support for Ascella camera
+
+Qtcam version 7.0.1
 -------------------------------
 * Added IR image capture for See3CamCu40 camera.
 * Added support for logitech C920 Webcam Pro camera.

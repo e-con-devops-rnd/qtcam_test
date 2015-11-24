@@ -26,9 +26,8 @@ void ASCELLA::setLEDStatusMode(camLedMode ledMode, QString brightnessVal){
     int bytesSent;
     u_int8_t brightnessIntVal;
 
-    qDebug()<<"SetLEDStatusMode"<<ledMode;
     if(uvccamera::handle == NULL){
-        qDebug()<<"SetLEDStatusMode - handle null";
+        emit logHandle(QtCriticalMsg, "setLEDStatusMode: Handle is Null");
         return void();
     }
 
@@ -56,12 +55,13 @@ void ASCELLA::setLEDStatusMode(camLedMode ledMode, QString brightnessVal){
                                             g_out_packet_buf,
                                             ASCELLA_BUFLEN,
                                             ASCELLA_TIMEOUT);
-        qDebug()<<"set led status mode: bytesSent"<<bytesSent;
         if(0 > bytesSent){
+            emit logHandle(QtCriticalMsg, "setLEDStatusMode: libusb_control_transfer set command failed");
             return void();
         }
     }
     else{
+        emit logHandle(QtCriticalMsg, "setLEDStatusMode: led mode is not in range");
         return void();
     }
 
@@ -73,6 +73,7 @@ void ASCELLA::setAutoFocusMode(camAfMode afMode){
 
     if(uvccamera::handle == NULL)
     {
+        emit logHandle(QtCriticalMsg, "setAutoFocusMode: Handle is Null");
         return void();
     }
 
@@ -95,10 +96,12 @@ void ASCELLA::setAutoFocusMode(camAfMode afMode){
                                             ASCELLA_BUFLEN,
                                             ASCELLA_TIMEOUT);
         if(0 > bytesSent){
+            emit logHandle(QtCriticalMsg, "setAutoFocusMode: set command failed");
             return void();
         }
     }
     else{
+        emit logHandle(QtCriticalMsg, "setAutoFocusMode: auto focus mode is not in range");
         return void();
     }
 }
@@ -110,6 +113,7 @@ void ASCELLA::setExposureCompensation(QString exposureVal){
 
     if(uvccamera::handle == NULL)
     {
+        emit logHandle(QtCriticalMsg, "setExposureCompensation: Handle is Null");
         return void();
     }
 
@@ -126,8 +130,9 @@ void ASCELLA::setExposureCompensation(QString exposureVal){
                                         0x2,
                                         g_out_packet_buf,
                                         ASCELLA_BUFLEN,
-                                        ASCELLA_TIMEOUT);
+                                        ASCELLA_TIMEOUT)
     if(0 > bytesSent){
+        emit logHandle(QtCriticalMsg, "setExposureCompensation: libusb_control_transfer set command failed");
         return void();
     }
 }
@@ -139,6 +144,7 @@ void ASCELLA::setSceneMode(camSceneMode sceneMode){
 
     if(uvccamera::handle == NULL)
     {
+        emit logHandle(QtCriticalMsg, "setSceneMode: Handle is Null");
         return void();
     }
 
@@ -161,10 +167,12 @@ void ASCELLA::setSceneMode(camSceneMode sceneMode){
                                             ASCELLA_TIMEOUT);
 
         if(0 > bytesSent){
+            emit logHandle(QtCriticalMsg, "setSceneMode: libusb_control_transfer set command failed");
             return void();
         }
     }
     else{
+        emit logHandle(QtCriticalMsg, "setSceneMode: scene mode is not in range");
         return void();
     }
 
@@ -177,6 +185,7 @@ void ASCELLA::setNoiseReduceMode(camNoiseReduceMode NoiseReduceMode, QString Noi
     u_int8_t noiseReduceFixIntVal;
 
     if(uvccamera::handle == NULL){
+        emit logHandle(QtCriticalMsg, "setNoiseReduceMode: Handle is Null");
         return void();
     }
 
@@ -190,8 +199,7 @@ void ASCELLA::setNoiseReduceMode(camNoiseReduceMode NoiseReduceMode, QString Noi
             noiseReduceFixIntVal = NoiseReduceFixVal.toInt();
             noiseReduceFixIntVal |= 0x80;
             g_out_packet_buf[2] = (unsigned char)(noiseReduceFixIntVal & 0xFF);
-        }
-        qDebug()<<"noise reduce mode:g_out_packet_buf[2]"<<g_out_packet_buf[2];
+       }
 
         bytesSent = libusb_control_transfer(uvccamera::handle,
                                             0x21,
@@ -202,13 +210,13 @@ void ASCELLA::setNoiseReduceMode(camNoiseReduceMode NoiseReduceMode, QString Noi
                                             ASCELLA_BUFLEN,
                                             ASCELLA_TIMEOUT);
 
-        qDebug()<<"Bytes sent::"<<bytesSent;
-
         if(0 > bytesSent){
+            emit logHandle(QtCriticalMsg, "setNoiseReduceMode: libusb_control_transfer set command failed");
             return void();
         }
     }
     else{
+        emit logHandle(QtCriticalMsg, "setNoiseReduceMode: NoiseReduceMode is not in range");
         return void();
     }
 }
@@ -219,6 +227,7 @@ void ASCELLA::setLimitMaxFrameRateMode(camLimitMaxFRMode LimitMaxFRMode, QString
     u_int8_t maxFRIntVal;
 
     if(uvccamera::handle == NULL){
+        emit logHandle(QtCriticalMsg, "setLimitMaxFrameRate: Handle is Null");
         return void();
     }
     if(LimitMaxFRMode == Disable || LimitMaxFRMode == ApplyMaxFrameRate){
@@ -231,7 +240,6 @@ void ASCELLA::setLimitMaxFrameRateMode(camLimitMaxFRMode LimitMaxFRMode, QString
             maxFRIntVal = maxFrameRateVal.toInt();
             g_out_packet_buf[2] = (unsigned char)(maxFRIntVal & 0xFF);
         }
-        qDebug()<<"g_out_packet_buf[2]"<<g_out_packet_buf[2];
         bytesSent = libusb_control_transfer(uvccamera::handle,
                                             0x21,
                                             0x09,
@@ -242,10 +250,12 @@ void ASCELLA::setLimitMaxFrameRateMode(camLimitMaxFRMode LimitMaxFRMode, QString
                                             ASCELLA_TIMEOUT);
 
         if(0 > bytesSent){
+            emit logHandle(QtCriticalMsg, "setLimitMaxFrameRateMode: libusb_control_transfer set command failed");
             return void();
         }
     }
     else{
+        emit logHandle(QtCriticalMsg, "setLimitMaxFrameRateMode: LimitMaxFRMode is not in range");
         return void();
     }
 }
@@ -256,6 +266,7 @@ void ASCELLA::setColorMode(camColorMode colorMode, QString blackwhiteThreshold){
     u_int8_t bwThresholdIntVal;
 
     if(uvccamera::handle == NULL){
+        emit logHandle(QtCriticalMsg, "setColorMode: Handle is Null");
         return void();
     }
     if(colorMode == ColorModeNormal || colorMode == ColorModeMono || colorMode == ColorModeNegative || colorMode == ColorModeBlackWhite){
@@ -284,10 +295,12 @@ void ASCELLA::setColorMode(camColorMode colorMode, QString blackwhiteThreshold){
                                             ASCELLA_TIMEOUT);
 
         if(0 > bytesSent){
+            emit logHandle(QtCriticalMsg, "setColorMode: libusb_control_transfer set command failed");
             return void();
         }
     }
     else{
+        emit logHandle(QtCriticalMsg, "setColorMode: colorMode is not in range");
         return void();
     }
 
@@ -299,6 +312,7 @@ void ASCELLA::setCenterWeightedAutoFocus(){
     int bytesSent;
 
     if(uvccamera::handle == NULL){
+        emit logHandle(QtCriticalMsg, "setCenterWeightedAutoFocus: Handle is Null");
         return void();
     }
     memset(g_out_packet_buf, 0x00, ASCELLA_BUFLEN);
@@ -316,6 +330,7 @@ void ASCELLA::setCenterWeightedAutoFocus(){
                                         ASCELLA_TIMEOUT);
 
     if(0 > bytesSent){
+        emit logHandle(QtCriticalMsg, "setCenterWeightedAutoFocus: libusb_control_transfer set command failed");
         return void();
     }
 }
@@ -329,6 +344,7 @@ void ASCELLA::setCustomAreaAutoFocus(QString afHoriStart, QString afHoriEnd, QSt
     int afVertiEndIntVal;
 
     if(uvccamera::handle == NULL){
+        emit logHandle(QtCriticalMsg, "setCustomWeightedAutoFocus: Handle is Null");
         return void();
     }
 
@@ -337,7 +353,7 @@ void ASCELLA::setCustomAreaAutoFocus(QString afHoriStart, QString afHoriEnd, QSt
     afVertiStartIntVal = afVertiStart.toInt();
     afVertiEndIntVal = afVertiEnd.toInt();
 
-    if(afHoriStartIntVal > afHoriEndIntVal || afVertiStartIntVal > afVertiEndIntVal){
+    if((afHoriStartIntVal > afHoriEndIntVal) || (afVertiStartIntVal > afVertiEndIntVal)){
         emit deviceStatus("Error", "Horizontal/Vertical AF window start position must be less than or equal to Horizontal/Vertical AF window end postion");
         return void();
     }
@@ -364,6 +380,7 @@ void ASCELLA::setCustomAreaAutoFocus(QString afHoriStart, QString afHoriEnd, QSt
                                         ASCELLA_BUFLEN,
                                         ASCELLA_TIMEOUT);
     if(0 > bytesSent){
+        emit logHandle(QtCriticalMsg, "setCenterWeightedAutoFocus: libusb_control_transfer set command failed");
         return void();
     }
 }
@@ -374,12 +391,12 @@ void ASCELLA::setBinnedResizedMode(camBinnResizeMode mode){
     int bytesSent;
 
     if(uvccamera::handle == NULL){
+        emit logHandle(QtCriticalMsg, "setBinnedResizedMode: Handle is Null");
         return void();
     }
 
     if(mode == Binned || mode == Resized){
         memset(g_out_packet_buf, 0x00, ASCELLA_BUFLEN);
-
         g_out_packet_buf[1] = 0xEE;
         g_out_packet_buf[2] = mode;
 
@@ -392,10 +409,12 @@ void ASCELLA::setBinnedResizedMode(camBinnResizeMode mode){
                                             ASCELLA_BUFLEN,
                                             ASCELLA_TIMEOUT);
         if(0 > bytesSent){
+            emit logHandle(QtCriticalMsg, "setBinnedResizedMode: libusb_control_transfer set command failed");
             return void();
         }
     }
     else{
+        emit logHandle(QtCriticalMsg, "setBinnedResizedMode: binned/Resized mode is not in range");
         return void();
     }
 
@@ -453,6 +472,7 @@ void ASCELLA::getDefaultValues(u_int8_t *pDefaultValue){
     int bytesSent;
 
     if(uvccamera::handle == NULL){
+        emit logHandle(QtCriticalMsg, "getDefaultValues: Handle is Null");
         return void();
     }
 
@@ -473,7 +493,7 @@ void ASCELLA::getDefaultValues(u_int8_t *pDefaultValue){
                                         ASCELLA_TIMEOUT);
 
     if(0 > bytesSent){
-        qDebug()<<"get default values:set command failed:bytesent"<<bytesSent;
+        emit logHandle(QtCriticalMsg, "getDefaultValues: libusb_control_transfer set command failed");
         return void();
     }
 
@@ -486,6 +506,10 @@ void ASCELLA::getDefaultValues(u_int8_t *pDefaultValue){
                                         g_in_packet_buf,
                                         ASCELLA_BUFLEN,
                                         ASCELLA_TIMEOUT);
+    if(0 > bytesSent){
+        emit logHandle(QtCriticalMsg, "getDefaultValues: libusb_control_transfer get command failed");
+        return void();
+    }
 
     pDefaultValue[0] = 0x00; //0 - 0x00 //Torch Status: 0 for OFF, 1 for Auto ON, 2 for Manual ON
     pDefaultValue[1] = 0x01; //1 - 0x01 //Torch level: 0-100 supported
@@ -509,7 +533,7 @@ void ASCELLA::getCurrentValues(u_int8_t *pCurrentValue){
     int bytesSent;
 
     if(uvccamera::handle == NULL){
-        qDebug()<<"getCurrentValues - NULL";
+        emit logHandle(QtCriticalMsg, "getCurrentValues: Handle is Null");
         return void();
     }
 
@@ -519,28 +543,37 @@ void ASCELLA::getCurrentValues(u_int8_t *pCurrentValue){
     g_out_packet_buf[1] = 0xCC;
     g_out_packet_buf[2] = 2;
 
-    // Sending the request command to get current values - output buffer
-    bytesSent = libusb_control_transfer(uvccamera::handle,
-                                        0x21,
-                                        0x09,
-                                        0x200,
-                                        0x2,
-                                        g_out_packet_buf,
-                                        ASCELLA_BUFLEN,
-                                        ASCELLA_TIMEOUT);
-    if(0 > bytesSent){
-        qDebug()<<"get current values:set command failed";
-        return void();
+    /* For 1st time call of getting the response gives old values. For 2nd time call, It gives previouly set values correctly*/
+    for (int i=0; i<2; i++){
+        // Sending the request command to get current values - output buffer
+        bytesSent = libusb_control_transfer(uvccamera::handle,
+                                            0x21,
+                                            0x09,
+                                            0x200,
+                                            0x2,
+                                            g_out_packet_buf,
+                                            ASCELLA_BUFLEN,
+                                            ASCELLA_TIMEOUT);
+        if(0 > bytesSent){
+            emit logHandle(QtCriticalMsg, "getCurrentValues: libusb_control_transfer set command failed");
+            return void();
+        }
+        // Getting the response - in buffer
+        bytesSent = libusb_control_transfer(uvccamera::handle,
+                                            0xA1,
+                                            0x01,
+                                            0x100,
+                                            0x2,
+                                            g_in_packet_buf,
+                                            ASCELLA_BUFLEN,
+                                            ASCELLA_TIMEOUT);
+        if(0 > bytesSent){
+            emit logHandle(QtCriticalMsg, "getCurrentValues: libusb_control_transfer get command failed");
+            return void();
+        }
+
     }
-    // Getting the response - in buffer
-    bytesSent = libusb_control_transfer(uvccamera::handle,
-                                        0xA1,
-                                        0x01,
-                                        0x100,
-                                        0x2,
-                                        g_in_packet_buf,
-                                        ASCELLA_BUFLEN,
-                                        ASCELLA_TIMEOUT);
+
     int i=0;
     /* pCurrentValue[0] - led status mode */
     switch(g_in_packet_buf[1]){
@@ -750,6 +783,6 @@ void ASCELLA::getFirmwareVersion(){
     _text.append(QString::number(currentValue[21]).append(".").append(QString::number(currentValue[22])));
     _text.append("\nBuild Date: ");
     _text.append(QString::number(currentValue[25]).append("/").append(QString::number(currentValue[24]).append("/").append(QString::number(currentValue[23]))));
-    emit titleTextChanged(_title,_text);
+    emit titleTextChanged(_title, _text);
 }
 

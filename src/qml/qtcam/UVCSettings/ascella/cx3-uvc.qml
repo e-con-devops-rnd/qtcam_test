@@ -84,7 +84,7 @@ Item {
             Row{
                  Text {
                      id: led_status
-                     text: "--- LED Status ---"
+                     text: "                    --- LED Status ---"
                      font.pixelSize: 14
                      font.family: "Ubuntu"
                      color: "#ffffff"
@@ -102,7 +102,6 @@ Item {
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked:{
-                        console.log("led off onClicked")
                         ascella.setLEDStatusMode(Ascella.LedOff, "0x00");
                     }
 
@@ -117,7 +116,6 @@ Item {
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked: {
-                        console.log("led auto onClicked")
                         ascella.setLEDStatusMode(Ascella.LedAuto, led_value.text);
                     }
 
@@ -132,7 +130,6 @@ Item {
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked: {
-                        console.log("led manual onClicked")
                         ascella.setLEDStatusMode(Ascella.LedManual, led_value.text);
                     }
 
@@ -157,7 +154,8 @@ Item {
                     minimumValue: 1
                     maximumValue: 100
                     onValueChanged:  {
-
+                        if((radioAuto.checked || radioManual.checked))
+                            led_value.text = ledSlider.value
                     }
                 }
                 TextField {
@@ -175,10 +173,8 @@ Item {
                         if(text != ""){
                             ledSlider.value = led_value.text
                             if(radioAuto.checked){
-                                console.log("text field auto checked")
                                 ascella.setLEDStatusMode(Ascella.LedAuto, led_value.text)}
                             else if(radioManual.checked){
-                                console.log("text field manual checked")
                                 ascella.setLEDStatusMode(Ascella.LedManual, led_value.text)}
                         }
                     }
@@ -188,7 +184,7 @@ Item {
             Row{
                  Text {
                      id: autoFocusMode
-                     text: "--- Auto Focus Mode ---"
+                     text: "               --- Auto Focus Mode ---"
                      font.pixelSize: 14
                      font.family: "Ubuntu"
                      color: "#ffffff"
@@ -198,8 +194,9 @@ Item {
             }
             Row{
                   spacing:10
+                  ExclusiveGroup { id: afgroup }
                   RadioButton {
-                      exclusiveGroup: ledgroup
+                      exclusiveGroup: afgroup
                       id: radioContin
                       text: "Continuous"
                       activeFocusOnPress: true
@@ -217,7 +214,7 @@ Item {
             Row{
                 spacing:25
                 RadioButton {
-                    exclusiveGroup: ledgroup
+                    exclusiveGroup: afgroup
                     id: radioOneshot
                     text: "One-Shot"
                     activeFocusOnPress: true
@@ -236,7 +233,7 @@ Item {
                     activeFocusOnPress : true
                     text: "Trigger"
                     style: econcx3ButtonStyle
-                    enabled: (radioOneshot.enabled) ? 1 : 0
+                    enabled: (radioOneshot.checked) ? 1 : 0
                     opacity: enabled ? 1 : 0.1
                     implicitHeight: 25
                     implicitWidth: 120
@@ -249,7 +246,7 @@ Item {
             Row{
                  Text {
                      id: autoFocusArea
-                     text: "--- Auto Focus Area ---"
+                     text: "               --- Auto Focus Area ---"
                      font.pixelSize: 14
                      font.family: "Ubuntu"
                      color: "#ffffff"
@@ -257,15 +254,15 @@ Item {
                      opacity: 0.50196078431373
                  }
             }
-            Row{
+            RowLayout{
                 spacing:25
                 ExclusiveGroup { id: groupAF }
                 RadioButton {
                     exclusiveGroup: groupAF
                     id: radiocenter
-                    text: "Center \nWeighted AF"
+                    text: "Center Weighted Auto Focus"
                     activeFocusOnPress: true
-                    style: econRadioButtonStyle
+                    style: radioButtonWordWrapStyle
                     enabled: JS.autoFocusChecked ? 1 : 0
                     opacity: enabled ? 1 : 0.1
                     onClicked:{
@@ -278,15 +275,16 @@ Item {
                 RadioButton {
                     exclusiveGroup: groupAF
                     id: radiocustom
-                    text: "Custom \nWeighted AF"
+                    text: "Custom Weighted Auto Focus"
                     activeFocusOnPress: true
-                    style: econRadioButtonStyle
+                    style: radioButtonWordWrapStyle
                     enabled: JS.autoFocusChecked ? 1 : 0
                     opacity: enabled ? 1 : 0.1
                     onClicked: {
                         vidResln = JS.videoCaptureResolution
                         vidWidth = vidResln.split('x')[0]
                         vidHeight = vidResln.split('x')[1]
+                        ascella.setCustomAreaAutoFocus(afhori_start_box_value.text, afhori_end_box_value.text, afverti_start_box_value.text, afverti_end_box_value.text)
                     }
                     Keys.onReturnPressed: {
 
@@ -298,11 +296,13 @@ Item {
                 spacing:15
                 Text {
                   id: afhori_start
-                  text: "AF Window Horizontal\nStart Position"
+                  text: "AF Window Horizontal Start Position"
                   font.pixelSize: 14
                   font.family: "Ubuntu"
                   color: "#ffffff"
                   smooth: true
+                  Layout.maximumWidth : 150
+                  wrapMode: Text.WordWrap
                   opacity: radiocustom.checked ? 1 : 0.1
                 }
                 TextField {
@@ -316,7 +316,9 @@ Item {
                     opacity: enabled ? 1 : 0.1
                     validator: IntValidator {bottom: 1; top: vidWidth;}
                     implicitWidth: 70
+                    text:"1"
                     onTextChanged: {
+
 
                     }
                 }
@@ -325,13 +327,13 @@ Item {
                 spacing:15
                 Text {
                     id: afhori_end
-                    text: "AF Window Horizontal\nEnd Position"
+                    text: "AF Window Horizontal End Position"
                     font.pixelSize: 14
                     font.family: "Ubuntu"
                     color: "#ffffff"
                     smooth: true
-                    x: 14
-                    y: 578.5
+                    Layout.maximumWidth : 150
+                    wrapMode: Text.WordWrap
                     opacity: radiocustom.checked ? 1 : 0.1
                 }
                 TextField {
@@ -345,6 +347,7 @@ Item {
                     opacity: enabled ? 1 : 0.1
                     validator: IntValidator {bottom: 1; top: vidWidth;}
                     implicitWidth: 70
+                    text:vidWidth
                     onTextChanged: {
 
                     }
@@ -354,13 +357,14 @@ Item {
                 spacing:15
                 Text {
                     id: afvertical_start
-                    text: "AF Window Vertical\nStart Position"
+                    text: "AF Window Vertical Start Position"
                     font.pixelSize: 14
                     font.family: "Ubuntu"
                     color: "#ffffff"
                     smooth: true
                     opacity: radiocustom.checked ? 1 : 0.1
-                    Layout.preferredWidth: 140
+                    Layout.maximumWidth : 150
+                    wrapMode: Text.WordWrap
                 }
                 TextField {
                     id: afverti_start_box_value
@@ -372,6 +376,7 @@ Item {
                     enabled: radiocustom.checked ? 1 : 0
                     opacity: enabled ? 1 : 0.1
                     implicitWidth: 70
+                    text:"1"
                     validator: IntValidator {bottom: 1; top: vidHeight;}
                     onTextChanged: {
 
@@ -382,13 +387,14 @@ Item {
                 spacing:15
                 Text {
                     id: afverti_end
-                    text: "AF Window Vertical\nEnd Position"
+                    text: "AF Window Vertical End Position"
                     font.pixelSize: 14
                     font.family: "Ubuntu"
                     color: "#ffffff"
                     smooth: true
                     opacity: radiocustom.checked ? 1 : 0.1
-                    Layout.preferredWidth: 140
+                    Layout.maximumWidth : 150
+                    wrapMode: Text.WordWrap
                 }
                 TextField {
                     id: afverti_end_box_value
@@ -400,6 +406,7 @@ Item {
                     enabled: radiocustom.checked ? 1 : 0
                     opacity: enabled ? 1 : 0.1
                     implicitWidth: 70
+                    text:vidHeight
                     validator: IntValidator {bottom: 1; top: vidHeight;}
                     onTextChanged: {
 
@@ -430,7 +437,7 @@ Item {
             Row{
                  Text {
                      id: sceneMode
-                     text: "--- Scene Mode ---"
+                     text: "                  --- Scene Mode ---"
                      font.pixelSize: 14
                      font.family: "Ubuntu"
                      color: "#ffffff"
@@ -472,7 +479,7 @@ Item {
             Row{
                  Text {
                      id: colorMode
-                     text: "--- Color Mode ---"
+                     text: "                  --- Color Mode ---"
                      font.pixelSize: 14
                      font.family: "Ubuntu"
                      color: "#ffffff"
@@ -545,12 +552,12 @@ Item {
             Row{
                  Text {
                      id: blacknwhiteGrp
-                     text: "--- Black and White ---"
+                     text: "               --- Black and White ---"
                      font.pixelSize: 14
                      font.family: "Ubuntu"
                      color: "#ffffff"
                      smooth: true
-                     opacity: 0.50196078431373
+                     opacity: colorModeBw.checked ? 0.50196078431373 : 0.1
                  }
             }
             RowLayout{
@@ -593,7 +600,7 @@ Item {
                     activeFocusOnPress: true
                     updateValueWhileDragging: false
                     id: bwManualSlider
-                    enabled: (colorModeBw.enabled && colorModeBwManual.enabled) ? 1 : 0
+                    enabled: (colorModeBw.enabled && colorModeBwManual.enabled && colorModeBwManual.checked) ? 1 : 0
                     opacity: enabled ? 1 : 0.1
                     width: 150
                     stepSize: 1
@@ -601,7 +608,7 @@ Item {
                     minimumValue: 0
                     maximumValue: 255
                     onValueChanged:  {
-
+                        bwvalue.text = bwManualSlider.value
                     }
                 }
                 TextField {
@@ -661,15 +668,17 @@ Item {
                 }
             }
 
-            Row{
+            RowLayout{
                  Text {
                      id: exposureCompInAuto
-                     text: "--- Exposure Compensation in Auto\nmode ---"
+                     text: "     --- Exposure Compensation in Auto mode ---"
                      font.pixelSize: 14
                      font.family: "Ubuntu"
                      color: "#ffffff"
                      smooth: true
                      opacity: 0.50196078431373
+                     Layout.maximumWidth: 230
+                     wrapMode: Text.WordWrap
                  }
             }
             Row{
@@ -686,7 +695,7 @@ Item {
                     minimumValue:0
                     maximumValue: 12
                     onValueChanged:  {
-
+                        exposureCompTextValue.text = exposureCompSlider.value
                     }
                 }
                 TextField {
@@ -711,7 +720,7 @@ Item {
             Row{
                  Text {
                      id: noiseReductionGrp
-                     text: "--- Noise Reduction mode ---"
+                     text: "        --- Noise Reduction mode ---"
                      font.pixelSize: 14
                      font.family: "Ubuntu"
                      color: "#ffffff"
@@ -764,7 +773,7 @@ Item {
                     minimumValue: 0
                     maximumValue: 10
                     onValueChanged:  {
-
+                        reduceNoiseFixvalue.text = reduceNoiseFixSlider.value
                     }
                 }
                 TextField {
@@ -781,7 +790,7 @@ Item {
                     onTextChanged: {
                         if(text != ""){
                             reduceNoiseFixSlider.value = reduceNoiseFixvalue.text
-                            if(reduceNoiseFix.enabled)
+                            if(reduceNoiseFix.checked)
                                 ascella.setNoiseReduceMode(Ascella.NoiseReduceFix, reduceNoiseFixvalue.text)
                         }
                     }
@@ -791,7 +800,7 @@ Item {
             Row{
                  Text {
                      id: limitMaxFrameRateGrp
-                     text: "--- Limit Maximum FrameRate ---"
+                     text: "     --- Limit Maximum FrameRate ---"
                      font.pixelSize: 14
                      font.family: "Ubuntu"
                      color: "#ffffff"
@@ -809,7 +818,6 @@ Item {
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked:{
-                        console.log("disable clicked")
                         ascella.setLimitMaxFrameRateMode(Ascella.Disable, "0x00");
                     }
                     Keys.onReturnPressed: {
@@ -823,7 +831,6 @@ Item {
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked: {
-                        console.log("max frame rate clicked")
                         ascella.setLimitMaxFrameRateMode(Ascella.ApplyMaxFrameRate, applyMaxFrameRatevalue.text);
                     }
                     Keys.onReturnPressed: {
@@ -847,7 +854,8 @@ Item {
                     minimumValue: 3
                     maximumValue: 119
                     onValueChanged:  {
-
+                        if(applyMaxFrameRate.checked)
+                        applyMaxFrameRatevalue.text = applyMaxFrameRateSlider.value
                     }
                 }
                 TextField {
@@ -864,8 +872,7 @@ Item {
                     onTextChanged: {
                        if(text != ""){
                            applyMaxFrameRateSlider.value = applyMaxFrameRatevalue.text
-                           if(applyMaxFrameRateSlider.checked){
-                               console.log("max frame rate slider enabled")
+                           if(applyMaxFrameRate.checked){
                                ascella.setLimitMaxFrameRateMode(Ascella.ApplyMaxFrameRate, applyMaxFrameRatevalue.text)
                            }
                        }
@@ -933,6 +940,25 @@ Item {
                 color: "#ffffff"
                 smooth: true
                 opacity: 1
+            }
+            background: Rectangle {
+                color: "#222021"
+                border.color: control.activeFocus ? "#ffffff" : "#222021"
+            }
+        }
+    }
+    Component {
+        id: radioButtonWordWrapStyle
+        RadioButtonStyle {
+            label: Text {
+                width:80
+                text: control.text
+                font.pixelSize: 14
+                font.family: "Ubuntu"
+                color: "#ffffff"
+                smooth: true
+                opacity: 1
+                wrapMode: Text.WordWrap
             }
             background: Rectangle {
                 color: "#222021"
@@ -1068,16 +1094,11 @@ Item {
 
         onSetCurrentLedValue:{
             if(ledCurMode == Ascella.LedOff){
-                console.log("ledoff")
                 radioOff.checked = true
             }else if(ledCurMode == Ascella.LedAuto){
                 radioAuto.checked = true
-                console.log("ledAuto")
-              //  led_value.text = ledCurBrightness
             }else if(ledCurMode == Ascella.LedManual){
                 radioManual.checked = true
-                console.log("ledManual")
-            //    led_value.text = ledCurBrightness
             }
             led_value.text = ledCurBrightness
         }
@@ -1100,12 +1121,9 @@ Item {
             }
         }
         onSetCurrentBwMode:{
-            console.log("cur bw mode"+curBWMode)
             if(curBWMode == "0x00"){
-                console.log("curBwmode auto")
                 colorModeBwAuto.checked = true
             }else{
-                console.log("curBwmode manual")
                 colorModeBwManual.checked = true
             }
             bwvalue.text = CurBWthreshold
@@ -1113,10 +1131,8 @@ Item {
         onSetCurNoiseReductionMode:{
             if(curNoiseMode == Ascella.NoiseReduceNormal){
                 reduceNoiseAuto.checked = true
-                console.log("noise normal")
             }else if(curNoiseMode == Ascella.NoiseReduceFix){
                 reduceNoiseFix.checked = true
-                console.log("noise fix  ")
             }
             reduceNoiseFixvalue.text = curNoiseValue
         }

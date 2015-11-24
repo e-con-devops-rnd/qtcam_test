@@ -26,6 +26,7 @@ import QtQuick.Layouts 1.1
 import QtQuick.Dialogs 1.1
 import econ.camera.property 1.0
 import econ.camera.stream 1.0
+import econ.camera.uvcsettings 1.0
 import "../JavaScriptFiles/tempValue.js" as JS
 
 Rectangle {
@@ -1665,12 +1666,14 @@ Rectangle {
                                             vidstreamproperty.selectMenuIndex(exposureAutoControlId,currentIndex)
                                             if(currentText.toString() == "Manual Mode") {
                                                 JS.autoExposureSelected = false
+                                                exposure_absolute.opacity = 1
                                                 exposure_Slider.opacity = 1
                                                 exposure_Slider.enabled = true
                                                 exposure_value.opacity = 1
                                                 exposure_value.enabled = true
                                             } else {
                                                 JS.autoExposureSelected = true
+                                                exposure_absolute.opacity = 0.1
                                                 exposure_Slider.opacity = 0.1
                                                 exposure_Slider.enabled = false
                                                 exposure_value.opacity = 0
@@ -1692,7 +1695,7 @@ Rectangle {
                                     font.family: "Ubuntu"
                                     color: "#ffffff"
                                     smooth: true
-                                    opacity: 0.1
+                                    opacity:  0
                                 }
                                 Slider {
                                     activeFocusOnPress: true
@@ -2869,12 +2872,14 @@ Rectangle {
                     x: 20
                     y: about.y - 50
                     id: average_frame
-                    text: "Current frame rate \nachieved"
+                    text: "Current frame rate achieved"
                     font.pixelSize: 14
                     font.family: "Ubuntu"
                     color: "#ffffff"
                     smooth: true
                     opacity: 1
+                    width: 150
+                    wrapMode: Text.WordWrap
                 }
                 TextField {
                     id: average_frame_value
@@ -3444,6 +3449,7 @@ Rectangle {
             break;
         case 2:
             if(controlName == "White Balance Temperature, Auto") {                
+                white_balance.opacity = 1
                 autoSelect_wb.opacity = 1
                 autoSelect_wb.enabled = true
                 autoSelect_wb.checked = controlDefaultValue
@@ -3502,6 +3508,7 @@ Rectangle {
                 exposureCombo.currentIndex = controlDefaultValue
                 if(exposureCombo.currentText == "Manual Mode"){
                     JS.autoExposureSelected = false
+                    exposure_absolute.opacity = 1
                     exposure_Slider.enabled = true
                     exposure_Slider.opacity = 1
                     exposure_value.opacity = 1
@@ -3933,6 +3940,6 @@ Rectangle {
     Keys.onRightPressed: {
         sideBarItems.visible = true
         open_sideBar.visible = false
-    }
+   }
 }
 

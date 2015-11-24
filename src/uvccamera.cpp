@@ -146,7 +146,6 @@ int uvccamera::initExtensionUnitAscella(){
 
     handle = libusb_open_device_with_vid_pid(NULL, ASCELLA_VID, ASCELLA_PID);
 
-    qDebug()<<"handle"<<handle;
     if(!handle) {
         emit logHandle(QtCriticalMsg, "\nunable to open the device\n");
     } else {
@@ -155,7 +154,6 @@ int uvccamera::initExtensionUnitAscella(){
         if (libusb_kernel_driver_active(handle, 2))
         {
             ret = libusb_detach_kernel_driver(handle, 2);
-            qDebug()<<"libusb_detach_kernel_driver:ret:"<<ret;
             if (ret == 0)
             {
                 kernelDriverDetached = 1;
