@@ -130,7 +130,7 @@ void ASCELLA::setExposureCompensation(QString exposureVal){
                                         0x2,
                                         g_out_packet_buf,
                                         ASCELLA_BUFLEN,
-                                        ASCELLA_TIMEOUT)
+                                        ASCELLA_TIMEOUT);
     if(0 > bytesSent){
         emit logHandle(QtCriticalMsg, "setExposureCompensation: libusb_control_transfer set command failed");
         return void();
