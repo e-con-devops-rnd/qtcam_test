@@ -58,7 +58,8 @@ int uvccamera::findEconDevice(QStringList *econCamera,QString parameter)
     udev = udev_new();
     if (!udev) {
         emit logHandle(QtCriticalMsg,"Can't create udev\n");
-        exit(1);
+	return -1;
+        //exit(1);
     }
 
     /* Create a list of the devices in the 'video4linux/hidraw' subsystem. */
@@ -95,7 +96,8 @@ int uvccamera::findEconDevice(QStringList *econCamera,QString parameter)
                     "usb_device");
         if (!pdev) {
             emit logHandle(QtCriticalMsg,"Unable to find parent usb device.");
-            exit(1);
+	    return -1;
+           // exit(1);
         }
 
         /* From here, we can call get_sysattr_value() for each file

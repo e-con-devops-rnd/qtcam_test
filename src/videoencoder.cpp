@@ -214,7 +214,8 @@ int VideoEncoder::encodeImage(const QImage &img)
     int ret = avcodec_encode_video2(pCodecCtx, &pkt, ppicture, &got_packet);
     if (ret < 0) {
         fprintf(stderr, "Error encoding a video frame\n");
-        exit(1);
+	return -1;
+        //exit(1);
     }
     if (got_packet) {
         if (pCodecCtx->coded_frame->pts != AV_NOPTS_VALUE)
@@ -248,7 +249,8 @@ int VideoEncoder::encodeImage(const QImage &img)
 
     if(out_size < 0){
         fprintf(stderr, "Error encoding a video frame\n");
-        exit(1);
+	return -1;
+        //exit(1);	
     }
     /* if zero size, it means the image was buffered */
     if (out_size > 0) {
