@@ -87,7 +87,7 @@ signals:
     void deviceStatus(QString title, QString message);
 
     /* Set Default values */
-    void ledOffEnable();
+    void ledOffEnable(QString brightness);
 
     void autoExposureEnable(QString exposureValue);
 

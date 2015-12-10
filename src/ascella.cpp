@@ -34,18 +34,16 @@ void ASCELLA::setLEDStatusMode(camLedMode ledMode, QString brightnessVal){
     if(ledMode == LedAuto || ledMode == LedManual || ledMode == LedOff){
         memset(g_out_packet_buf, 0x00, ASCELLA_BUFLEN);
 
-        brightnessIntVal = brightnessVal.toInt();
         g_out_packet_buf[1] = 0x01;
         if(ledMode == LedOff){
             g_out_packet_buf[2] = 0x00;
-            g_out_packet_buf[3] = 0x00;
         }else if(ledMode == LedAuto){
             g_out_packet_buf[2] = 0x01;
-            g_out_packet_buf[3] = (unsigned char)(brightnessIntVal & 0xFF);
         }else if(ledMode == LedManual){
             g_out_packet_buf[2] = 0x02;
-            g_out_packet_buf[3] = (unsigned char)(brightnessIntVal & 0xFF);
         }
+        brightnessIntVal = brightnessVal.toInt();
+        g_out_packet_buf[3] = (unsigned char)(brightnessIntVal & 0xFF);
 
         bytesSent = libusb_control_transfer(uvccamera::handle,
                                             0x21,
@@ -430,7 +428,8 @@ void ASCELLA::setDefaultValues(){
     getDefaultValues(defaultValue);
 
     /* Enabling led off */
-    emit ledOffEnable();
+    QString brightness = QString::number(defaultValue[1]);
+    emit ledOffEnable(brightness);
 
     /* Enabling exposure compensation if auto exposure is selected in Image Quality Settings menu */
     QString exposureValue = QString::number(defaultValue[2]);
@@ -442,6 +441,7 @@ void ASCELLA::setDefaultValues(){
     /* Enabling black and white color mode auto and setting manual default slider value */
     QString bwThresholdValue = QString::number(defaultValue[18]);
     emit bwColorModeAutoEnable(bwThresholdValue);
+    setColorMode(ColorModeNormal, bwThresholdValue);
 
     /* Enabling auto focus mode control if auto focus is checked in Image Quality Settings menu*/
     emit afContinuousEnable();
@@ -526,6 +526,7 @@ void ASCELLA::getDefaultValues(u_int8_t *pDefaultValue){
     pDefaultValue[18] = 0x01; //18 - 0x01 //B&W: Previous B&W Fix Threshold Value
     pDefaultValue[19] = g_in_packet_buf[20]; //19 - Enable binning/resize; 0 for disable, 1 for enable
     pDefaultValue[20] = g_in_packet_buf[21]; //20 - 1 for binning, 2 for resize
+    //==========================================================
 }
 
 

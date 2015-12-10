@@ -104,9 +104,13 @@ Item {
                     onClicked:{
                         ascella.setLEDStatusMode(Ascella.LedOff, "0x00");
                     }
+                    onCheckedChanged: {
+                        if(checked){
+                            ascella.setLEDStatusMode(Ascella.LedOff, "0x00");
+                        }
+                    }
 
                     Keys.onReturnPressed: {
-                       // ascella.setLEDStatusMode(Ascella.LedOff, "0x00");
                     }
                 }
                 RadioButton {
@@ -206,6 +210,11 @@ Item {
                       onClicked: {
                         ascella.setAutoFocusMode(Ascella.Continuous);
                       }
+                      onCheckedChanged: {
+                          if(JS.autoFocusChecked && checked){
+                            ascella.setAutoFocusMode(Ascella.Continuous);
+                          }
+                      }
                       Keys.onReturnPressed: {
 
                       }
@@ -233,11 +242,11 @@ Item {
                     activeFocusOnPress : true
                     text: "Trigger"
                     style: econcx3ButtonStyle
-                    enabled: (radioOneshot.checked) ? 1 : 0
-                    opacity: enabled ? 1 : 0.1
+                    enabled: (JS.autoFocusChecked && radioOneshot.checked) ? 1 : 0
+                    opacity: (JS.autoFocusChecked && radioOneshot.checked) ? 1 : 0.1
                     implicitHeight: 25
                     implicitWidth: 120
-                    action: (radioOneshot.checked) ? triggerAction : null
+                    action: (JS.autoFocusChecked && radioOneshot.checked) ? triggerAction : null
                     Keys.onReturnPressed: {
                         ascella.setAutoFocusMode(Ascella.OneShot);
                     }
@@ -267,6 +276,11 @@ Item {
                     opacity: enabled ? 1 : 0.1
                     onClicked:{
                         ascella.setCenterWeightedAutoFocus();
+                    }
+                    onCheckedChanged:{
+                        if(JS.autoFocusChecked && checked){
+                            ascella.setCenterWeightedAutoFocus();
+                        }
                     }
                     Keys.onReturnPressed: {
 
@@ -457,6 +471,11 @@ Item {
                     onClicked: {
                         ascella.setSceneMode(Ascella.SceneNormal);
                     }
+                    onCheckedChanged: {
+                        if(checked){
+                            ascella.setSceneMode(Ascella.SceneNormal);
+                        }
+                    }
                     Keys.onReturnPressed: {
 
                     }
@@ -498,6 +517,11 @@ Item {
                     style: econRadioButtonStyle
                     onClicked: {
                         ascella.setColorMode(Ascella.ColorModeNormal, "0x00")
+                    }
+                    onCheckedChanged: {
+                        if(checked){
+                            ascella.setColorMode(Ascella.ColorModeNormal, "0x00")
+                        }
                     }
                     Keys.onReturnPressed: {
 
@@ -574,6 +598,11 @@ Item {
                     onClicked: {
                         ascella.setColorMode(Ascella.ColorModeBlackWhite, "0x00")
                     }
+                    onCheckedChanged:  {
+//                        if(checked){
+//                            ascella.setColorMode(Ascella.ColorModeBlackWhite, bwvalue.text)
+//                        }
+                    }
                     Keys.onReturnPressed: {
 
                     }
@@ -587,7 +616,7 @@ Item {
                     opacity: enabled ? 1 : 0.1
                     style: econRadioButtonStyle
                     onClicked: {
-
+                        ascella.setColorMode(Ascella.ColorModeBlackWhite, bwvalue.text)
                     }
                     Keys.onReturnPressed: {
 
@@ -646,6 +675,11 @@ Item {
                     style: econRadioButtonStyle
                     onClicked: {
                         ascella.setBinnedResizedMode(Ascella.Binned)
+                    }
+                    onCheckedChanged:{
+                        if(checked){
+                            ascella.setBinnedResizedMode(Ascella.Binned)
+                        }
                     }
                     Keys.onReturnPressed: {
 
@@ -740,6 +774,11 @@ Item {
                     onClicked:{
                         ascella.setNoiseReduceMode(Ascella.NoiseReduceNormal, "0x00");
                     }
+                    onCheckedChanged:{
+                        if(checked){
+                            ascella.setNoiseReduceMode(Ascella.NoiseReduceNormal, "0x00");
+                        }
+                    }
                     Keys.onReturnPressed: {
                     }
                 }
@@ -819,6 +858,11 @@ Item {
                     style: econRadioButtonStyle
                     onClicked:{
                         ascella.setLimitMaxFrameRateMode(Ascella.Disable, "0x00");
+                    }
+                    onCheckedChanged:{
+                        if(checked){
+                            ascella.setLimitMaxFrameRateMode(Ascella.Disable, applyMaxFrameRatevalue.text);
+                        }
                     }
                     Keys.onReturnPressed: {
 
@@ -1043,6 +1087,7 @@ Item {
         }
         onLedOffEnable:{
             radioOff.checked = true
+            led_value.text = brightness
         }
         onAutoExposureEnable:{
             if(JS.autoExposureSelected){
@@ -1050,9 +1095,9 @@ Item {
             }
         }
         onAfContinuousEnable:{
-            if(JS.autoFocusChecked){
+            //if(JS.autoFocusChecked){
                 radioContin.checked = true
-            }
+            //}
         }
         onNoiseReductionAutoEnable:{
             reduceNoiseAuto.checked = true
@@ -1068,8 +1113,8 @@ Item {
             colorModeNormal.checked = true
         }
         onBwColorModeAutoEnable:{
-            colorModeBwAuto.checked = true
             bwvalue.text = bwThresholdValue
+            colorModeBwAuto.checked = true
         }
         onBinnResizeEnableDisable:{
             if(mode == "0x01"){
@@ -1152,8 +1197,9 @@ Item {
             applyMaxFrameRatevalue.text = curMaxFRLimit
         }
         onSetAfAreaCenterMode:{
-            if(JS.autoFocusChecked)
+            //if(JS.autoFocusChecked){
                 radiocenter.checked = true
+            //}
         }
         onSetCurrentAfAreaCustomMode:{
             if(JS.autoFocusChecked){
