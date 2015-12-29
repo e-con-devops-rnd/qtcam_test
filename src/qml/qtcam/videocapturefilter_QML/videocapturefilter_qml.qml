@@ -913,6 +913,9 @@ Rectangle {
                         vidstreamproperty.displayOutputFormat()
                         vidstreamproperty.displayStillResolution()
                         vidstreamproperty.displayVideoResolution()
+                        if(device_box.currentText == "CX3-UVC"){
+                            vidstreamproperty.cameraFilterControls()
+                        }
                         updateFPS(color_comp_box.currentText.toString(), output_value.currentText.toString())
                         brightValueChangeProperty = false
                         contrastValueChangeProperty = false
@@ -994,8 +997,9 @@ Rectangle {
             action: cameratab
             activeFocusOnPress: true
             onFocusChanged: {
-                if(activeFocus)
+                if(activeFocus){
                     selectCameraSettings()
+                }
             }
         }
 
@@ -3857,7 +3861,6 @@ Rectangle {
         var component2 = Qt.createComponent("../about/QML_about.qml")
         aboutWindow = component2.createObject(root);
     }
-
     Component.onDestruction: {
         if(record_stop.visible) {
             vidstreamproperty.recordStop()

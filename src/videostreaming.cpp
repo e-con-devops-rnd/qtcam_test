@@ -36,7 +36,13 @@
 #define B(x, y, w)	tempCu40DestBuffer[2 + 3 * ((x) + (w) * (y))]
 
 #define Bay(x, y, w) tempCu40SrcBuffer[(x) + (w) * (y)]
-#define CLIP(x) ((x) < 0? 0 :((x) >= 255)? 255 : (x))
+
+//Modified by Nithyesh
+/*
+ * Previously it was
+ * #define CLIP(x) ((x) < 0? 0 :((x) >= 255)? 255 : (x))
+ */
+#define CLIP(x) (((x) >= 255)? 255 : (x))
 
 /* Jpeg-decode */
 #define HEADERFRAME1 0xaf
@@ -65,7 +71,13 @@ Videostreaming::Videostreaming()
     dotile = 0;
     pf = TJPF_RGB;
     warmup = 1;
-    sf = {1, 1};
+    //Modified by Nithyesh
+    /*
+     * Previously was sf = {1, 1};
+     * See http://stackoverflow.com/questions/7007591/syntax-in-assigning-to-map-of-structs
+     */
+    sf.denom = 1;
+    sf.num = 1;
     flags = TJFLAG_NOREALLOC;
     yuvpad = 1;
 }
@@ -135,7 +147,10 @@ void Videostreaming::capFrame()
     unsigned char *tempLogtechSrcBuffer = NULL, *tempLogtechDestBuffer = NULL;
     unsigned char *displaybuf = NULL;
     unsigned short int *tempCu40SrcBuffer = NULL;
-    int err = 0, x, y;
+    //Modified by Nithyesh
+    //Previously it was int err = 0, x, y;
+    int err = 0;
+    __u32 x, y;
     bool again, v4l2convert = false;
 
     memset(planes, 0, sizeof(planes));
@@ -422,6 +437,8 @@ void Videostreaming::freeBuffer(unsigned char *ptr)
     }
 }
 
+//Modified by Nithyesh
+//Changed type of imgHeight and imgWidth from int to __u32
 bool Videostreaming::extractIRImage(unsigned short int *srcBuffer, unsigned char *irBuffer)
 {
     bool ret = 1;
@@ -429,9 +446,9 @@ bool Videostreaming::extractIRImage(unsigned short int *srcBuffer, unsigned char
 
     if(srcBuffer != NULL && irBuffer != NULL)
     {
-        for(int imgHeight = 1; imgHeight < height; imgHeight += 2)
+        for(__u32 imgHeight = 1; imgHeight < height; imgHeight += 2)
         {
-            for(int imgWidth = 0; imgWidth < width; imgWidth += 2)
+            for(__u32 imgWidth = 0; imgWidth < width; imgWidth += 2)
             {
                 irBuffer[irBufferLocation++] = srcBuffer[(imgHeight * width) + imgWidth] >> 2;
             }
@@ -662,6 +679,12 @@ void Videostreaming::freeBuffers(unsigned char *srcBuffer, unsigned char *destBu
     {
         free(copyBuffer);
         copyBuffer = NULL;
+        //destBuffer = NULL;
+    }
+
+    if(destBuffer)
+    {
+        free(destBuffer);
         destBuffer = NULL;
     }
 }
@@ -1263,11 +1286,24 @@ void Videostreaming::cameraFilterControls(bool actualValue) {
 QString Videostreaming::getSettings(unsigned int id) {
     struct v4l2_control c;
     c.id = id;
+    //Modified by Nithyesh
+    /*
+     * Previosuly it was
+     * if (ioctl(VIDIOC_G_CTRL, &c)) {
+     *      v4l2_queryctrl qctrl;
+     *      qctrl.id = id;
+     *      emit logCriticalHandle("Unable to get the Value, setting the Default value: "+ QString::number(c.value,10));
+     *      return QString::number(c.value,10);
+     *  }
+     *  QString value = QString::number(c.value,10);
+     *  return value;
+     */
+    c.value = 0;
     if (ioctl(VIDIOC_G_CTRL, &c)) {
-        v4l2_queryctrl qctrl;
-        qctrl.id = id;
-        emit logCriticalHandle("Unable to get the Value, setting the Default value: "+ QString::number(qctrl.default_value,10));
-        return QString::number(qctrl.default_value,10);
+        //v4l2_queryctrl qctrl;
+        //qctrl.id = id;
+        emit logCriticalHandle("Unable to get the Value, setting the Default value: "+ QString::number(c.value,10));
+        return QString::number(c.value,10);
     }
     QString value = QString::number(c.value,10);
     return value;

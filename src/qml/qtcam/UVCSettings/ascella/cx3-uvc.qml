@@ -43,6 +43,15 @@ Item {
         }
     }
 
+    Timer {
+        id: ledStatusTimer
+        interval: 2000
+        repeat:true
+        onTriggered: {
+            ascella.setLedValueWithExternalHwButton() //every two seconds need to get current led mode and brightness
+        }
+    }
+
     Image {
         id: bg
         source: "images/bg.png"
@@ -53,7 +62,7 @@ Item {
 
     ScrollView{
         id: cx3_scrollview
-        x: 2
+        x: 10
         y: 189.5
         width: 257
         height:450
@@ -93,7 +102,7 @@ Item {
                  }
             }
             Row{
-                spacing:25
+                spacing:15
                 ExclusiveGroup { id: ledgroup }
                 RadioButton {
                     exclusiveGroup: ledgroup
@@ -654,7 +663,7 @@ Item {
                     onTextChanged: {
                         if(text != ""){
                             bwManualSlider.value = bwvalue.text
-                            if(colorModeBwManual.enabled)
+                            if(colorModeBwManual.enabled && colorModeBwManual.checked)
                                 ascella.setColorMode(Ascella.ColorModeBlackWhite, bwvalue.text)
                         }
 
@@ -848,7 +857,7 @@ Item {
                  }
             }
             Row{
-                spacing:25
+                spacing:15
                 ExclusiveGroup { id: maxFrameRategrp }
                 RadioButton {
                     exclusiveGroup: maxFrameRategrp
@@ -861,7 +870,7 @@ Item {
                     }
                     onCheckedChanged:{
                         if(checked){
-                            ascella.setLimitMaxFrameRateMode(Ascella.Disable, applyMaxFrameRatevalue.text);
+                           ascella.setLimitMaxFrameRateMode(Ascella.Disable, "0x00");
                         }
                     }
                     Keys.onReturnPressed: {
@@ -924,6 +933,51 @@ Item {
                     }
                 }
             }
+//            RowLayout{
+//                 Text {
+//                     id: rollControlText
+//                     text:"                 --- Roll Control ---"
+//                     font.pixelSize: 14
+//                     font.family: "Ubuntu"
+//                     color: "#ffffff"
+//                     smooth: true
+//                     opacity: 0.50196078431373
+//                     Layout.maximumWidth: 230
+//                 }
+//            }
+//            Row{
+//                spacing:25
+//                Slider {
+//                    activeFocusOnPress: true
+//                    updateValueWhileDragging: false
+//                    id: rollControlSlider
+//                    opacity: enabled ? 1 : 0.1
+//                    width: 150
+//                    stepSize: 180
+//                    style:econSliderStyle
+//                    minimumValue:0
+//                    maximumValue: 180
+//                    onValueChanged:  {
+//                       rollControlTextValue.text = rollControlSlider.value
+//                    }
+//                }
+//                TextField {
+//                    id: rollControlTextValue
+//                    text: rollControlSlider.value
+//                    font.pixelSize: 10
+//                    font.family: "Ubuntu"
+//                    smooth: true
+//                    horizontalAlignment: TextInput.AlignHCenter
+//                    opacity: enabled ? 1 : 0.1
+//                    style: econTextFieldStyle
+//                    onTextChanged: {
+//                        if(text != ""){
+//                            rollControlSlider.value = rollControlTextValue.text
+//                            ascella.setRollValue(rollControlTextValue.text)
+//                        }
+//                    }
+//                }
+//            }
             RowLayout{
                 Image {
                     id: hideImage1
@@ -1238,8 +1292,11 @@ Item {
     Component.onCompleted:{
         uvccamera.initExtensionUnitAscella()
         ascella.setCurrentValues(JS.videoCaptureResolution)
+        //ascella.setRollValue(rollControlTextValue.text)
+        ledStatusTimer.start()
     }
     Component.onDestruction:{
+        ledStatusTimer.stop()
         uvccamera.exitExtensionUnitAscella()
     }
 }

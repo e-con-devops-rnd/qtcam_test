@@ -145,7 +145,6 @@ void ASCELLA::setSceneMode(camSceneMode sceneMode){
         emit logHandle(QtCriticalMsg, "setSceneMode: Handle is Null");
         return void();
     }
-
     if(sceneMode == SceneNormal || sceneMode == SceneDocScan){
         memset(g_out_packet_buf, 0x00, ASCELLA_BUFLEN);
 
@@ -223,7 +222,6 @@ void ASCELLA::setLimitMaxFrameRateMode(camLimitMaxFRMode LimitMaxFRMode, QString
 
     int bytesSent;
     u_int8_t maxFRIntVal;
-
     if(uvccamera::handle == NULL){
         emit logHandle(QtCriticalMsg, "setLimitMaxFrameRate: Handle is Null");
         return void();
@@ -418,6 +416,35 @@ void ASCELLA::setBinnedResizedMode(camBinnResizeMode mode){
 
 }
 
+#if 0
+void ASCELLA::setRollValue(QString rollValue){
+    int bytesSent;
+    u_int8_t rollIntVal;
+    if(uvccamera::handle == NULL)
+    {
+        emit logHandle(QtCriticalMsg, "setRollValue: Handle is Null");
+        return void();
+    }
+
+    memset(g_out_packet_buf, 0x00, ASCELLA_BUFLEN);
+
+    g_out_packet_buf[1] = 0x00;
+    rollIntVal = rollValue.toInt();
+    g_out_packet_buf[2] = (unsigned char)(rollIntVal & 0xFF);
+    bytesSent = libusb_control_transfer(uvccamera::handle,
+                                        0x21,
+                                        0x09,
+                                        0x200,
+                                        0x2,
+                                        g_out_packet_buf,
+                                        ASCELLA_BUFLEN,
+                                        10000);
+    if(0 > bytesSent){
+        emit logHandle(QtCriticalMsg, "setRollValue: libusb_control_transfer set command failed");
+        return void();
+    }
+}
+#endif
 
 void ASCELLA::setDefaultValues(){
     u_int8_t defaultValue[30];
@@ -526,7 +553,6 @@ void ASCELLA::getDefaultValues(u_int8_t *pDefaultValue){
     pDefaultValue[18] = 0x01; //18 - 0x01 //B&W: Previous B&W Fix Threshold Value
     pDefaultValue[19] = g_in_packet_buf[20]; //19 - Enable binning/resize; 0 for disable, 1 for enable
     pDefaultValue[20] = g_in_packet_buf[21]; //20 - 1 for binning, 2 for resize
-    //==========================================================
 }
 
 
@@ -561,10 +587,10 @@ void ASCELLA::getCurrentValues(u_int8_t *pCurrentValue){
         }
         // Getting the response - in buffer
         bytesSent = libusb_control_transfer(uvccamera::handle,
-                                            0xA1,
-                                            0x01,
-                                            0x100,
-                                            0x2,
+                                            0xA1, // req type
+                                            0x01, // request
+                                            0x100, // value
+                                            0x2, // index
                                             g_in_packet_buf,
                                             ASCELLA_BUFLEN,
                                             ASCELLA_TIMEOUT);
@@ -579,44 +605,49 @@ void ASCELLA::getCurrentValues(u_int8_t *pCurrentValue){
     /* pCurrentValue[0] - led status mode */
     switch(g_in_packet_buf[1]){
         case 0x00:
-            pCurrentValue[i++] = 0x01; break;
+            pCurrentValue[i] = 0x01; break;
         case 0x01:
-            pCurrentValue[i++] = 0x02; break;
+            pCurrentValue[i] = 0x02; break;
         case 0x02:
-            pCurrentValue[i++] = 0x03; break;
+            pCurrentValue[i] = 0x03; break;
     }
 
+    i++;
     /* pCurrentValue[1] - Led Brightness value */
-    pCurrentValue[i++] = g_in_packet_buf[2];
+    pCurrentValue[i] = g_in_packet_buf[2];
+    i++;
 
     /* pCurrentValue[2] - Exposure */
-    pCurrentValue[i++] = g_in_packet_buf[3];
+    pCurrentValue[i] = g_in_packet_buf[3];
+    i++;
 
     /* pCurrentValue[3] - Auto focus mode */
     switch(g_in_packet_buf[4]){
         case 0x03:
-            pCurrentValue[i++] = 0x01; break;
+            pCurrentValue[i] = 0x01; break;
         case 0x00:
-            pCurrentValue[i++] = 0x02; break;
+            pCurrentValue[i] = 0x02; break;
     }
+    i++;
 
     /* pCurrentValue[4] - color mode */
     switch(g_in_packet_buf[5]){
         case 0x00:
-            pCurrentValue[i++] = 0x01; break;
+            pCurrentValue[i] = 0x01; break;
         case 0x01:
-            pCurrentValue[i++] = 0x02; break;
+            pCurrentValue[i] = 0x02; break;
         case 0x03:
-            pCurrentValue[i++] = 0x03; break;
+            pCurrentValue[i] = 0x03; break;
         case 0x0A:
-            pCurrentValue[i++] = 0x04; break;
+            pCurrentValue[i] = 0x04; break;
     }
-
+    i++;
     /* pCurrentValue[5] - Black and white mode */
     if(g_in_packet_buf[6] == 0x00)
-        pCurrentValue[i++] = 0x00;      //Black&White Auto
+        pCurrentValue[i] = 0x00;      //Black&White Auto
     else if(g_in_packet_buf[6] >= 0x01)
-        pCurrentValue[i++] = g_in_packet_buf[6]; //black and white thresold
+        pCurrentValue[i] = g_in_packet_buf[6]; //black and white thresold
+    i++;
 
     /* pCurrentValue[6] - noise reduction mode */
     pCurrentValue[i++] = g_in_packet_buf[7];
@@ -624,17 +655,19 @@ void ASCELLA::getCurrentValues(u_int8_t *pCurrentValue){
     /* pCurrentValue[7] - scene mode */
     switch(g_in_packet_buf[8]){
         case 0x00:
-            pCurrentValue[i++] = 0x01; break;
+            pCurrentValue[i] = 0x01; break;
         case 0x20:
-            pCurrentValue[i++] = 0x02; break;
+            pCurrentValue[i] = 0x02; break;
     }
+    i++;
 
     /* pCurrentValue[8] - limit max frame rate */
     if(g_in_packet_buf[9] >= 0x03){            // Max frame rate
-        pCurrentValue[i++] = g_in_packet_buf[9];
+        pCurrentValue[i] = g_in_packet_buf[9];
     }else if(g_in_packet_buf[9] == 0x00)       // Disable
-        pCurrentValue[i++] = 0x01;
+        pCurrentValue[i] = 0x01;
 
+    i++;
     // pCurrentValue[9] - Auto Focus area either  center or custom
     pCurrentValue[i++] = g_in_packet_buf[10];
 
@@ -647,6 +680,29 @@ void ASCELLA::getCurrentValues(u_int8_t *pCurrentValue){
         pCurrentValue[i++] = g_in_packet_buf[11 + j];
     }
 
+}
+
+void ASCELLA::setLedValueWithExternalHwButton(){
+    u_int8_t currentValue[30];
+    QString ledCurBrightness;
+
+    /* Every two secs this function will be called and
+     * when hw button for led is pressed the UI will be updated*/
+    memset(currentValue, 0x00, sizeof(currentValue));
+    getCurrentValues(currentValue);
+
+    /* Set Led mode and led brightness */
+    if(currentValue[1] < 1)
+        ledCurBrightness = QString::number(10);
+    else
+        ledCurBrightness = QString::number(currentValue[1]);
+
+    if(currentValue[0] == 0x01)
+        emit setCurrentLedValue(LedOff, ledCurBrightness);
+    else if(currentValue[0] == 0x02)
+        emit setCurrentLedValue(LedAuto, ledCurBrightness);
+    else if(currentValue[0] == 0x03)
+        emit setCurrentLedValue(LedManual, ledCurBrightness);
 }
 
 void ASCELLA::setCurrentValues(QString vidResolution){
@@ -693,7 +749,12 @@ void ASCELLA::setCurrentValues(QString vidResolution){
     noiseValue = currentValue[6];
     QString curNoiseValue = QString::number(noiseValue);
 
-    if(currentValue[6] >= 0x00 && currentValue[6] <= 0x0A){
+    //Modified by Nithyesh
+    /*
+     * Condition is always true as currentValue[6] is of uint type.
+     * Previous check was if(currentValue[6] >= 0x00 && currentValue[6] <= 0x0A)
+     */
+    if(currentValue[6] <= 0x0A){
         emit setCurNoiseReductionMode(curNoiseValue, NoiseReduceNormal);
     }else if(currentValue[6] >= 0x80){
         noiseValue ^= 0x80;
@@ -716,7 +777,6 @@ void ASCELLA::setCurrentValues(QString vidResolution){
 
     vidWidth = vidResolution.split('x')[0].toInt();
     vidHeight = vidResolution.split('x')[1].toInt();
-
     if(currentValue[9] == 0x01){ /* set auto focus area center mode */
         emit setAfAreaCenterMode();
     }else if(currentValue[9] == 0x02){ /* set auto focus area custom mode */

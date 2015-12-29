@@ -160,7 +160,7 @@
 #define ASCELLA_VID 0x04b4
 #define ASCELLA_PID 0x00c3
 #define ASCELLA_BUFLEN 64
-#define ASCELLA_TIMEOUT 100
+#define ASCELLA_TIMEOUT 1000
 #define ASCELLA_DEFAULT_MAXFRAMERATE 119
 
 #define LEDSTATUS_MODE				0xF031
@@ -195,7 +195,13 @@ public:
     //Q_INVOKABLE void setCameraName(const QString msg);
     //QString getCameraName();
 
-    int findEconDevice(QStringList*,QString);
+    //Modified by Nithyesh
+    /*
+     * Removed arg QStringList from function as it was unused.
+     * Previous fn signature was
+     * int uvccamera::findEconDevice(QStringList, QString)
+     */
+    int findEconDevice(QString);
     void getDeviceNodeName(QString);
     int closeAscellaDevice();
 

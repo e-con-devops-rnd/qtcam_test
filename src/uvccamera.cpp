@@ -42,7 +42,14 @@ unsigned int uvccamera::getTickCount()
     return (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
 }
 
-int uvccamera::findEconDevice(QStringList *econCamera,QString parameter)
+//Modified by Nithyesh
+/*
+ * Removed arg QStringList from function as it was unused.
+ * Previous fn signature was
+ * int uvccamera::findEconDevice(QStringList *econCamera,QString parameter)
+ */
+
+int uvccamera::findEconDevice(QString parameter)
 {
 
     //QStringList tempList = *econCamera;
@@ -142,6 +149,8 @@ int uvccamera::findEconDevice(QStringList *econCamera,QString parameter)
 int uvccamera::initExtensionUnitAscella(){
     int ret;
 
+    //Added by Nithyesh
+    ret = -1;
     kernelDriverDetached = 0;
     libusb_init(NULL);
     libusb_set_debug(NULL, 3);
@@ -165,7 +174,7 @@ int uvccamera::initExtensionUnitAscella(){
 
         ret = libusb_claim_interface(handle, 2);
         if(ret == 0){
-            emit logHandle(QtDebugMsg, "Interfaced Claimed successfully\n");
+            emit logHandle(QtDebugMsg, "Interface Claimed successfully\n");
         }
         else{
             emit logHandle(QtCriticalMsg, "error claiming interface\n");
@@ -200,7 +209,6 @@ int uvccamera::closeAscellaDevice(){
     }
 
     libusb_exit(NULL);
-
     handle = NULL;
 
     return res;
@@ -283,7 +291,8 @@ bool uvccamera::initExtensionUnit(QString cameraName) {
         return false;
     }
 
-    uint i;
+    //Commented by Nithyesh
+    //uint i;
     int ret, desc_size = 0;
     char buf[256];
     struct hidraw_devinfo info;

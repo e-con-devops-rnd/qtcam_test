@@ -196,6 +196,13 @@ public slots:
      * @param mode - Set binned or resized mode
      */
     void setBinnedResizedMode(camBinnResizeMode mode);
+ #if 0
+    /**
+     * @brief setRollValue
+     * @param rollValue - change the orientation of image
+     */
+    void setRollValue(QString rollValue);
+#endif
 
     /**
      * @brief setDefaultValues when Default button pressed in extension settings
@@ -217,6 +224,11 @@ public slots:
      * @brief setCurrentValues
      */
     void setCurrentValues(QString vidResolution);
+
+    /**
+     * @brief setLedValueWithExternalHwButton
+     */
+    void setLedValueWithExternalHwButton();
 
     /**
      * @brief getFirmwareVersion
