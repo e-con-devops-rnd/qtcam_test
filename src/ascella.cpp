@@ -487,8 +487,12 @@ void ASCELLA::setDefaultValues(){
     QString binResizeMode = QString::number(defaultValue[19]);
     emit binnResizeEnableDisable(binResizeMode);
 
-    /* selecting binned mode */
-    emit binnModeEnable();
+//    /* selecting binned mode */
+//    emit binnModeEnable();
+
+    /* Select binn or resize mode */
+    QString binResizeSelect = QString::number(defaultValue[20]);
+    emit setCurbinnResizeSelect(binResizeSelect)
 
     /* Enabling auto focus area center mode */
     emit setAfAreaCenterMode();
