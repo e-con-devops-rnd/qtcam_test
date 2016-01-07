@@ -220,7 +220,7 @@ void Videostreaming::capFrame()
 
         memcpy(tempSrcBuffer, m_buffers[buf.index].start[0], buf.bytesused);
 
-        for(int l=0; l<(width*height*2); l=l+2) /* Y16 to YUYV conversion */
+        for(__u32 l=0; l<(width*height*2); l=l+2) /* Y16 to YUYV conversion */
         {
             *tempDestBuffer++ = (((tempSrcBuffer[l] & 0xF0) >> 4) | (tempSrcBuffer[l+1] & 0x0F) << 4);
             *tempDestBuffer++ = 0x80;
@@ -386,10 +386,8 @@ void Videostreaming::capFrame()
             m_snapShot = false;
             if (!((stillSize == lastPreviewSize) && (stillOutFormat == lastFormat)))
             {
-                if(tempSrcBuffer || copyDestBuffer)
-                {
-                    freeBuffers(tempSrcBuffer,tempDestBuffer,copyDestBuffer);
-                }
+                freeBuffer(tempSrcBuffer);
+                freeBuffers(tempDestBuffer, copyDestBuffer);
                 freeBuffer((unsigned char *)tempCu40SrcBuffer);
                 freeBuffer(tempCu40DestBuffer);
                 freeBuffer(irBuffer);
@@ -425,8 +423,8 @@ void Videostreaming::capFrame()
     if(tempCu130SrcBuffer){
        free(tempCu130SrcBuffer); tempCu130SrcBuffer = NULL;
     }   
-    if(tempSrcBuffer || copyDestBuffer)
-        freeBuffers(tempSrcBuffer,tempDestBuffer,copyDestBuffer);    
+    freeBuffer(tempSrcBuffer);
+    freeBuffers(tempDestBuffer, copyDestBuffer);
     qbuf(buf);
 }
 
@@ -666,28 +664,17 @@ int Videostreaming::decomp(unsigned char **jpegbuf,
     return retval;
 }
 
-void Videostreaming::freeBuffers(unsigned char *srcBuffer, unsigned char *destBuffer, unsigned char *copyBuffer)
-{
-
-    if(srcBuffer)
-    {
-        free(srcBuffer);
-        srcBuffer = NULL;
-    }
-
-    if(copyBuffer)
+void Videostreaming::freeBuffers(unsigned char *destBuffer, unsigned char *copyBuffer)
+{     
+    if(copyBuffer || destBuffer)
     {
         free(copyBuffer);
         copyBuffer = NULL;
-        //destBuffer = NULL;
-    }
-
-    if(destBuffer)
-    {
-        free(destBuffer);
         destBuffer = NULL;
     }
+
 }
+
 void Videostreaming::getFrameRates() {
     struct timeval tv, res;
     if (m_frame == 0)
