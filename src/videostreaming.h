@@ -40,6 +40,7 @@
 #include "v4l2-api.h"
 #include "videoencoder.h"
 #include "h264decoder.h"
+#include "audioinput.h"
 
 #if !LIBAVCODEC_VER_AT_LEAST(54,25)
     #define AV_CODEC_ID_NONE CODEC_ID_NONE
@@ -96,6 +97,7 @@ public:
 
     VideoEncoder  *videoEncoder;
     H264Decoder *h264Decode;
+    InputTest *inpTest;
 
     /* Jpeg decode */
     int doyuv;

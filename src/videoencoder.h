@@ -23,6 +23,11 @@
 #include <QIODevice>
 #include <QFile>
 #include <QImage>
+#include <QAudioDeviceInfo>
+#include <QAudioInput>
+//#include "microphone.h"
+//#include "audioinput.h"
+
 
 /* checking version compatibility */
 #define LIBAVCODEC_VER_AT_LEAST(major,minor)  (LIBAVCODEC_VERSION_MAJOR > major || \
@@ -60,21 +65,29 @@ public:
    bool createFile(QString filename, CodecID encodeType, unsigned width,unsigned height,unsigned fpsDenominator, unsigned fpsNumerator, unsigned bitRate);
    bool closeFile();
 
+   // audio
+   int open_audio(AVStream *st);
+   AVStream* add_audio_stream(AVFormatContext *oc, enum CodecID codec_id);
+   int check_sample_fmt(AVCodec *codec, enum AVSampleFormat sample_fmt);
+   int encodeAudio(const char *);
+   int select_sample_rate(AVCodec *codec);
+   int select_channel_layout(AVCodec *codec);
+
    int encodeImage(const QImage &);
-   bool isOk();
+   bool isOk();   
 
 protected:
       unsigned Width,Height;
       unsigned Bitrate;
       unsigned Gop;
       bool ok;
-      int i;
+      int i,j;
 
       // FFmpeg stuff
       AVFormatContext *pFormatCtx;
       AVOutputFormat *pOutputFormat;
-      AVCodecContext *pCodecCtx;
-      AVStream *pVideoStream;
+      AVCodecContext *pCodecCtx, *pAudioCodecCtx;
+      AVStream *pVideoStream, *pAudioStream;
       AVCodec *pCodec;
 
       // Frame data
@@ -90,7 +103,7 @@ protected:
       SwsContext *img_convert_ctx;
 
       // Packet
-      AVPacket pkt;
+      AVPacket pkt, audioPkt;
 
       QString fileName;
       QString tempExtensionCheck;
@@ -113,6 +126,14 @@ protected:
       bool convertImage(const QImage &img);
       bool convertImage_sws(const QImage &img);
 
+      //audio      
+      int audio_outbuf_size;
+      int audio_input_frame_size;
+      u_int8_t *samples;
+      u_int8_t *audio_outbuf;
+
+      AVCodec *paudioCodec;
+      AVFrame *pAudioFrame;
 };
 #endif // VideoEncoder_H
 

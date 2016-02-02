@@ -313,6 +313,8 @@ void Videostreaming::capFrame()
         if(m_VideoRecord) {
             if(videoEncoder!=NULL) {
                 videoEncoder->encodeImage(*qq);
+                if(inpTest->m_audioInfo->ses != NULL)
+                    videoEncoder->encodeAudio(inpTest->m_audioInfo->ses);
             }
         }
     } else {        
@@ -323,8 +325,7 @@ void Videostreaming::capFrame()
     delete qq;
     int tmpRet;    
     if(m_frame > 1 && m_snapShot) {
-        bool tmpValue;
-
+        bool tmpValue;        
         if(formatType == "raw") {
             QFile file(filename);
             if(file.open(QIODevice::WriteOnly)) {     
@@ -1372,6 +1373,7 @@ void Videostreaming::recordBegin(int videoEncoderType, QString videoFormatType, 
     fileName = fileLocation +"/Qtcam-" + QDateTime::currentDateTime().toString("yy_MM_dd:hh_mm_ss")+"."+ videoFormatType;
     v4l2_frmivalenum frmival;
     enum_frameintervals(frmival, m_pixelformat, m_width, m_height);
+    inpTest = new InputTest();
     bool tempRet = videoEncoder->createFile(fileName,(CodecID)videoEncoderType, m_capDestFormat.fmt.pix.width,m_capDestFormat.fmt.pix.height,frmival.discrete.denominator,frmival.discrete.numerator,10000000);
     if(!tempRet){
         emit rcdStop("Unable to record the video");
@@ -1380,12 +1382,15 @@ void Videostreaming::recordBegin(int videoEncoderType, QString videoFormatType, 
 
 void Videostreaming::recordStop() {
 
-    emit videoRecord(fileName);
+    emit videoRecord(fileName);    
     m_VideoRecord = false;
     if(videoEncoder!=NULL){
-        videoEncoder->closeFile();
+        videoEncoder->closeFile();        
+        inpTest->stopRecord();
         delete videoEncoder;
         videoEncoder=NULL;
+        delete inpTest;
+        inpTest = NULL;
     }
 }
 

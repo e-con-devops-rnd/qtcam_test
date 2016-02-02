@@ -3,7 +3,7 @@ folder_01.source = qml/qtcam
 folder_01.target = qml
 DEPLOYMENTFOLDERS = folder_01
 
-QT += widgets
+QT += widgets multimedia
 TARGET = Qtcam
 
 CONFIG += release
@@ -29,7 +29,8 @@ SOURCES += main.cpp \
     seecam_cu51.cpp \
     see3cam_cu130.cpp \
     h264decoder.cpp \
-    ascella.cpp
+    ascella.cpp \    
+    audioinput.cpp
 
 # Installation path
 # target.path =
@@ -57,7 +58,8 @@ HEADERS += \
     seecam_cu51.h \
     see3cam_cu130.h \
     h264decoder.h \
-    ascella.h
+    ascella.h \    
+    audioinput.h
 
 
 INCLUDEPATH +=  $$PWD/v4l2headers/include \
@@ -75,7 +77,7 @@ LIBS += -lv4l2 -lv4lconvert \
         -lusb-1.0 \
         -L/usr/lib/ -lturbojpeg
 
-
+QMAKE_CXXFLAGS_RELEASE += -g
 QMAKE_CFLAGS_THREAD = -D__STDC_CONSTANT_MACROS      #For Ubuntu 12.04 compilation
 QMAKE_CXXFLAGS_THREAD = -D__STDC_CONSTANT_MACROS    #For Ubuntu 12.04 compilation
 
