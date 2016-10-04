@@ -108,7 +108,7 @@ Rectangle {
     property bool olderValue:false
     property bool webcamKeyAccept: true
     property bool stillColorSpace
-
+    property bool usb3speed: false
 
     property int videoPinSize;
     property int videoPinSizeIndex;
@@ -130,6 +130,10 @@ Rectangle {
     property var menuitems:[]
     property variant aboutWindow
     property variant see3cam
+    /* To fix manual expoure not updating in preview when moving slider */
+    property variant exposureOrigAscella: [10, 20, 39, 78, 156, 312, 625, 1250, 2500, 5000, 10000, 20000]
+    property int expAscellaDefaultValue;
+    property int expAscellaTxtFiledValue;
 
     onSeeCamCu51Capture: {
         vidstreamproperty.setStillVideoSize(output_value.currentText.toString(), color_comp_box.currentIndex.toString())
@@ -892,6 +896,7 @@ Rectangle {
             onCurrentIndexChanged: {
                 if(currentIndex.toString() != "-1" && currentIndex.toString() != "0") {
                     if(oldIndex!=currentIndex) {
+			usb3speed = false			
                         oldIndex = currentIndex
                         m_Snap = true
                         outputSizeBox = false
@@ -913,8 +918,14 @@ Rectangle {
                         vidstreamproperty.displayOutputFormat()
                         vidstreamproperty.displayStillResolution()
                         vidstreamproperty.displayVideoResolution()
+                        vidstreamproperty.displayEncoderList()
                         if(device_box.currentText == "CX3-UVC"){
                             vidstreamproperty.cameraFilterControls()
+                            if(!usb3speed){
+                                menuitems.push("Auto Mode")
+                                exposureCombo.model = menuitems
+                                menuitems.pop()
+                            }
                         }
                         updateFPS(color_comp_box.currentText.toString(), output_value.currentText.toString())
                         brightValueChangeProperty = false
@@ -945,7 +956,8 @@ Rectangle {
                         JS.stillCaptureFormat = color_comp_box.currentIndex.toString()
                         JS.stillCaptureResolution = output_value.currentText.toString()
                         JS.videoCaptureFormat = JS.stillCaptureFormat
-                        JS.videoCaptureResolution = JS.stillCaptureResolution                        
+                        JS.videoCaptureResolution = JS.stillCaptureResolution
+                        JS.videocaptureFps = frame_rate_box.currentText.toString()
                         vidstreamproperty.masterModeEnabled()
                     }
                 }
@@ -1325,14 +1337,16 @@ Rectangle {
                                         onCheckedChanged: {
                                             if(checked) {
                                                 camproperty.logDebugWriter("White Balance set to Auto Mode")
-                                                vidstreamproperty.changeSettings(whiteBalanceControl_auto_Id,1)
+                                                vidstreamproperty.changeSettings(whiteBalanceControl_auto_Id, 1)
                                                 white_balance_Slider.opacity = 0.1
                                                 white_balance_Slider.enabled = false
                                             } else {
                                                 camproperty.logDebugWriter("White Balance set to Manual Mode")                                                
-                                                vidstreamproperty.changeSettings(whiteBalanceControl_auto_Id,0)
-                                                white_balance_Slider.opacity = 1
-                                                white_balance_Slider.enabled = true
+                                                vidstreamproperty.changeSettings(whiteBalanceControl_auto_Id, 0)
+                                                if(device_box.currentText.toString() != "CX3-UVC"){
+                                                    white_balance_Slider.opacity = 1
+                                                    white_balance_Slider.enabled = true
+                                                }
                                             }
                                         }
                                     }
@@ -1383,8 +1397,7 @@ Rectangle {
                                     smooth: true
                                     opacity: 0.1
                                 }
-                                Slider {
-                                    property bool gammaValueChangeProperty
+                                Slider {                                   
                                     activeFocusOnPress: true
                                     updateValueWhileDragging: false
                                     id: gamma_Slider
@@ -1393,10 +1406,7 @@ Rectangle {
                                     opacity: enabled ? 1 : 0.1
                                     style:econSliderStyle
                                     onValueChanged: {
-                                        if(gammaValueChangeProperty) {
-                                            camproperty.logDebugWriter("Gamma settings changed to: "+ value.toString())
-                                            vidstreamproperty.changeSettings(gammaControlId,value.toString())
-                                        }
+                                        vidstreamproperty.changeSettings(gammaControlId,value.toString())
                                     }
                                 }
                                 TextField {
@@ -1701,26 +1711,35 @@ Rectangle {
                                     smooth: true
                                     opacity:  0
                                 }
-                                Slider {
+                                Slider {                                    
                                     activeFocusOnPress: true
+                                    property var exposureValueAscella
                                     updateValueWhileDragging: false
                                     id: exposure_Slider
                                     width: 110
                                     stepSize: 1
                                     opacity: enabled ? 1 : 0.1
-                                    style:econSliderStyle
+                                    style:econSliderStyle                                  
                                     onValueChanged: {
-                                        if((exposureCombo.currentText == "Manual Mode") || (device_box.currentText == "e-con's CX3 RDK with O\nV5680") || (device_box.currentText == "e-con's CX3 RDK with M\nT9P031") || (device_box.currentText == "See3CAM_CU40")) {
-                                            camproperty.logDebugWriter("Exposure Control settings changed to: "+ value.toString())
-                                            vidstreamproperty.changeSettings(exposurecontrolId,value.toString())
+                                        if((exposureCombo.currentText == "Manual Mode") && (device_box.currentText == "CX3-UVC")){
+                                            exposureValueAscella = exposureOrigAscella[value]
+                                            exposure_value.text = exposureOrigAscella[value]
+                                            vidstreamproperty.changeSettings(exposurecontrolId, exposureValueAscella)
+                                        }else{
+                                            if((exposureCombo.currentText == "Manual Mode") || (device_box.currentText == "e-con's CX3 RDK with O\nV5680") || (device_box.currentText == "e-con's CX3 RDK with M\nT9P031") || (device_box.currentText == "See3CAM_CU40")) {
+                                                vidstreamproperty.changeSettings(exposurecontrolId,value.toString())
+                                            }
                                         }
 
                                     }
+
                                 }
                                 TextField {
                                     id: exposure_value
-                                    text: exposure_Slider.value
-                                    validator: IntValidator {bottom: exposure_Slider.minimumValue; top: exposure_Slider.maximumValue;}
+                                    property int expLocalVal
+                                    property int expLocalval1
+                                    text: (device_box.currentText != "CX3-UVC") ? exposure_Slider.value : ""
+                                    validator: IntValidator {bottom: (device_box.currentText != "CX3-UVC") ? exposure_Slider.minimumValue : 10; top: (device_box.currentText != "CX3-UVC") ? exposure_Slider.maximumValue : 20000;}
                                     font.pixelSize: 10
                                     font.family: "Ubuntu"
                                     smooth: true
@@ -1728,8 +1747,27 @@ Rectangle {
                                     opacity: 0
                                     style:econTextFieldStyle
                                     onTextChanged: {
-                                        if(text != "")
-                                            exposure_Slider.value = exposure_value.text
+                                         if(exposure_value.text.length > 0){
+                                             if(device_box.currentText == "CX3-UVC"){
+                                             expLocalval1 = text.toString()
+                                             expLocalVal = expLocalval1
+                                             for(var i=0; i<exposureOrigAscella.length; i++){
+                                                 if(expLocalVal == exposureOrigAscella[i]){
+                                                     expAscellaTxtFiledValue = text.toString()
+                                                     exposure_Slider.value = exposureOrigAscella.indexOf(expAscellaTxtFiledValue)
+                                                     break
+                                                 }
+                                             }
+                                             if(i == exposureOrigAscella.length){
+                                                 messageDialog.title = qsTr("Failure")
+                                                 messageDialog.text = qsTr("Invalid exposure value")
+                                                 messageDialog.open()
+                                             }
+                                             }
+                                             else{
+                                                 exposure_Slider.value = exposure_value.text
+                                             }
+                                        }
                                     }
                                 }
                                 Column {
@@ -2100,7 +2138,6 @@ Rectangle {
                                     onValueChanged: {
                                         if(focusValueChangeProperty) {
                                             if(!autoSelect_focus.checked || device_box.currentText == "e-con's CX3 RDK with O\nV5680") {
-                                                camproperty.logDebugWriter("Focus control settings changed to: "+ value.toString())
                                                 vidstreamproperty.changeSettings(focusControlId,value.toString())
                                             } else {
                                                 focus_Slider.enabled = false
@@ -2247,12 +2284,13 @@ Rectangle {
                                 }
                             }
                             onCurrentIndexChanged: {
-                                JS.stillCaptureFormat = color_comp_box.currentIndex.toString()
-                                if(JS.triggerMode_11cug === 1 || JS.triggerMode_B === 1 || JS.triggerMode_M === 1 || JS.triggerMode_cu51 === 1)
-                                    triggerModeCapture()
-
-                                if(stillColorSpace) {
-                                      updateStillPreview(output_value.currentText.toString(), color_comp_box.currentIndex.toString())
+                                if(color_comp_box.count > 0){
+                                    JS.stillCaptureFormat = color_comp_box.currentIndex.toString()
+                                    if(JS.triggerMode_11cug === 1 || JS.triggerMode_B === 1 || JS.triggerMode_M === 1 || JS.triggerMode_cu51 === 1)
+                                        triggerModeCapture()
+                                    if(stillColorSpace) {
+                                          updateStillPreview(output_value.currentText.toString(), color_comp_box.currentIndex.toString())
+                                    }
                                 }
                             }
                             Component.onCompleted:
@@ -2550,6 +2588,7 @@ Rectangle {
                                     onCurrentIndexChanged: {
                                         if(frameRateBox) {                                            
                                             videoPinFrameInterval = currentIndex
+                                            JS.videocaptureFps = currentText
                                             updateScenePreview(output_size_box_Video.currentText.toString(), color_comp_box_VideoPin.currentIndex.toString(),currentIndex)
                                         }
                                     }
@@ -2609,13 +2648,15 @@ Rectangle {
                                         }
                                     }
                                     onCurrentIndexChanged: {
-                                        if(colorSpace) {                                            
-                                            vidFormatChanged = true
-                                            JS.videoCaptureFormat = color_comp_box_VideoPin.currentIndex.toString()                                            
-                                            updateScenePreview(vidstreamproperty.width.toString() +"x"+vidstreamproperty.height.toString(), color_comp_box_VideoPin.currentIndex.toString(),frame_rate_box.currentIndex)
-                                            vidstreamproperty.displayVideoResolution()
-                                            updateFPS(currentText.toString(), output_size_box_Video.currentText.toString())
-                                            vidFormatChanged = false
+                                        if(output_size_box_Video.count > 0){
+                                            if(colorSpace) {
+                                                vidFormatChanged = true
+                                                JS.videoCaptureFormat = color_comp_box_VideoPin.currentIndex.toString()
+                                                updateScenePreview(vidstreamproperty.width.toString() +"x"+vidstreamproperty.height.toString(), color_comp_box_VideoPin.currentIndex.toString(),frame_rate_box.currentIndex)
+                                                vidstreamproperty.displayVideoResolution()
+                                                updateFPS(currentText.toString(), output_size_box_Video.currentText.toString())
+                                                vidFormatChanged = false
+                                            }
                                         }
                                     }
                                     Component.onCompleted: {
@@ -2673,11 +2714,13 @@ Rectangle {
                                         }
                                     }                                    
                                     onCurrentIndexChanged: {                                        
-                                        JS.videoCaptureResolution = output_size_box_Video.currentText.toString();
-                                        if(outputSizeBox) {
-                                            updateFPS(color_comp_box_VideoPin.currentText.toString(), currentText.toString())
-                                            updateScenePreview(output_size_box_Video.currentText.toString(), color_comp_box_VideoPin.currentIndex.toString(),frame_rate_box.currentIndex)
-                                        }                                        
+                                        if(output_size_box_Video.count > 0){
+                                            JS.videoCaptureResolution = output_size_box_Video.currentText.toString();
+                                            if(outputSizeBox) {
+                                                updateFPS(color_comp_box_VideoPin.currentText.toString(), currentText.toString())
+                                                updateScenePreview(output_size_box_Video.currentText.toString(), color_comp_box_VideoPin.currentIndex.toString(),frame_rate_box.currentIndex)
+                                            }
+                                        }                                       
                                     }
                                     Component.onCompleted: {
                                         outputSizeBox = true
@@ -2754,12 +2797,8 @@ Rectangle {
                                 ComboBox {
                                     id: fileEncoder
                                     opacity: 1
-                                    model: ListModel {
-                                        ListElement { text: "YUY"  }
-                                        ListElement { text: "MJPG" }
-                                        ListElement { text: "H264" }
-                                        ListElement { text: "VP8" }
-                                    }
+                                    model: encodersModel
+                                    textRole: "display"
                                     activeFocusOnPress: true
                                     style: ComboBoxStyle {
                                         background: Image {
@@ -3251,21 +3290,20 @@ Rectangle {
     }
 
     function updateStillPreview(str, format) {
-        m_Snap = false
+		m_Snap = false
         stillPreview = true        
         vidstreamproperty.stopCapture()
         vidstreamproperty.vidCapFormatChanged(format)
         vidstreamproperty.displayStillResolution()
         vidstreamproperty.setStillVideoSize(str, format)
-        vidstreamproperty.startAgain()
-
+        JS.videoCaptureFormat = color_comp_box_VideoPin.currentIndex.toString()
+        JS.stillCaptureResolution = output_value.currentText.toString()
         if(JS.videoCaptureFormat !== JS.stillCaptureFormat  || JS.stillCaptureResolution !== JS.videoCaptureResolution)
         {
-            vidstreamproperty.stopCapture()
             vidstreamproperty.vidCapFormatChanged(JS.videoCaptureFormat)
             vidstreamproperty.setResoultion(JS.videoCaptureResolution)
-            vidstreamproperty.startAgain()
         }
+        vidstreamproperty.startAgain()
     }
 
     function updateFPS(pix, size) {        
@@ -3389,17 +3427,32 @@ Rectangle {
                 sharpness_Slider.value = controlDefaultValue
             } else if(controlName === "Exposure (Absolute)") {
                 exposure_absolute.opacity = 1
-                if((device_box.currentText === "e-con's CX3 RDK with O\nV5680") || (device_box.currentText === "e-con's CX3 RDK with M\nT9P031") || (device_box.currentText === "See3CAM_CU40") ) {                    
+                if((device_box.currentText === "e-con's CX3 RDK with O\nV5680") || (device_box.currentText === "e-con's CX3 RDK with M\nT9P031") || (device_box.currentText === "See3CAM_CU40")) {
                     exposure_Slider.opacity = 1
                     exposure_Slider.enabled = true
                     exposure_value.opacity = 1
                     exposure_value.enabled = true
                 }
-
                 exposurecontrolId = ctrlID
-                exposure_Slider.minimumValue = controlMinValue
-                exposure_Slider.maximumValue = controlMaxValue
-                exposure_Slider.value = controlDefaultValue
+                if(device_box.currentText === "CX3-UVC"){       // For ascella camera, mapped exposure values to slider values 0 to 11
+                    if(exposureCombo.currentText == "Auto Mode"){
+                        exposure_absolute.opacity = 0.1
+                    }else{
+                        exposure_absolute.opacity = 1
+                    }
+                    usb3speed = true
+                    exposure_Slider.enabled = false
+                    exposure_Slider.minimumValue = 0
+                    exposure_Slider.maximumValue = 11
+                    expAscellaDefaultValue = ctrlDefaultValue
+                    exposure_Slider.value = exposureOrigAscella.indexOf(expAscellaDefaultValue)
+                    exposure_value.text = exposureOrigAscella[exposure_Slider.value]
+
+                }else{
+                    exposure_Slider.minimumValue = controlMinValue
+                    exposure_Slider.maximumValue = controlMaxValue
+                    exposure_Slider.value = ctrlDefaultValue
+                }
             } else if(controlName === "Focus (absolute)") {
                 focusauto.opacity = 1
                 if(device_box.currentText === "e-con's CX3 RDK with O\nV5680") {
@@ -3458,7 +3511,7 @@ Rectangle {
                 autoSelect_wb.enabled = true
                 autoSelect_wb.checked = controlDefaultValue
                 whiteBalanceControl_auto_Id = ctrlID
-                if(!autoSelect_wb.checked) {
+                if(!autoSelect_wb.checked && device_box.currentText.toString() != "CX3-UVC") {
                     white_balance_Slider.enabled = true
                 }
             } else if(controlName == "Focus, Auto") {
@@ -3473,7 +3526,7 @@ Rectangle {
                     focus_value.opacity = 1
                     focus_value.enabled = true
                 }
-            } else if(controlName == "Exposure, Auto Priority") {
+            } else if(controlName == "Exposure, Auto Priority" && device_box.currentText.toString() != "CX3-UVC") {
                 exposureAutoPriority.opacity = 1
                 exposureAutoPriorityCheck.opacity = 1
                 exposureAutoPriorityCheck.enabled = true
@@ -3503,6 +3556,9 @@ Rectangle {
             }
             else if(controlName === "Exposure, Auto") {
                 menuitems.pop()
+                if(device_box.currentText == "CX3-UVC" && !usb3speed){
+                    while(menuitems.pop()){}
+                }
                 exposure_auto.opacity = 1
                 exposureCombo.opacity = 1
                 exposureCombo.model = menuitems
@@ -3510,7 +3566,7 @@ Rectangle {
                 exposureAutoControlId = ctrlID
                 exposureComboEnable =  true
                 exposureCombo.currentIndex = controlDefaultValue
-                if(exposureCombo.currentText == "Manual Mode"){
+                if(exposureCombo.currentIndex == 1){  // 0 - auto mode, 1 - manual mode
                     JS.autoExposureSelected = false
                     exposure_absolute.opacity = 1
                     exposure_Slider.enabled = true
@@ -3846,6 +3902,8 @@ Rectangle {
                 see3cam = Qt.createComponent("../UVCSettings/see3camar0130/uvc_ar0130.qml").createObject(root)
             } else if(device_box.currentText == "See3CAM_CU40") {
                 see3cam = Qt.createComponent("../UVCSettings/see3cam40/uvc40.qml").createObject(root)
+            } else if(device_box.currentText == "See3CAM_CU30") {
+                see3cam = Qt.createComponent("../UVCSettings/see3cam30/uvc30.qml").createObject(root)
             } else if(device_box.currentText == "CX3-UVC") {
                 see3cam = Qt.createComponent("../UVCSettings/ascella/cx3-uvc.qml").createObject(root)
             } else {

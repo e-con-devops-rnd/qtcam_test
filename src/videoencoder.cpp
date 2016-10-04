@@ -25,7 +25,6 @@
 
 using namespace std;
 
-
 /**
   gop: maximal interval in frames between keyframes
 **/
@@ -40,179 +39,11 @@ VideoEncoder::~VideoEncoder()
     closeFile();
 }
 
-int VideoEncoder::check_sample_fmt(AVCodec *codec, enum AVSampleFormat sample_fmt)
-{
-    const enum AVSampleFormat *p = codec->sample_fmts;
-
-    while (*p != AV_SAMPLE_FMT_NONE) {
-        if (*p == sample_fmt)
-            return 1;
-        p++;
-    }
-    return 0;
-}
-
-/* just pick the highest supported samplerate */
-int VideoEncoder::select_sample_rate(AVCodec *codec)
-{
-    const int *p;
-    int best_samplerate = 0;
-
-    if (!codec->supported_samplerates)
-        return 44100;
-
-    p = codec->supported_samplerates;
-    while (*p) {
-        best_samplerate = FFMAX(*p, best_samplerate);
-        p++;
-    }
-    return best_samplerate;
-}
-
-/* select layout with the highest channel count */
-int VideoEncoder::select_channel_layout(AVCodec *codec)
-{
-    const uint64_t *p;
-    uint64_t best_ch_layout = 0;
-    int best_nb_channells   = 0;
-
-    if (!codec->channel_layouts)
-        return AV_CH_LAYOUT_STEREO;
-
-    p = codec->channel_layouts;
-    while (*p) {
-        int nb_channels = av_get_channel_layout_nb_channels(*p);
-
-        if (nb_channels > best_nb_channells) {
-            best_ch_layout    = *p;
-            best_nb_channells = nb_channels;
-        }
-        p++;
-    }
-    return best_ch_layout;
-}
-
-
-AVStream* VideoEncoder::add_audio_stream(AVFormatContext *oc, CodecID codec_id)
-{
-    AVCodecContext *c;
-    AVStream *st;
-
-    paudioCodec = avcodec_find_encoder(CODEC_ID_MP2);
-    if (!paudioCodec)
-    {
-        printf("codec not found\n");
-        return NULL;
-    }
-    st = avformat_new_stream(oc, paudioCodec);
-    if (!st) {
-        fprintf(stderr, "Could not alloc stream\n");
-        return NULL;
-    }
-
-    c = st->codec;
-    c->codec_id = codec_id;
-    c->codec_type = AVMEDIA_TYPE_AUDIO;
-
-    /* put sample parameters */
-    c->sample_fmt = AV_SAMPLE_FMT_S16;
-    if (!check_sample_fmt(paudioCodec, c->sample_fmt)) {
-        fprintf(stderr, "Encoder does not support sample format %s",
-        av_get_sample_fmt_name(c->sample_fmt));
-        return NULL;
-    }
-    c->bit_rate = 160000;
-    c->sample_rate = 32000;
-    c->channel_layout = select_channel_layout(paudioCodec);
-    c->channels    = av_get_channel_layout_nb_channels(c->channel_layout);
-    qDebug()<<"c->sample_rate"<<c->sample_rate;
-    qDebug()<<"c->channel layout"<<c->channel_layout;
-    qDebug()<<"c->channels"<<c->channels;
-
-    qDebug()<<"pFormatCtx->audio_codec_id"<<pFormatCtx->audio_codec_id;
-
-    // some formats want stream headers to be separate
-    if(oc->oformat->flags & AVFMT_GLOBALHEADER)
-        c->flags |= CODEC_FLAG_GLOBAL_HEADER;
-
-    return st;
-}
-
-
-int VideoEncoder::open_audio(AVStream *st)
-{
-    pAudioCodecCtx = st->codec;
-    /* open it */
-    if (avcodec_open2(pAudioCodecCtx, paudioCodec, NULL) < 0) {
-        fprintf(stderr, "could not open codec\n");
-        return false;
-    }
-
-    /* frame containing input raw audio */
-    pAudioFrame = avcodec_alloc_frame();
-    if (!pAudioFrame) {
-        fprintf(stderr, "Could not allocate audio frame\n");
-        return false;
-    }
-
-    int frameSize = pAudioCodecCtx->frame_size;
-    if(frameSize <= 0){
-        frameSize = 1152; // default
-    }
-
-    audio_outbuf_size = 240000;
-
-    samples = (u_int8_t *)av_malloc(audio_outbuf_size);
-    if (!samples) {
-        fprintf(stderr, "Could not allocate %d bytes for samples buffer\n",
-                                       audio_outbuf_size);
-        return false;
-    }    
-    pAudioFrame->nb_samples     = frameSize;
-    pAudioFrame->format         = pAudioCodecCtx->sample_fmt;
-    return true;
-}
-
-int VideoEncoder::encodeAudio(const char *data)
-{
-    int out_size, ret;
-    if(!isOk())
-        return -1;
-
-   out_size = avcodec_encode_audio(pAudioCodecCtx, samples, audio_outbuf_size, (short*)data);
-   if(out_size < 0){
-       fprintf(stderr, "Error encoding a audio frame\n");
-       return -1;
-   }
-
-   if(out_size > 0){
-       av_init_packet(&audioPkt);
-
-       if(pAudioCodecCtx->coded_frame && pAudioCodecCtx->coded_frame->pts != (int64_t)AV_NOPTS_VALUE)
-           audioPkt.pts = av_rescale_q(pAudioCodecCtx->coded_frame->pts, pAudioCodecCtx->time_base, pAudioStream->time_base);
-       if(pAudioCodecCtx->coded_frame->key_frame)
-           audioPkt.flags |= AV_PKT_FLAG_KEY;
-       audioPkt.stream_index = pAudioStream->index;
-       audioPkt.data = samples;
-       audioPkt.size = out_size;
-       pAudioCodecCtx->gop_size = pCodecCtx->gop_size;
-       if((tempExtensionCheck) == "mkv")
-       {
-         j++;
-         audioPkt.pts = (j*(1000/pAudioCodecCtx->gop_size));
-         audioPkt.dts = audioPkt.pts;
-       }
-       /* write the compressed frame in the media file */
-          ret = av_write_frame(pFormatCtx, &audioPkt);
-          av_free_packet(&audioPkt);
-   } else
-   {
-          ret = 0;
-   }
-   return ret;
-}
-
+#if LIBAVCODEC_VER_AT_LEAST(54,25)
+bool VideoEncoder::createFile(QString fileName,AVCodecID encodeType, unsigned width,unsigned height,unsigned fpsDenominator, unsigned fpsNumerator, unsigned bitrate)
+#else
 bool VideoEncoder::createFile(QString fileName,CodecID encodeType, unsigned width,unsigned height,unsigned fpsDenominator, unsigned fpsNumerator, unsigned bitrate)
+#endif
 {
     // If we had an open video, close it.
     closeFile();
@@ -231,8 +62,11 @@ bool VideoEncoder::createFile(QString fileName,CodecID encodeType, unsigned widt
     if (!pOutputFormat) {
         pOutputFormat = av_guess_format("mpeg", NULL, NULL);
     }
-
+#if LIBAVCODEC_VER_AT_LEAST(54,25)
+    pOutputFormat->video_codec = (AVCodecID)encodeType;
+#else
     pOutputFormat->video_codec = (CodecID)encodeType;
+#endif
     pFormatCtx= avformat_alloc_context();
     if(!pFormatCtx)
     {
@@ -263,11 +97,11 @@ bool VideoEncoder::createFile(QString fileName,CodecID encodeType, unsigned widt
         if(pFormatCtx->oformat->flags & AVFMT_GLOBALHEADER)
             pCodecCtx->flags |= CODEC_FLAG_GLOBAL_HEADER;
 
-
         pCodecCtx->codec_id = pOutputFormat->video_codec;
 
-        if(encodeType == CODEC_ID_RAWVIDEO)
+        if(encodeType == CODEC_ID_RAWVIDEO){
             pCodecCtx->pix_fmt =  PIX_FMT_YUYV422;//AV_PIX_FMT_YUV444P;//AV_PIX_FMT_YUV422P;//PIX_FMT_YUYV422;//PIX_FMT_YUV420P;
+        }
         else if(encodeType == CODEC_ID_MJPEG)
             pCodecCtx->pix_fmt =  PIX_FMT_YUVJ420P;
         else {
@@ -286,6 +120,7 @@ bool VideoEncoder::createFile(QString fileName,CodecID encodeType, unsigned widt
             pCodecCtx->qmin = 15; // qmin = 10*
             pCodecCtx->qmax = 30; //qmax = 51 **
         }
+
 #if !LIBAVCODEC_VER_AT_LEAST(53,6)
         /* set the output parameters (must be done even if no
                 parameters). */
@@ -320,20 +155,6 @@ bool VideoEncoder::createFile(QString fileName,CodecID encodeType, unsigned widt
             return 1;
         }
     }
-
-    pFormatCtx->audio_codec_id = CODEC_ID_MP2;
-    qDebug()<<"pOutputFormat->audio_codec"<<pOutputFormat->audio_codec;
-    pOutputFormat->audio_codec = CODEC_ID_MP2;
-
-    if (pOutputFormat->audio_codec != CODEC_ID_NONE){
-          pAudioStream = add_audio_stream(pFormatCtx, pOutputFormat->audio_codec);
-          qDebug()<<"audio stream opened.";
-      }
-      if(pAudioStream == NULL)
-          return false;
-      else
-          open_audio(pAudioStream);
-
     int ret = avformat_write_header(pFormatCtx,NULL);
     if(ret<0) {
         return false;
@@ -373,7 +194,6 @@ bool VideoEncoder::closeFile()
     av_free(pFormatCtx);
 
     initVars();
-
     return true;
 }
 
@@ -400,13 +220,14 @@ int VideoEncoder::encodeImage(const QImage &img)
     /* encode the image */
     int ret = avcodec_encode_video2(pCodecCtx, &pkt, ppicture, &got_packet);
     if (ret < 0) {
+        char errText[999]="";
+        av_strerror(ret, errText, 999);
         fprintf(stderr, "Error encoding a video frame\n");
-    return -1;
-        //exit(1);
+	    return -1;       
     }
     if (got_packet) {
         if (pCodecCtx->coded_frame->pts != AV_NOPTS_VALUE)
-            pkt.pts= av_rescale_q(pCodecCtx->coded_frame->pts, pCodecCtx->time_base, pVideoStream->time_base);
+            pkt.pts = av_rescale_q(pCodecCtx->coded_frame->pts, pCodecCtx->time_base, pVideoStream->time_base);
         pkt.stream_index = pVideoStream->index;
         if((tempExtensionCheck) == "mkv") {
             i++;
@@ -436,8 +257,7 @@ int VideoEncoder::encodeImage(const QImage &img)
 
     if(out_size < 0){
         fprintf(stderr, "Error encoding a video frame\n");
-        return -1;
-        //exit(1);
+	    return -1;        
     }
     /* if zero size, it means the image was buffered */
     if (out_size > 0) {
@@ -466,9 +286,6 @@ int VideoEncoder::encodeImage(const QImage &img)
 }
 #endif
 
-
-
-
 void VideoEncoder::initVars()
 {
     ok=false;
@@ -481,14 +298,7 @@ void VideoEncoder::initVars()
     outbuf=0;
     picture_buf=0;
     img_convert_ctx=0;
-    pAudioFrame = 0;
-    pAudioCodecCtx = 0;
-    audio_outbuf = 0;
-    pAudioStream = 0;
-    paudioCodec = 0;
-    samples = 0;
     i = 0;
-    j = 0;
 }
 
 bool VideoEncoder::initCodec()
@@ -542,13 +352,14 @@ void VideoEncoder::freeOutputBuf()
 
 bool VideoEncoder::initFrame()
 {
-#if LIBAVCODEC_VER_AT_LEAST(53,34)
-    ppicture = avcodec_alloc_frame();
-#else
+#if LIBAVCODEC_VER_AT_LEAST(55,28)
     ppicture = av_frame_alloc();
+#else
+    ppicture = avcodec_alloc_frame();
 #endif
-    if(ppicture==0)
+    if(ppicture==0){
         return false;
+    }
 
     int size = avpicture_get_size(pCodecCtx->pix_fmt, pCodecCtx->width, pCodecCtx->height);
     picture_buf = new uint8_t[size];
@@ -574,18 +385,6 @@ void VideoEncoder::freeFrame()
     {
         av_free(ppicture);
         ppicture=0;
-    }
-
-    //audio
-    if(samples)
-    {
-        delete[] samples;
-        samples=0;
-    }
-    if(pAudioFrame)
-    {
-        av_free(pAudioFrame);
-        pAudioFrame=0;
     }
 }
 

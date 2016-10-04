@@ -1,9 +1,10 @@
 [Desktop Entry]
-Version=1.0
+Version=9.0.0.4
 Type=Application
-Terminal=false
+Terminal=true
 Name[en_IN]=Qtcam
-Exec= gksu /usr/bin/qtcam
+Exec=sudo /usr/bin/qtcam
 Name=Qtcam
 Comment=Linux camera application
 Icon=/usr/share/qml/qtcam/icon/images/icon.jpg
+TargetEnvironment=Unity

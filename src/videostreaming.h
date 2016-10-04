@@ -40,7 +40,6 @@
 #include "v4l2-api.h"
 #include "videoencoder.h"
 #include "h264decoder.h"
-#include "audioinput.h"
 
 #if !LIBAVCODEC_VER_AT_LEAST(54,25)
     #define AV_CODEC_ID_NONE CODEC_ID_NONE
@@ -70,6 +69,7 @@ public:
     static QStringListModel stillOutputFormat;
     static QStringListModel videoOutputFormat;
     static QStringListModel fpsList;    
+    static QStringListModel encoderList;
 
     void setFrame(unsigned char *data);
     void displayFrame();
@@ -97,7 +97,6 @@ public:
 
     VideoEncoder  *videoEncoder;
     H264Decoder *h264Decode;
-    InputTest *inpTest;
 
     /* Jpeg decode */
     int doyuv;
@@ -162,6 +161,7 @@ private:
     QString stillOutFormat;
     QString formatType;
     QString filename;
+    QString ubuntuVersion;
 
     QMap<QString,QString> pixFormat;
 
@@ -343,6 +343,8 @@ public slots:
     void masterModeEnabled();
 
     int getMenuIndex(unsigned int,int);
+
+    void displayEncoderList();
 
 signals:
     void logDebugHandle(QString _text);

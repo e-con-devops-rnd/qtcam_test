@@ -56,6 +56,7 @@ QStringListModel Videostreaming::resolution;
 QStringListModel Videostreaming::stillOutputFormat;
 QStringListModel Videostreaming::videoOutputFormat;
 QStringListModel Videostreaming::fpsList;
+QStringListModel Videostreaming::encoderList;
 int Videostreaming::deviceNumber;
 QString Videostreaming::camDeviceName;
 
@@ -313,8 +314,6 @@ void Videostreaming::capFrame()
         if(m_VideoRecord) {
             if(videoEncoder!=NULL) {
                 videoEncoder->encodeImage(*qq);
-                if(inpTest->m_audioInfo->ses != NULL)
-                    videoEncoder->encodeAudio(inpTest->m_audioInfo->ses);
             }
         }
     } else {        
@@ -325,7 +324,8 @@ void Videostreaming::capFrame()
     delete qq;
     int tmpRet;    
     if(m_frame > 1 && m_snapShot) {
-        bool tmpValue;        
+        bool tmpValue;
+
         if(formatType == "raw") {
             QFile file(filename);
             if(file.open(QIODevice::WriteOnly)) {     
@@ -884,14 +884,6 @@ void Videostreaming::formatSaveSuccess(bool success) {
         emit titleTextChanged(_title,_text);
     }
 
-//    if(success) {
-//        emit logDebugHandle("Still image saved successfully in " + filename);
-//        qDebug("able to save image");
-//    } else {
-//        emit logCriticalHandle("Still image not saved successfully");
-//        qDebug("Not able to save image");
-//    }
-//    emit enableCaptureAndRecord();
 }
 
 bool Videostreaming::getInterval(struct v4l2_fract &interval)
@@ -1060,6 +1052,29 @@ void Videostreaming::displayStillResolution() {
     }    
     stillOutputFormat.setStringList(dispStillRes);
     emit logDebugHandle("Supported still Resolution: " +dispStillRes.join(", "));
+}
+
+void Videostreaming::displayEncoderList(){
+    QStringList encoders;
+    QString fileContent;
+    encoders.clear();
+    // read
+    QFile f("/etc/issue");
+    if (f.open(QFile::ReadOnly)){
+        QTextStream in(&f);
+        fileContent.append(in.readAll());
+
+        if( (-1 != fileContent.indexOf("15.10")) || (-1 != fileContent.indexOf("16.04")) || (-1 != fileContent.indexOf("Linux Mint 18")) ){
+            encoders<<"MJPG"<<"H264"<<"VP8";
+            ubuntuVersion = ">=15"; // version >=  15 [ Here 15.10 and 16.04 , Linux Mint 18 ]
+
+        }else if((-1 != fileContent.indexOf("12.04")) || (-1 != fileContent.indexOf("14.04"))){
+            encoders<<"YUY"<<"MJPG"<<"H264"<<"VP8";
+            ubuntuVersion = "<15"; // version less than 15 [ Here 12.04 and 14.04 ]
+        }
+
+        encoderList.setStringList(encoders);
+    }
 }
 
 void Videostreaming::displayVideoResolution() {
@@ -1300,9 +1315,9 @@ QString Videostreaming::getSettings(unsigned int id) {
 void Videostreaming::changeSettings(unsigned int id, QString value) {
     struct v4l2_control c;
     c.id = id;
-    c.value = value.toInt();    
+    c.value = value.toInt();
     if (ioctl(VIDIOC_S_CTRL, &c)) {
-        emit logCriticalHandle("Error in setting the Value");        
+        emit logCriticalHandle("Error in setting the Value");      
     }
 }
 
@@ -1355,26 +1370,45 @@ void Videostreaming::recordBegin(int videoEncoderType, QString videoFormatType, 
     if(videoFormatType.isEmpty()) {
         videoFormatType = "avi";        //Application never enters in this condition
     }
-    switch(videoEncoderType) {
-    case 0:
-        videoEncoderType = CODEC_ID_RAWVIDEO;
-        break;
-    case 1:
-        videoEncoderType = CODEC_ID_MJPEG;
-        break;
-    case 2:
-        videoEncoderType = CODEC_ID_H264;
-        break;
-    case 3:
-        videoEncoderType = CODEC_ID_VP8;
-        break;
+
+    if(ubuntuVersion == ">=15"){
+        switch(videoEncoderType) {
+        case 0:
+            videoEncoderType = CODEC_ID_MJPEG;
+            break;
+        case 1:
+            videoEncoderType = CODEC_ID_H264;
+            break;
+        case 2:
+            videoEncoderType = CODEC_ID_VP8;
+            break;
+        }
+    } else if(ubuntuVersion == "<15"){
+        switch(videoEncoderType) {
+        case 0:
+            videoEncoderType = CODEC_ID_RAWVIDEO;
+            break;
+        case 1:
+            videoEncoderType = CODEC_ID_MJPEG;
+            break;
+        case 2:
+            videoEncoderType = CODEC_ID_H264;
+            break;
+        case 3:
+            videoEncoderType = CODEC_ID_VP8;
+            break;
+        }
+
     }
 
     fileName = fileLocation +"/Qtcam-" + QDateTime::currentDateTime().toString("yy_MM_dd:hh_mm_ss")+"."+ videoFormatType;
     v4l2_frmivalenum frmival;
     enum_frameintervals(frmival, m_pixelformat, m_width, m_height);
-    inpTest = new InputTest();
+#if LIBAVCODEC_VER_AT_LEAST(54,25)
+    bool tempRet = videoEncoder->createFile(fileName,(AVCodecID)videoEncoderType, m_capDestFormat.fmt.pix.width,m_capDestFormat.fmt.pix.height,frmival.discrete.denominator,frmival.discrete.numerator,10000000);
+#else
     bool tempRet = videoEncoder->createFile(fileName,(CodecID)videoEncoderType, m_capDestFormat.fmt.pix.width,m_capDestFormat.fmt.pix.height,frmival.discrete.denominator,frmival.discrete.numerator,10000000);
+#endif
     if(!tempRet){
         emit rcdStop("Unable to record the video");
     }
@@ -1382,15 +1416,12 @@ void Videostreaming::recordBegin(int videoEncoderType, QString videoFormatType, 
 
 void Videostreaming::recordStop() {
 
-    emit videoRecord(fileName);    
+    emit videoRecord(fileName);
     m_VideoRecord = false;
     if(videoEncoder!=NULL){
-        videoEncoder->closeFile();        
-        inpTest->stopRecord();
+        videoEncoder->closeFile();
         delete videoEncoder;
         videoEncoder=NULL;
-        delete inpTest;
-        inpTest = NULL;
     }
 }
 
