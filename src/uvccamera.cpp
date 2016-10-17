@@ -23,14 +23,52 @@
 
 QMap<QString, QString> uvccamera::cameraMap;
 QMap<QString, QString> uvccamera::serialNumberMap;
+//Added by Dhurka - 13th Oct 2016
+/**
+ * @brief uvccamera::selectedDeviceEnum - This is used to compare camera enum value instead of camera name
+ */
+CommonEnums::ECameraNames  uvccamera::selectedDeviceEnum;
 QString uvccamera::hidNode;
 
 int uvccamera::hid_fd;
 libusb_device_handle *uvccamera::handle;
+//Added bu Dhurka - 14th Oct 2016
+/**
+ * @brief econCameraVid - to avoid hard coded value checking in findEconDevice()
+ */
+const QString econCameraVid = "2560";
+const QString ascellaCameraVid = "04b4";
 
 uvccamera::uvccamera()
 {
+    //Added by Dhurka - 13th Oct 2016
+    /**
+     * @brief initCameraEnumMap - Initialize the cameramap with key as vid,pid and value is corressponding
+     * enum value
+     */
+    initCameraEnumMap();
+}
 
+void uvccamera::initCameraEnumMap()
+{
+    //Added by Dhurka - 13th Oct 2016
+    QString econVid = "2560"; // This is common for econ camera. So initialize once
+    cameraEnumMap.clear();
+    cameraEnumMap.insert(econVid + (",c112"),CommonEnums::SEE3CAM_11CUG);
+    cameraEnumMap.insert(econVid + (",c113"),CommonEnums::SEE3CAM_12CUNIR);
+    cameraEnumMap.insert(econVid + (",c130"),CommonEnums::SEE3CAM_CU30);
+    cameraEnumMap.insert(econVid + (",c140"),CommonEnums::SEE3CAM_CU40);
+    cameraEnumMap.insert(econVid + (",c151"),CommonEnums::SEE3CAM_CU50);
+    cameraEnumMap.insert(econVid + (",c152"),CommonEnums::SEE3CAM_CU51);
+    cameraEnumMap.insert(econVid + (",c1d0"),CommonEnums::SEE3CAM_CU130);
+    cameraEnumMap.insert("04b4,00c3",CommonEnums::CX3_UVC_CAM);
+    cameraEnumMap.insert("046d,082d",CommonEnums::HD_PRO_WEBCAM);
+    cameraEnumMap.insert(econVid + (",c111"),CommonEnums::ECON_1MP_BAYER_RGB);
+    cameraEnumMap.insert(econVid + (",c110"),CommonEnums::ECON_1MP_MONOCHROME);
+    cameraEnumMap.insert(econVid + (",d151"),CommonEnums::ECON_CX3_RDX_T9P031);
+    cameraEnumMap.insert(econVid + (",d052"),CommonEnums::ECON_CX3_RDX_V5680);
+    cameraEnumMap.insert(econVid + (",c080"),CommonEnums::ECON_8MP_CAMERA);
+    cameraEnumMap.insert(econVid + (",c0d0"),CommonEnums::SEE3CAM_130);
 }
 
 unsigned int uvccamera::getTickCount()
@@ -51,9 +89,6 @@ unsigned int uvccamera::getTickCount()
 
 int uvccamera::findEconDevice(QString parameter)
 {
-
-    //QStringList tempList = *econCamera;
-
     emit logHandle(QtDebugMsg,"Check Devices of"+ parameter);
     cameraMap.clear();
     struct udev *udev;
@@ -66,7 +101,6 @@ int uvccamera::findEconDevice(QString parameter)
     if (!udev) {
         emit logHandle(QtCriticalMsg,"Can't create udev\n");
 	return -1;
-        //exit(1);
     }
 
     /* Create a list of the devices in the 'video4linux/hidraw' subsystem. */
@@ -104,7 +138,6 @@ int uvccamera::findEconDevice(QString parameter)
         if (!pdev) {
             emit logHandle(QtCriticalMsg,"Unable to find parent usb device.");
 	    return -1;
-           // exit(1);
         }
 
         /* From here, we can call get_sysattr_value() for each file
@@ -115,11 +148,21 @@ int uvccamera::findEconDevice(QString parameter)
            encoded, but the strings returned from
            udev_device_get_sysattr_value() are UTF-8 encoded. */
 
-        if(!strncmp(udev_device_get_sysattr_value(pdev,"idVendor"), "2560", 4)) {
+        //Modified by Dhurka - 14th Oct 2016
+        /*
+         * Modified string comparision with lower case to avoid future issues
+         * Previous comparision is not using the lower case comparision
+         */
+        if (((QString::fromUtf8(udev_device_get_sysattr_value(pdev,"idVendor"))).toLower() == econCameraVid.toLower()) ||
+            (QString::fromUtf8(udev_device_get_sysattr_value(pdev,"idVendor"))).toLower() == ascellaCameraVid.toLower())
+        {
             QString hid_device = udev_device_get_devnode(dev);
             QString productName = udev_device_get_sysattr_value(pdev,"product");
             QString serialNumber = udev_device_get_sysattr_value(pdev,"serial");
-            if(parameter!="video4linux") {
+            QString vidValue = udev_device_get_sysattr_value(pdev,"idVendor");
+            QString pidValue = udev_device_get_sysattr_value(pdev,"idProduct");
+            if(parameter!="video4linux")
+            {
                 emit logHandle(QtDebugMsg, "HID Device found: "+productName + ": Available in: "+hid_device);
                 uvccamera::cameraMap.insertMulti(productName,hid_device);
                 if(serialNumber.isEmpty())
@@ -127,14 +170,15 @@ int uvccamera::findEconDevice(QString parameter)
                 else
                     serialNumberMap.insertMulti(hid_device,serialNumber);
             }
-
-        } else {
-            if (!strncmp(udev_device_get_sysattr_value(pdev,"idVendor"), "058f",4)) {
+            else
+            {
+                //Added by Dhurka - 13th Oct 2016
+                /*
+                 * Added the camera name  and corresponding vid,pid in the pidVid map
+                 */
+                QString vidPid = vidValue.toLower().append(",").append(pidValue).toLower();
+                pidVidMap.insert(productName,vidPid);
             }
-//            else {
-//                QString productName = udev_device_get_sysattr_value(pdev,"product");
-//                econCamera->removeOne(productName);
-//            }
         }
         udev_device_unref(dev);
 
@@ -142,8 +186,36 @@ int uvccamera::findEconDevice(QString parameter)
     /* Free the enumerator object */
     udev_enumerate_unref(enumerate);
     udev_unref(udev);
-    //*econCamera = tempList;
     return 1;
+}
+//Added by Dhurka - 13th Oct 2016
+/**
+ * @brief uvccamera::currentlySelectedDevice - This is used to get the currently selected
+ * camera enum value.
+ */
+void uvccamera::currentlySelectedDevice(QString deviceName)
+{
+    deviceName.remove(QRegExp("[\n\t\r]"));
+    if(pidVidMap.contains(deviceName))
+    {
+        QString selectedCameraVidPid = pidVidMap.value(deviceName);
+        //Convert the vid,pid value in the cameraEnum map as lower case and compare with the selected Vid,pid
+        QMap<QString, CommonEnums::ECameraNames>::iterator mapIterator;
+        selectedDeviceEnum = CommonEnums::NONE;
+        for (mapIterator = cameraEnumMap.begin(); mapIterator != cameraEnumMap.end(); ++mapIterator)
+        {
+            if(mapIterator.key().toLower() == selectedCameraVidPid)
+            {
+                selectedDeviceEnum = mapIterator.value();
+                break;
+            }
+        }
+    }
+    else
+    {
+        selectedDeviceEnum = CommonEnums::NONE;
+    }
+    emit currentlySelectedCameraEnum(selectedDeviceEnum);
 }
 
 int uvccamera::initExtensionUnitAscella(){
@@ -369,8 +441,12 @@ bool uvccamera::initExtensionUnit(QString cameraName) {
         perror("HIDIOCGRAWINFO");
         return false;
     }
-
-    if(cameraName != "See3CAM_CU130" && cameraName != "See3CAM_CU40")//this condition is put temporary until cu130 and cu40 hardware
+    //Modified by Dhurka - 14th Oct 2016
+    /*
+     * Added camera enum comparision
+     * Before its like camera name comparision
+     */
+    if(selectedDeviceEnum != CommonEnums::SEE3CAM_CU130 && selectedDeviceEnum != CommonEnums::SEE3CAM_CU40)//this condition is put temporary until cu130 and cu40 hardware
     {                                // does not support sendOSCode implementation
         ret = sendOSCode();
         if (ret == false) {
@@ -491,12 +567,24 @@ bool See3CAM_Control::getFlashState(quint8 *flashState, QString cameraName) {
     memset(g_out_packet_buf, 0x00, sizeof(g_out_packet_buf));
 
     //Set the Report Number
-    if(cameraName == "e-con's 8MP Camera")
+    //Modified by Dhurka - 14th Oct 2016
+    /*
+     * Added camera enum comparision
+     * Before its like camera name comparision
+     */
+    if(selectedDeviceEnum == CommonEnums::ECON_8MP_CAMERA)
+    {
         g_out_packet_buf[1] = CAMERA_CONTROL_80; /* Report Number */
-    else if(cameraName == "See3CAMCU50")
-        g_out_packet_buf[1] = CAMERA_CONTROL_50; /* Report Number */    
-    else if(cameraName == "See3CAM_12CUNIR")
+    }
+    else if(selectedDeviceEnum == CommonEnums::SEE3CAM_CU50)
+    {
+        g_out_packet_buf[1] = CAMERA_CONTROL_50; /* Report Number */
+
+    }
+    else if(selectedDeviceEnum == CommonEnums::SEE3CAM_12CUNIR)
+    {
         g_out_packet_buf[1] = CAMERA_CONTROL_AR0130; /* Report Number */
+    }
 
     //g_out_packet_buf[1] = CAMERA_CONTROL_80; /* Report Number */
     g_out_packet_buf[2] = GET_FLASH_LEVEL; /* Report Number */
@@ -534,7 +622,6 @@ bool See3CAM_Control::getFlashState(quint8 *flashState, QString cameraName) {
 
 bool See3CAM_Control::setFlashState(flashTorchState flashState, QString cameraName)
 {
-
     if(cameraName.isEmpty())
     {
         emit logHandle(QtCriticalMsg," cameraName Not passed to set flash state of camera\n");
@@ -555,12 +642,23 @@ bool See3CAM_Control::setFlashState(flashTorchState flashState, QString cameraNa
         //Initialize the buffer
         memset(g_out_packet_buf, 0x00, sizeof(g_out_packet_buf));
         //Set the Report Number
-        if(cameraName == "e-con's 8MP Camera")
+        //Modified by Dhurka - 14th Oct 2016
+        /*
+         * Added camera enum comparision
+         * Before its like camera name comparision
+         */
+        if(selectedDeviceEnum == CommonEnums::ECON_8MP_CAMERA)
+        {
             g_out_packet_buf[1] = CAMERA_CONTROL_80; /* Report Number */
-        else if(cameraName == "See3CAMCU50")
+        }
+        else if(selectedDeviceEnum == CommonEnums::SEE3CAM_CU50)
+        {
             g_out_packet_buf[1] = CAMERA_CONTROL_50; /* Report Number */
-        else if(cameraName == "See3CAM_12CUNIR")
+        }
+        else if(selectedDeviceEnum == CommonEnums::SEE3CAM_12CUNIR)
+        {
             g_out_packet_buf[1] = CAMERA_CONTROL_AR0130; /* Report Number */
+        }
         g_out_packet_buf[2] = SET_FLASH_LEVEL; 	/* Report Number */
         g_out_packet_buf[3] = flashState;		/* Flash mode */
 
@@ -604,7 +702,8 @@ bool See3CAM_Control::setFlashState(flashTorchState flashState, QString cameraNa
     return true;
 }
 
-bool See3CAM_Control::getTorchState(quint8 *torchState, QString cameraName) {
+bool See3CAM_Control::getTorchState(quint8 *torchState, QString cameraName)
+{
 
     *torchState = 0;
     if(cameraName.isEmpty())
@@ -624,12 +723,23 @@ bool See3CAM_Control::getTorchState(quint8 *torchState, QString cameraName) {
     memset(g_out_packet_buf, 0x00, sizeof(g_out_packet_buf));
 
     //Set the Report Number
-    if(cameraName == "e-con's 8MP Camera")
+    //Modified by Dhurka - 14th Oct 2016
+    /*
+     * Added camera enum comparision
+     * Before its like camera name comparision
+     */
+    if(selectedDeviceEnum == CommonEnums::ECON_8MP_CAMERA)
+    {
         g_out_packet_buf[1] = CAMERA_CONTROL_80; /* Report Number */
-    else if(cameraName == "See3CAMCU50")
+    }
+    else if(selectedDeviceEnum == CommonEnums::SEE3CAM_CU50)
+    {
         g_out_packet_buf[1] = CAMERA_CONTROL_50; /* Report Number */
-    else if(cameraName == "See3CAM_CU51")
+    }
+    else if(selectedDeviceEnum == CommonEnums::SEE3CAM_CU51)
+    {
         g_out_packet_buf[1] = CAMERA_CONTROL_51; /* Report Number */
+    }
     g_out_packet_buf[2] = GET_TORCH_LEVEL; /* Report Number */
     ret = write(uvccamera::hid_fd, g_out_packet_buf, BUFFER_LENGTH);
     if (ret < 0) {
@@ -683,15 +793,26 @@ bool See3CAM_Control::setTorchState(flashTorchState torchState, QString cameraNa
         memset(g_out_packet_buf, 0x00, sizeof(g_out_packet_buf));
 
         //Set the Report Number
-        if(cameraName == "e-con's 8MP Camera")
+        //Modified by Dhurka - 14th Oct 2016
+        /*
+         * Added camera enum comparision
+         * Before its like camera name comparision
+         */
+        if(selectedDeviceEnum == CommonEnums::ECON_8MP_CAMERA)
+        {
             g_out_packet_buf[1] = CAMERA_CONTROL_80; /* Report Number */
-        else if(cameraName == "See3CAMCU50")
+        }
+        else if(selectedDeviceEnum == CommonEnums::SEE3CAM_CU50)
+        {
             g_out_packet_buf[1] = CAMERA_CONTROL_50; /* Report Number */
-        else if(cameraName == "See3CAM_CU51")
-            g_out_packet_buf[1] = CAMERA_CONTROL_51; /* Report Number */        
+        }
+        else if(selectedDeviceEnum == CommonEnums::SEE3CAM_CU51)
+        {
+            g_out_packet_buf[1] = CAMERA_CONTROL_51; /* Report Number */
+        }
         g_out_packet_buf[2] = SET_TORCH_LEVEL; 	/* Report Number */
 
-        if(cameraName == "See3CAM_CU51" && torchState == torchOff)
+        if(selectedDeviceEnum == CommonEnums::SEE3CAM_CU51 && torchState == torchOff)
         {
             g_out_packet_buf[3] = 2;		/* Torch mode */
         }
@@ -888,62 +1009,57 @@ void See3CAM_GPIOControl::setGpioLevel(camGpioPin gpioPin,camGpioValue gpioValue
                 }
             }
         }
-            else
-            {
-                return void();
-            }
-        }
+        //Modified by Dhurka - Braces alignment - 14th Oct 2016
         else
         {
             return void();
         }
     }
-
-    bool See3CAM_ModeControls::enableMasterMode()
+    else
     {
-        int ret =0;
-
-        if(uvccamera::hid_fd < 0)
-        {
-            return false;
-        }
-        //Initialize the buffer
-        memset(g_out_packet_buf, 0x00, sizeof(g_out_packet_buf));
-
-        //Set the Report Number
-        g_out_packet_buf[1] = ENABLEMASTERMODE; /* Report Number */
-        ret = write(uvccamera::hid_fd, g_out_packet_buf, BUFFER_LENGTH);
-        if (ret < 0) {
-            perror("write");
-            return false;
-        }
-        return true;
+        return void();
     }
+}
+//Modified by Dhurka - Braces alignment - 14th Oct 2016
+bool See3CAM_ModeControls::enableMasterMode()
+{
+    int ret =0;
 
-    bool See3CAM_ModeControls::enableTriggerMode()
+    if(uvccamera::hid_fd < 0)
     {
-        int ret =0;
-
-        if(uvccamera::hid_fd < 0)
-        {
-            return false;
-        }
-        //Initialize the buffer
-        memset(g_out_packet_buf, 0x00, sizeof(g_out_packet_buf));
-
-        //Set the Report Number
-        g_out_packet_buf[1] = ENABLETRIGGERMODE; /* Report Number */
-
-        ret = write(uvccamera::hid_fd, g_out_packet_buf, BUFFER_LENGTH);
-        if (ret < 0) {
-            perror("write");
-            return false;
-        }
-        return true;
+        return false;
     }
+    //Initialize the buffer
+    memset(g_out_packet_buf, 0x00, sizeof(g_out_packet_buf));
 
+    //Set the Report Number
+    g_out_packet_buf[1] = ENABLEMASTERMODE; /* Report Number */
+    ret = write(uvccamera::hid_fd, g_out_packet_buf, BUFFER_LENGTH);
+    if (ret < 0) {
+        perror("write");
+        return false;
+    }
+    return true;
+}
+//Modified by Dhurka - Braces alignment - 14th Oct 2016
+bool See3CAM_ModeControls::enableTriggerMode()
+{
+    int ret =0;
 
+    if(uvccamera::hid_fd < 0)
+    {
+        return false;
+    }
+    //Initialize the buffer
+    memset(g_out_packet_buf, 0x00, sizeof(g_out_packet_buf));
 
+    //Set the Report Number
+    g_out_packet_buf[1] = ENABLETRIGGERMODE; /* Report Number */
 
-
-
+    ret = write(uvccamera::hid_fd, g_out_packet_buf, BUFFER_LENGTH);
+    if (ret < 0) {
+        perror("write");
+        return false;
+    }
+    return true;
+}

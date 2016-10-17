@@ -26,8 +26,10 @@ import QtQuick.Layouts 1.1
 import QtQuick.Dialogs 1.1
 import econ.camera.property 1.0
 import econ.camera.stream 1.0
+import econ.camera.see3cam130 1.0
 import econ.camera.uvcsettings 1.0
 import "../JavaScriptFiles/tempValue.js" as JS
+import cameraenum 1.0
 
 Rectangle {
     id: root
@@ -36,6 +38,12 @@ Rectangle {
     signal dispOutFormatCam()
     signal stopCamPreview()
     signal seeCamCu51Capture()
+    property var see3cam130Obj: seecam130
+    property var see3camAfROIMode
+    property var see3camAutoExpROIMode
+    property var see3cam130AfwinSize
+    property var see3cam130AutoExpwinSize
+    property int see3cam130burstLength;
     property bool ret;
     property bool vidFormatChanged: false
     property string stateDisplay:"";
@@ -134,6 +142,9 @@ Rectangle {
     property variant exposureOrigAscella: [10, 20, 39, 78, 156, 312, 625, 1250, 2500, 5000, 10000, 20000]
     property int expAscellaDefaultValue;
     property int expAscellaTxtFiledValue;
+    //Added by Dhurka - 13th Oct 2016
+    //This contains selected camera enum value for comparision instead of camera name
+    property int selectedDeviceEnumValue;
 
     onSeeCamCu51Capture: {
         vidstreamproperty.setStillVideoSize(output_value.currentText.toString(), color_comp_box.currentIndex.toString())
@@ -419,7 +430,13 @@ Rectangle {
                 keyEventFiltering = false
                 messageDialog.title = _title.toString()
                 messageDialog.text = _text.toString()
-                messageDialog.visible = true
+                messageDialog.visible = true               
+            }
+            onEnableRfRectIn130Cam:{
+                if(!seecam130.enableDisableAFRectangle(true)){
+                    camproperty.logCriticalWriter("Not able to enable the RF Rect mode")
+                }
+
             }
 
             onNewControlAdded: {
@@ -435,14 +452,14 @@ Rectangle {
                 messageDialog.title = _title.toString()
                 messageDialog.text = _text.toString()
                 messageDialog.open()
-                if(device_box.currentText == "e-con's 1MP Monochrome\n Camera")
+                if(selectedDeviceEnumValue == CommonEnums.ECON_1MP_MONOCHROME)
                 {
                     JS.enableMasterMode_10cugM()
-                } else if(device_box.currentText == "e-con's 1MP Bayer RGB \nCamera") {
+                } else if(selectedDeviceEnumValue == CommonEnums.ECON_1MP_BAYER_RGB) {
                     JS.enableMasterMode_10cugB()
-                } else if(device_box.currentText == "See3CAM_11CUG"){
+                } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_11CUG){
                     JS.enableMasterMode_11cug()
-                } else if(device_box.currentText == "See3CAM_CU51"){
+                } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU51){
                     JS.enableMasterMode_cu51()
                 }
                 device_box.oldIndex = 0
@@ -539,16 +556,44 @@ Rectangle {
 
             MouseArea {
                 anchors.fill: parent
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
                 onReleased:
                 {
-                    if(capture.visible)
-                        mouseClickCapture()
-                    else if(record.visible){
-                        videoRecordBegin()
-                    } else if(record_stop.visible){
-                        videoSaveVideo()
-                    }
-                }
+                     if (mouse.button == Qt.LeftButton){
+                        if(capture.visible)
+                            mouseClickCapture()
+                        else if(record.visible){
+                            videoRecordBegin()
+                        } else if(record_stop.visible){
+                            videoSaveVideo()
+                        }
+                     }else if(mouse.button == Qt.RightButton && selectedDeviceEnumValue == CommonEnums.SEE3CAM_130){
+                         if(see3cam){
+                             see3cam130AfwinSize = see3cam.afROIwindowSizeCurrentIndex+1 // combo index starts from 0
+                             if(see3cam.afROImode){
+                                 see3camAfROIMode = See3Cam130.AFCentered
+                             }else{
+                                 see3camAfROIMode = See3Cam130.AFManual
+                             }
+                             see3cam130AutoExpwinSize = see3cam.autoExpROIwindowSizeCurrentIndex+1 // combo index starts from 0
+                             if(see3cam.autoExpROImode){
+                                 see3camAutoExpROIMode = See3Cam130.AutoExpFull
+                             }else{
+                                 see3camAutoExpROIMode = See3Cam130.AutoExpManual
+                             }
+                         }
+                         if(see3camAfROIMode === See3Cam130.AFCentered || see3camAfROIMode === See3Cam130.AFManual){
+                             seecam130.setROIAutoFoucs(see3camAfROIMode, vidstreamproperty.width, vidstreamproperty.height, mouse.x, mouse.y, see3cam130AfwinSize)
+                         }else{
+                             console.log("Auto focus ROI mode is invalid");
+                         }
+                         if(see3camAutoExpROIMode === See3Cam130.AutoExpFull || see3camAutoExpROIMode === See3Cam130.AutoExpManual){
+                             seecam130.setROIAutoExposure(see3camAutoExpROIMode, vidstreamproperty.width, vidstreamproperty.height, mouse.x, mouse.y, see3cam130AutoExpwinSize)
+                         }else{
+                             console.log("Auto exposure ROI mode is invalid");
+                         }
+                     }
+                }                
             }
         }
     }
@@ -896,7 +941,7 @@ Rectangle {
             onCurrentIndexChanged: {
                 if(currentIndex.toString() != "-1" && currentIndex.toString() != "0") {
                     if(oldIndex!=currentIndex) {
-			usb3speed = false			
+                        usb3speed = false
                         oldIndex = currentIndex
                         m_Snap = true
                         outputSizeBox = false
@@ -919,13 +964,20 @@ Rectangle {
                         vidstreamproperty.displayStillResolution()
                         vidstreamproperty.displayVideoResolution()
                         vidstreamproperty.displayEncoderList()
-                        if(device_box.currentText == "CX3-UVC"){
+                        if(selectedDeviceEnumValue == CommonEnums.CX3_UVC_CAM){
                             vidstreamproperty.cameraFilterControls()
                             if(!usb3speed){
                                 menuitems.push("Auto Mode")
                                 exposureCombo.model = menuitems
                                 menuitems.pop()
                             }
+                        }
+                        if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_130){
+                            uvccamera.exitExtensionUnit()
+                            uvccamera.initExtensionUnit(device_box.currentText)
+                            seecam130.getAutoFocusROIModeAndWindowSize()
+                            seecam130.getAutoExpROIModeAndWindowSize()
+                            seecam130.getBurstLength()
                         }
                         updateFPS(color_comp_box.currentText.toString(), output_value.currentText.toString())
                         brightValueChangeProperty = false
@@ -1343,7 +1395,7 @@ Rectangle {
                                             } else {
                                                 camproperty.logDebugWriter("White Balance set to Manual Mode")                                                
                                                 vidstreamproperty.changeSettings(whiteBalanceControl_auto_Id, 0)
-                                                if(device_box.currentText.toString() != "CX3-UVC"){
+                                                if(selectedDeviceEnumValue != CommonEnums.CX3_UVC_CAM){
                                                     white_balance_Slider.opacity = 1
                                                     white_balance_Slider.enabled = true
                                                 }
@@ -1721,12 +1773,12 @@ Rectangle {
                                     opacity: enabled ? 1 : 0.1
                                     style:econSliderStyle                                  
                                     onValueChanged: {
-                                        if((exposureCombo.currentText == "Manual Mode") && (device_box.currentText == "CX3-UVC")){
+                                        if((exposureCombo.currentText == "Manual Mode") && (selectedDeviceEnumValue == CommonEnums.CX3_UVC_CAM)){
                                             exposureValueAscella = exposureOrigAscella[value]
                                             exposure_value.text = exposureOrigAscella[value]
                                             vidstreamproperty.changeSettings(exposurecontrolId, exposureValueAscella)
                                         }else{
-                                            if((exposureCombo.currentText == "Manual Mode") || (device_box.currentText == "e-con's CX3 RDK with O\nV5680") || (device_box.currentText == "e-con's CX3 RDK with M\nT9P031") || (device_box.currentText == "See3CAM_CU40")) {
+                                            if((exposureCombo.currentText == "Manual Mode") || (selectedDeviceEnumValue == CommonEnums.ECON_CX3_RDX_V5680) || (selectedDeviceEnumValue == CommonEnums.ECON_CX3_RDX_T9P031) || (selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU40)) {
                                                 vidstreamproperty.changeSettings(exposurecontrolId,value.toString())
                                             }
                                         }
@@ -1738,8 +1790,8 @@ Rectangle {
                                     id: exposure_value
                                     property int expLocalVal
                                     property int expLocalval1
-                                    text: (device_box.currentText != "CX3-UVC") ? exposure_Slider.value : ""
-                                    validator: IntValidator {bottom: (device_box.currentText != "CX3-UVC") ? exposure_Slider.minimumValue : 10; top: (device_box.currentText != "CX3-UVC") ? exposure_Slider.maximumValue : 20000;}
+                                    text: (selectedDeviceEnumValue != CommonEnums.CX3_UVC_CAM) ? exposure_Slider.value : ""
+                                    validator: IntValidator {bottom: (selectedDeviceEnumValue != CommonEnums.CX3_UVC_CAM) ? exposure_Slider.minimumValue : 10; top: (selectedDeviceEnumValue != CommonEnums.CX3_UVC_CAM) ? exposure_Slider.maximumValue : 20000;}
                                     font.pixelSize: 10
                                     font.family: "Ubuntu"
                                     smooth: true
@@ -1748,7 +1800,7 @@ Rectangle {
                                     style:econTextFieldStyle
                                     onTextChanged: {
                                          if(exposure_value.text.length > 0){
-                                             if(device_box.currentText == "CX3-UVC"){
+                                             if(selectedDeviceEnumValue == CommonEnums.CX3_UVC_CAM){
                                              expLocalval1 = text.toString()
                                              expLocalVal = expLocalval1
                                              for(var i=0; i<exposureOrigAscella.length; i++){
@@ -2137,7 +2189,7 @@ Rectangle {
                                     opacity: enabled ? 1 : 0.1
                                     onValueChanged: {
                                         if(focusValueChangeProperty) {
-                                            if(!autoSelect_focus.checked || device_box.currentText == "e-con's CX3 RDK with O\nV5680") {
+                                            if(!autoSelect_focus.checked || selectedDeviceEnumValue == CommonEnums.ECON_CX3_RDX_V5680) {
                                                 vidstreamproperty.changeSettings(focusControlId,value.toString())
                                             } else {
                                                 focus_Slider.enabled = false
@@ -3106,7 +3158,21 @@ Rectangle {
 
     Camproperty {
         id: camproperty
+        //Added by Dhurka - 13th Oct 2016
+        //This signal is caught from cameraproperty.cpp to get the selected camera enum value
+        onCurrentlySelectedCameraEnum:
+        {
+            selectedDeviceEnumValue = selectedDevice;
+        }
     }
+    Uvccamera {
+       id: uvccamera
+       onTitleTextChanged: {
+       messageDialog.title = _title.toString()
+       messageDialog.text = _text.toString()
+       messageDialog.open()
+       }
+   }
 
     function mouseClickCapture() {
         m_Snap = false
@@ -3114,33 +3180,44 @@ Rectangle {
         capture.opacity = 0.5
         keyEventFiltering = true
         vidstreamproperty.enabled = false
-        if(device_box.currentText == "e-con's 1MP Monochrome\n Camera")
+        if(selectedDeviceEnumValue == CommonEnums.ECON_1MP_MONOCHROME)
         {
             if(JS.masterMode_M === 1) {
                 vidstreamproperty.setStillVideoSize(output_value.currentText.toString(), color_comp_box.currentIndex.toString())
                 vidstreamproperty.makeShot(storage_path.text.toString(),imageFormatCombo.currentText.toString())
             }
-        } else if(device_box.currentText == "e-con's 1MP Bayer RGB \nCamera") {
+        } else if(selectedDeviceEnumValue == CommonEnums.ECON_1MP_BAYER_RGB) {
             if(JS.masterMode_B === 1) {
                 vidstreamproperty.setStillVideoSize(output_value.currentText.toString(), color_comp_box.currentIndex.toString())
                 vidstreamproperty.makeShot(storage_path.text.toString(),imageFormatCombo.currentText.toString())
             }
-        } else if(device_box.currentText == "See3CAM_11CUG") {
+        } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_11CUG) {
             if(JS.masterMode_11cug === 1) {
                 vidstreamproperty.setStillVideoSize(output_value.currentText.toString(), color_comp_box.currentIndex.toString())
                 vidstreamproperty.makeShot(storage_path.text.toString(),imageFormatCombo.currentText.toString())
             }
-        } else if(device_box.currentText == "See3CAM_CU51") {
+        } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU51) {
             if(JS.masterMode_cu51 === 1) {
                 vidstreamproperty.setStillVideoSize(output_value.currentText.toString(), color_comp_box.currentIndex.toString())
                 vidstreamproperty.makeShot(storage_path.text.toString(),imageFormatCombo.currentText.toString())
             }
-        } else if(device_box.currentText == "See3CAM_12CUNIR") {
+        }
+        else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_12CUNIR){
             if(JS.masterMode_12cuinr === 1) {
                 vidstreamproperty.setStillVideoSize(output_value.currentText.toString(), color_comp_box.currentIndex.toString())
                 vidstreamproperty.makeShot(storage_path.text.toString(),imageFormatCombo.currentText.toString())
+            }            
+        } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_130) {
+            vidstreamproperty.setStillVideoSize(output_value.currentText.toString(), color_comp_box.currentIndex.toString())
+            if(see3cam){
+                see3cam130burstLength = see3cam.burstLengthCurrentIndex+1
             }
-        } else {
+            //AfRectangle - make disable while capturing image.
+            if(!seecam130.enableDisableAFRectangle(false)){
+                camproperty.logCriticalWriter("Not able to disable the RF Rect mode")
+            }
+            vidstreamproperty.makeBurstShot(storage_path.text.toString(),imageFormatCombo.currentText.toString(), see3cam130burstLength)
+        }else {
             vidstreamproperty.setStillVideoSize(output_value.currentText.toString(), color_comp_box.currentIndex.toString())
             vidstreamproperty.makeShot(storage_path.text.toString(),imageFormatCombo.currentText.toString())
         }
@@ -3300,6 +3377,8 @@ Rectangle {
         JS.stillCaptureResolution = output_value.currentText.toString()
         if(JS.videoCaptureFormat !== JS.stillCaptureFormat  || JS.stillCaptureResolution !== JS.videoCaptureResolution)
         {
+            console.log("JS.videoCaptureFormat"+JS.videoCaptureFormat)
+            console.log("JS.videoCaptureResolution"+JS.videoCaptureResolution)
             vidstreamproperty.vidCapFormatChanged(JS.videoCaptureFormat)
             vidstreamproperty.setResoultion(JS.videoCaptureResolution)
         }
@@ -3427,14 +3506,14 @@ Rectangle {
                 sharpness_Slider.value = controlDefaultValue
             } else if(controlName === "Exposure (Absolute)") {
                 exposure_absolute.opacity = 1
-                if((device_box.currentText === "e-con's CX3 RDK with O\nV5680") || (device_box.currentText === "e-con's CX3 RDK with M\nT9P031") || (device_box.currentText === "See3CAM_CU40")) {
+                if((selectedDeviceEnumValue === CommonEnums.ECON_CX3_RDX_V5680) || (selectedDeviceEnumValue === CommonEnums.ECON_CX3_RDX_T9P031) || (selectedDeviceEnumValue === CommonEnums.SEE3CAM_CU40)) {
                     exposure_Slider.opacity = 1
                     exposure_Slider.enabled = true
                     exposure_value.opacity = 1
                     exposure_value.enabled = true
                 }
                 exposurecontrolId = ctrlID
-                if(device_box.currentText === "CX3-UVC"){       // For ascella camera, mapped exposure values to slider values 0 to 11
+                if(selectedDeviceEnumValue === CommonEnums.CX3_UVC_CAM){       // For ascella camera, mapped exposure values to slider values 0 to 11
                     if(exposureCombo.currentText == "Auto Mode"){
                         exposure_absolute.opacity = 0.1
                     }else{
@@ -3455,7 +3534,7 @@ Rectangle {
                 }
             } else if(controlName === "Focus (absolute)") {
                 focusauto.opacity = 1
-                if(device_box.currentText === "e-con's CX3 RDK with O\nV5680") {
+                if(selectedDeviceEnumValue === CommonEnums.ECON_CX3_RDX_V5680) {
                     focus_Slider.opacity = 1
                     focus_Slider.enabled = true
                     focus_value.opacity = 1
@@ -3511,7 +3590,7 @@ Rectangle {
                 autoSelect_wb.enabled = true
                 autoSelect_wb.checked = controlDefaultValue
                 whiteBalanceControl_auto_Id = ctrlID
-                if(!autoSelect_wb.checked && device_box.currentText.toString() != "CX3-UVC") {
+                if(!autoSelect_wb.checked && selectedDeviceEnumValue != CommonEnums.CX3_UVC_CAM) {
                     white_balance_Slider.enabled = true
                 }
             } else if(controlName == "Focus, Auto") {
@@ -3526,7 +3605,7 @@ Rectangle {
                     focus_value.opacity = 1
                     focus_value.enabled = true
                 }
-            } else if(controlName == "Exposure, Auto Priority" && device_box.currentText.toString() != "CX3-UVC") {
+            } else if(controlName == "Exposure, Auto Priority" && selectedDeviceEnumValue != CommonEnums.CX3_UVC_CAM) {
                 exposureAutoPriority.opacity = 1
                 exposureAutoPriorityCheck.opacity = 1
                 exposureAutoPriorityCheck.enabled = true
@@ -3556,7 +3635,7 @@ Rectangle {
             }
             else if(controlName === "Exposure, Auto") {
                 menuitems.pop()
-                if(device_box.currentText == "CX3-UVC" && !usb3speed){
+                if(selectedDeviceEnumValue == CommonEnums.CX3_UVC_CAM && !usb3speed){
                     while(menuitems.pop()){}
                 }
                 exposure_auto.opacity = 1
@@ -3638,14 +3717,14 @@ Rectangle {
         {
             see3cam.destroy()
         }
-        if(device_box.currentText == "e-con's 1MP Bayer RGB \nCamera")
+        if(selectedDeviceEnumValue == CommonEnums.ECON_1MP_BAYER_RGB)
         {
            cbItemsImgFormat.clear();
            cbItemsImgFormat.insert(0, {text: "raw" })
            cbItemsImgFormat.insert(1, {text: "bmp" })
            cbItemsImgFormat.insert(2, {text: "jpg" })
            cbItemsImgFormat.insert(3, {text: "png" })
-        }else if(device_box.currentText == "See3CAM_CU40")
+        }else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU40)
         {
            cbItemsImgFormat.clear();
            cbItemsImgFormat.insert(0, {text: "jpg" })
@@ -3830,7 +3909,7 @@ Rectangle {
     }
 
     function openVideoPinPage() {
-        if(device_box.currentText == "e-con's 1MP Monochrome\n Camera") {
+        if(selectedDeviceEnumValue == CommonEnums.ECON_1MP_MONOCHROME) {
             if(JS.masterMode_M === 1) {
                 videoPin()
             } else {                
@@ -3839,7 +3918,7 @@ Rectangle {
                 messageDialog.text = qsTr("Video Capture Settings is disabled in trigger Mode")
                 messageDialog.open()                
             }
-        } else if(device_box.currentText == "e-con's 1MP Bayer RGB \nCamera") {
+        } else if(selectedDeviceEnumValue == CommonEnums.ECON_1MP_BAYER_RGB) {
             if(JS.masterMode_B === 1) {
                 videoPin()
             } else {
@@ -3848,7 +3927,7 @@ Rectangle {
                 messageDialog.text = qsTr("Video Capture Settings is disabled in trigger Mode")
                 messageDialog.open()
             }
-        } else if(device_box.currentText == "See3CAM_11CUG") {
+        } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_11CUG) {
             if(JS.masterMode_11cug === 1) {
                 videoPin()
             } else {
@@ -3857,7 +3936,7 @@ Rectangle {
                 messageDialog.text = qsTr("Video Capture Settings is disabled in trigger Mode")
                 messageDialog.open()
             }
-        } else if(device_box.currentText == "See3CAM_CU51") {
+        } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU51) {
             if(JS.masterMode_cu51 === 1) {
                 videoPin()
             } else {
@@ -3866,7 +3945,7 @@ Rectangle {
                 messageDialog.text = qsTr("Video Capture Settings is disabled in trigger Mode")
                 messageDialog.open()
             }
-        } else if(device_box.currentText == "See3CAM_12CUNIR") {
+        } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_12CUNIR) {
             if(JS.masterMode_12cuinr === 1) {
                 videoPin()
             } else {
@@ -3884,31 +3963,47 @@ Rectangle {
         if(cameraColumnLayout.visible) {
             cameraColumnLayout.visible = false
             JS.cameraComboIndex = device_box.currentIndex
-            if(device_box.currentText == "e-con's 1MP Bayer RGB \nCamera" ) {
+            if(selectedDeviceEnumValue == CommonEnums.ECON_1MP_BAYER_RGB ) {
                 see3cam = Qt.createComponent("../UVCSettings/see3cam10/uvc10_c.qml").createObject(root)
-            } else if(device_box.currentText == "e-con's 1MP Monochrome\n Camera") {
+            } else if(selectedDeviceEnumValue == CommonEnums.ECON_1MP_MONOCHROME) {
                 see3cam = Qt.createComponent("../UVCSettings/see3cam10/uvc10_m.qml").createObject(root)
-            } else if(device_box.currentText == "See3CAM_11CUG") {
+            } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_11CUG) {
                 see3cam = Qt.createComponent("../UVCSettings/see3cam11/uvc11.qml").createObject(root)
-            } else if(device_box.currentText == "e-con's 8MP Camera") {
+            } else if(selectedDeviceEnumValue == CommonEnums.ECON_8MP_CAMERA) {
                 see3cam = Qt.createComponent("../UVCSettings/see3cam80/uvc80.qml").createObject(root)
-            } else if(device_box.currentText == "See3CAMCU50") {
+            } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU50) {
                 see3cam = Qt.createComponent("../UVCSettings/see3cam50/uvc50.qml").createObject(root)
-            } else if(device_box.currentText == "See3CAM_CU130") {
-                see3cam = Qt.createComponent("../UVCSettings/see3cam130/uvc130.qml").createObject(root)
-            } else if(device_box.currentText == "See3CAM_CU51") {
+            } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU130) {
+                see3cam = Qt.createComponent("../UVCSettings/see3camcu130/uvc_cu130.qml").createObject(root)
+            } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_130) {
+                see3cam = Qt.createComponent("../UVCSettings/see3cam130/uvc_130.qml").createObject(root)
+            } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU51) {
                 see3cam = Qt.createComponent("../UVCSettings/see3cam51/uvc51.qml").createObject(root)
-            } else if(device_box.currentText == "See3CAM_12CUNIR") {
+            } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_12CUNIR) {
                 see3cam = Qt.createComponent("../UVCSettings/see3camar0130/uvc_ar0130.qml").createObject(root)
-            } else if(device_box.currentText == "See3CAM_CU40") {
+            } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU40) {
                 see3cam = Qt.createComponent("../UVCSettings/see3cam40/uvc40.qml").createObject(root)
-            } else if(device_box.currentText == "See3CAM_CU30") {
+            } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU30) {
                 see3cam = Qt.createComponent("../UVCSettings/see3cam30/uvc30.qml").createObject(root)
-            } else if(device_box.currentText == "CX3-UVC") {
+            } else if(selectedDeviceEnumValue == CommonEnums.CX3_UVC_CAM) {
                 see3cam = Qt.createComponent("../UVCSettings/ascella/cx3-uvc.qml").createObject(root)
             } else {
                 see3cam = Qt.createComponent("../UVCSettings/others/others.qml").createObject(root)
             }
+        }
+    }
+    See3Cam130 {
+        id: seecam130
+        onSendROIAfMode:{
+            see3camAfROIMode = roiMode
+            see3cam130AfwinSize = winSize
+        }
+        onSendROIAutoExpMode:{
+            see3camAutoExpROIMode = roiMode
+            see3cam130AutoExpwinSize = winSize
+        }
+        onSendBurstLength:{
+            see3cam130burstLength = burstLength
         }
     }
 
@@ -3940,7 +4035,7 @@ Rectangle {
         } else if(event.key === Qt.Key_WebCam){
             m_Snap = false
             if(webcamKeyAccept) {
-                if(device_box.currentText == "e-con's 1MP Monochrome\n Camera")
+                if(selectedDeviceEnumValue == CommonEnums.ECON_1MP_MONOCHROME)
                 {
                     if(JS.masterMode_M === 1) {
                         vidstreamproperty.setStillVideoSize(output_value.currentText.toString(), color_comp_box.currentIndex.toString())
@@ -3949,7 +4044,7 @@ Rectangle {
                         vidstreamproperty.setStillVideoSize(output_value.currentText.toString(), color_comp_box.currentIndex.toString())
                         vidstreamproperty.triggerModeShot(storage_path.text.toString(),imageFormatCombo.currentText.toString())
                     }
-                } else if(device_box.currentText == "e-con's 1MP Bayer RGB \nCamera") {
+                } else if(selectedDeviceEnumValue == CommonEnums.ECON_1MP_BAYER_RGB) {
                     if(JS.masterMode_B === 1) {
                         vidstreamproperty.setStillVideoSize(output_value.currentText.toString(), color_comp_box.currentIndex.toString())
                         vidstreamproperty.makeShot(storage_path.text.toString(),imageFormatCombo.currentText.toString())
@@ -3957,7 +4052,7 @@ Rectangle {
                         vidstreamproperty.setStillVideoSize(output_value.currentText.toString(), color_comp_box.currentIndex.toString())
                         vidstreamproperty.triggerModeShot(storage_path.text.toString(),imageFormatCombo.currentText.toString())
                     }
-                } else if(device_box.currentText == "See3CAM_11CUG") {
+                } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_11CUG) {
                     if(JS.masterMode_11cug === 1) {
                         vidstreamproperty.setStillVideoSize(output_value.currentText.toString(), color_comp_box.currentIndex.toString())
                         vidstreamproperty.makeShot(storage_path.text.toString(),imageFormatCombo.currentText.toString())
@@ -3965,7 +4060,7 @@ Rectangle {
                         vidstreamproperty.setStillVideoSize(output_value.currentText.toString(), color_comp_box.currentIndex.toString())
                         vidstreamproperty.triggerModeShot(storage_path.text.toString(),imageFormatCombo.currentText.toString())
                     }
-                } else if(device_box.currentText == "See3CAM_CU51") {
+                } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU51) {
                     if(JS.masterMode_cu51 === 1) {
                         vidstreamproperty.setStillVideoSize(output_value.currentText.toString(), color_comp_box.currentIndex.toString())
                         vidstreamproperty.makeShot(storage_path.text.toString(),imageFormatCombo.currentText.toString())
@@ -3973,7 +4068,7 @@ Rectangle {
                         vidstreamproperty.setStillVideoSize(output_value.currentText.toString(), color_comp_box.currentIndex.toString())
                         vidstreamproperty.triggerModeShot(storage_path.text.toString(),imageFormatCombo.currentText.toString())
                     }
-                } else if(device_box.currentText == "See3CAM_12CUNIR") {
+                } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_12CUNIR) {
                     if(JS.masterMode_12cuinr === 1) {
                         vidstreamproperty.setStillVideoSize(output_value.currentText.toString(), color_comp_box.currentIndex.toString())
                         vidstreamproperty.makeShot(storage_path.text.toString(),imageFormatCombo.currentText.toString())
