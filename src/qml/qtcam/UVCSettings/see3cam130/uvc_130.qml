@@ -15,17 +15,18 @@ Item {
     property int qFactorMin: 10
     property int qFactorMax: 96
     property int iHDRMin: 1
-    property int iHDRMax: 4
-    property bool settingWhenUpdateInUI : false
-    property bool settingafWinSizeWhenUpdateInUI: false
-    property bool settingautoExpWinSizeWhenUpdateInUI: false
-    property bool settingBurstLengthWhenUpdateInUI: false
-    property bool settingiHDRWhenUpdateInUI: false
+    property int iHDRMax: 4    
     property int afROIwindowSizeCurrentIndex: afWindowSizeCombo.currentIndex
     property bool afROImode: afCentered.checked
     property int autoExpROIwindowSizeCurrentIndex: autoExpoWinSizeCombo.currentIndex
     property bool autoExpROImode: autoexpFull.checked
     property int burstLengthCurrentIndex: burstLengthCombo.currentIndex
+    // Flags to prevent setting values in camera when getting the values from camera
+    property bool settingWhenUpdateInUI : false
+    property bool settingafWinSizeWhenUpdateInUI: false
+    property bool settingautoExpWinSizeWhenUpdateInUI: false
+    property bool settingBurstLengthWhenUpdateInUI: false
+    property bool settingiHDRWhenUpdateInUI: false
 
     Action {
         id: triggerAction
@@ -83,9 +84,11 @@ Item {
                     style:  econRadioButtonStyle
                     text:   qsTr("Normal")
                     exclusiveGroup: sceneInputGroup
-                    activeFocusOnPress: true
-                    //checked: true
+                    activeFocusOnPress: true                    
                     onClicked: {
+                        seecam130.setSceneMode(See3Cam130.SCENE_NORMAL)
+                    }
+                    Keys.onReturnPressed: {
                         seecam130.setSceneMode(See3Cam130.SCENE_NORMAL)
                     }
                 }
@@ -96,6 +99,9 @@ Item {
                     exclusiveGroup: sceneInputGroup
                     activeFocusOnPress: true
                     onClicked: {
+                        seecam130.setSceneMode(See3Cam130.SCENE_DOCUMENT)
+                    }
+                    Keys.onReturnPressed: {
                         seecam130.setSceneMode(See3Cam130.SCENE_DOCUMENT)
                     }
                 }
@@ -123,9 +129,11 @@ Item {
                     style:  econRadioButtonStyle
                     text:   qsTr("Normal")
                     exclusiveGroup: effectInputGroup
-                    activeFocusOnPress: true
-                    //checked: true
+                    activeFocusOnPress: true                    
                     onClicked: {
+                        seecam130.setEffectMode(See3Cam130.EFFECT_NORMAL)
+                    }
+                    Keys.onReturnPressed: {
                         seecam130.setEffectMode(See3Cam130.EFFECT_NORMAL)
                     }
                 }
@@ -138,6 +146,9 @@ Item {
                     onClicked: {
                         seecam130.setEffectMode(See3Cam130.EFFECT_BLACK_WHITE)
                     }
+                    Keys.onReturnPressed: {
+                        seecam130.setEffectMode(See3Cam130.EFFECT_BLACK_WHITE)
+                    }
                 }
                 RadioButton {
                     id: effectNegative
@@ -146,6 +157,9 @@ Item {
                     exclusiveGroup: effectInputGroup
                     activeFocusOnPress: true
                     onClicked: {
+                        seecam130.setEffectMode(See3Cam130.EFFECT_NEGATIVE)
+                    }
+                    Keys.onReturnPressed: {
                         seecam130.setEffectMode(See3Cam130.EFFECT_NEGATIVE)
                     }
                 }
@@ -158,6 +172,9 @@ Item {
                     onClicked: {
                         seecam130.setEffectMode(See3Cam130.EFFECT_GREYSCALE)
                     }
+                    Keys.onReturnPressed: {
+                        seecam130.setEffectMode(See3Cam130.EFFECT_GREYSCALE)
+                    }
                 }
                 RadioButton {
                     id: effectSketch
@@ -166,6 +183,9 @@ Item {
                     exclusiveGroup: effectInputGroup
                     activeFocusOnPress: true
                     onClicked: {
+                        seecam130.setEffectMode(See3Cam130.EFFECT_SKETCH)
+                    }
+                    Keys.onReturnPressed: {
                         seecam130.setEffectMode(See3Cam130.EFFECT_SKETCH)
                     }
                 }
@@ -196,7 +216,7 @@ Item {
                         seecam130.setAutoFocusMode(See3Cam130.Continuous);
                       }
                       Keys.onReturnPressed: {
-
+                          seecam130.setAutoFocusMode(See3Cam130.Continuous);
                       }
                   }
             }
@@ -213,7 +233,7 @@ Item {
                         seecam130.setAutoFocusMode(See3Cam130.OneShot);
                     }
                     Keys.onReturnPressed: {
-
+                        seecam130.setAutoFocusMode(See3Cam130.OneShot);
                     }
                 }
                 Button {
@@ -468,7 +488,7 @@ Item {
                         seecam130.setROIAutoExposure(See3Cam130.AutoExpFull, 0, 0, 0, 0, 0);
                       }
                       Keys.onReturnPressed: {
-
+                          seecam130.setROIAutoExposure(See3Cam130.AutoExpFull, 0, 0, 0, 0, 0);
                       }
                   }
                   RadioButton {
@@ -482,7 +502,7 @@ Item {
                           seecam130.setROIAutoExposure(See3Cam130.AutoExpManual, 0, 0, 0, 0, 0);
                       }
                       Keys.onReturnPressed: {
-
+                          seecam130.setROIAutoExposure(See3Cam130.AutoExpManual, 0, 0, 0, 0, 0);
                       }
                   }
             }
@@ -746,7 +766,6 @@ Item {
             background: Image {
                 id: burstLengthCombo_bkgrnd
                 source: "../../videocapturefilter/images/device_box.png"
-                //source: "../videocapturefilter/images/device_box.png"
                 Rectangle {
                     width: burstLengthCombo_bkgrnd.sourceSize.width  - 28
                     height: burstLengthCombo_bkgrnd.sourceSize.height
@@ -800,8 +819,7 @@ Item {
         }
     }
 
-    Component.onCompleted:{
-        //uvccamera.initExtensionUnit("See3CAM_130")
+    Component.onCompleted:{     
         seecam130.getSceneMode()
         seecam130.getEffectMode()
         seecam130.getAutoFocusMode()
@@ -811,10 +829,7 @@ Item {
         seecam130.getBurstLength()
         seecam130.getAutoFocusROIModeAndWindowSize()
         seecam130.getAutoExpROIModeAndWindowSize()
-    }
-    Component.onDestruction: {
-        //uvccamera.exitExtensionUnit()
-    }
+    }    
 
     function getSerialNumber() {
         uvccamera.getSerialNumber()

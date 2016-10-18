@@ -364,15 +364,20 @@ void Videostreaming::capFrame()
 
     delete qq;
     int tmpRet;        
+    // m_burstShot - if continous number of shots are needed , this flag will be set.
     if((m_frame > 1 && m_snapShot) || (m_frame > 1 && m_burstShot)) {
         if(m_burstNumber == m_burstLength){
             m_burstNumber = 1;            
         }
+        // imgSaveSuccessCount - how many images taken and saved correctly
         imgSaveSuccessCount = 0;
         while(m_burstLength >= m_burstNumber){
-            m_burstNumber++;            
+            // increasing burst number
+            m_burstNumber++;
+            // get file name to save
             getFileName(getFilePath(),getImageFormatType());
             bool tmpValue;
+            // saving raw format
             if(formatType == "raw") {
                 QFile file(filename);
                 if(file.open(QIODevice::WriteOnly)) {
@@ -388,7 +393,7 @@ void Videostreaming::capFrame()
                 } else {
                     tmpValue = false;
                 }
-            }else if(formatType == "IR data(8bit BMP)"){
+            }else if(formatType == "IR data(8bit BMP)"){           // saving IR 8bit bmp
                 irBuffer = (unsigned char *)malloc(width * height/4);
                 if(extractIRImage(tempCu40SrcBuffer, irBuffer)){
                     QImage qImage2(irBuffer, width/2, height/2, QImage::Format_Indexed8);
@@ -413,8 +418,8 @@ void Videostreaming::capFrame()
                 }else{
                     tmpValue = false;
                 }
-            }else {
-                QImage qImage3(displaybuf, width, height,QImage::Format_RGB888);
+            }else { // other than raw and [IR data(8bit BMP)] format
+                QImage qImage3(displaybuf, width, height, QImage::Format_RGB888);
                 bool tmpRet;
                 QImageWriter writer(filename);
 
@@ -451,7 +456,7 @@ void Videostreaming::capFrame()
                     if(tempCu130SrcBuffer){
                        free(tempCu130SrcBuffer); tempCu130SrcBuffer = NULL;
                     }
-                    // for multiple shots, preview resoln and format switching is required at last.
+                    // after taking shot(s), restore preview resoln and format.
                     if(m_burstNumber > m_burstLength){
                         stopCapture();
                         vidCapFormatChanged(lastFormat);
