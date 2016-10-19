@@ -91,6 +91,6 @@ public slots:
     bool getBurstLength();
     bool setQFactor(uint qFactor);
     bool getQFactor();
-    bool enableDisableAFRectangle(bool enableRFRect);
+    bool enableDisableAFRectangle(bool enableRFRect);    
 };
 #endif // SEE3CAM_130_H

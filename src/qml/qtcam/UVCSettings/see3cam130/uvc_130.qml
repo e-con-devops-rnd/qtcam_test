@@ -8,6 +8,7 @@ import QtQuick.Layouts 1.1
 import "../../JavaScriptFiles/tempValue.js" as JS
 
 Item {
+    id: see3cam30Id
     width:268
     height:750
     property int denoiseMin: 0
@@ -15,18 +16,25 @@ Item {
     property int qFactorMin: 10
     property int qFactorMax: 96
     property int iHDRMin: 1
-    property int iHDRMax: 4    
-    property int afROIwindowSizeCurrentIndex: afWindowSizeCombo.currentIndex
-    property bool afROImode: afCentered.checked
-    property int autoExpROIwindowSizeCurrentIndex: autoExpoWinSizeCombo.currentIndex
-    property bool autoExpROImode: autoexpFull.checked
+    property int iHDRMax: 4
     property int burstLengthCurrentIndex: burstLengthCombo.currentIndex
     // Flags to prevent setting values in camera when getting the values from camera
-    property bool settingWhenUpdateInUI : false
-    property bool settingafWinSizeWhenUpdateInUI: false
-    property bool settingautoExpWinSizeWhenUpdateInUI: false
-    property bool settingBurstLengthWhenUpdateInUI: false
-    property bool settingiHDRWhenUpdateInUI: false
+    property bool skipUpdateUIOnSetttings : false
+    property bool skipUpdateUIOnAFWindowSize: false
+    property bool skipUpdateUIOnExpWindowSize: false
+    property bool skipUpdateUIOnBurstLength: false
+    property bool skipUpdateUIiHDR: false
+    signal sendBurstLengthtoCaptureImg(var burstLength)
+
+    Timer {
+        id: getCamValuesTimer
+        interval: 200
+        onTriggered: {
+            seecam130.getSceneMode()
+            seecam130.getEffectMode()
+            stop()
+        }
+    }
 
     Action {
         id: triggerAction
@@ -43,13 +51,6 @@ Item {
         }
     }
 
-    Action {
-        id: serialNumber
-        onTriggered:
-        {
-            getSerialNumber()
-        }
-    }
     ScrollView{
         id: scrollview
         x: 10
@@ -104,6 +105,7 @@ Item {
                     Keys.onReturnPressed: {
                         seecam130.setSceneMode(See3Cam130.SCENE_DOCUMENT)
                     }
+
                 }
 
             }
@@ -129,13 +131,15 @@ Item {
                     style:  econRadioButtonStyle
                     text:   qsTr("Normal")
                     exclusiveGroup: effectInputGroup
-                    activeFocusOnPress: true                    
+                    activeFocusOnPress: true
+                    //checked: true
                     onClicked: {
                         seecam130.setEffectMode(See3Cam130.EFFECT_NORMAL)
                     }
                     Keys.onReturnPressed: {
                         seecam130.setEffectMode(See3Cam130.EFFECT_NORMAL)
                     }
+
                 }
                 RadioButton {
                     id: effectBW
@@ -162,6 +166,7 @@ Item {
                     Keys.onReturnPressed: {
                         seecam130.setEffectMode(See3Cam130.EFFECT_NEGATIVE)
                     }
+
                 }
                 RadioButton {
                     id: effectGrayscale
@@ -216,7 +221,7 @@ Item {
                         seecam130.setAutoFocusMode(See3Cam130.Continuous);
                       }
                       Keys.onReturnPressed: {
-                          seecam130.setAutoFocusMode(See3Cam130.Continuous);
+                        seecam130.setAutoFocusMode(See3Cam130.Continuous);
                       }
                   }
             }
@@ -246,7 +251,7 @@ Item {
                     implicitWidth: 120
                     action: (radioOneshot.checked) ? triggerAction : null
                     Keys.onReturnPressed: {
-
+                        seecam130.setAutoFocusMode(See3Cam130.OneShot);
                     }
                 }
             }
@@ -321,10 +326,10 @@ Item {
                     opacity: enabled ? 1 : 0.1
                     onValueChanged:  {
                         iHDRTextField.text = iHDRSlider.value
-                        if(settingiHDRWhenUpdateInUI){
+                        if(skipUpdateUIiHDR){
                             seecam130.setiHDRMode(See3Cam130.HdrManual, iHDRSlider.value)
                         }
-                        settingiHDRWhenUpdateInUI = true
+                        skipUpdateUIiHDR = true
 
                     }
                 }
@@ -370,10 +375,10 @@ Item {
                     maximumValue: denoiseMax
                     onValueChanged:  {
                         deNoiseTextField.text = deNoiseSlider.value
-                        if(settingWhenUpdateInUI){
+                        if(skipUpdateUIOnSetttings){
                             seecam130.setDenoiseValue(deNoiseSlider.value)
                         }
-                        settingWhenUpdateInUI = true
+                        skipUpdateUIOnSetttings = true
                     }
                 }
                 TextField {
@@ -456,11 +461,11 @@ Item {
                 }
                 activeFocusOnPress: true
                 style: econComboBoxStyle
-                onCurrentIndexChanged: {                    
-                    if(settingafWinSizeWhenUpdateInUI){
+                onCurrentIndexChanged: {
+                    if(skipUpdateUIOnAFWindowSize){
                         seecam130.setROIAutoFoucs(See3Cam130.AFManual, 0, 0, 0, 0, afWindowSizeCombo.currentText)
                     }
-                    settingafWinSizeWhenUpdateInUI = true
+                    skipUpdateUIOnAFWindowSize = true
                 }
             }
             Text {
@@ -484,8 +489,11 @@ Item {
                       activeFocusOnPress: true
                       style: econRadioButtonStyle                      
                       opacity: enabled ? 1 : 0.1
+                      // setROIAutoExposure() args:  mode, videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord, WinSize]
+                      // videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord - these parameters are required only when click in preview]
+                      // winSize is required only for manual mode
                       onClicked: {
-                        seecam130.setROIAutoExposure(See3Cam130.AutoExpFull, 0, 0, 0, 0, 0);
+                          seecam130.setROIAutoExposure(See3Cam130.AutoExpFull, 0, 0, 0, 0, 0);
                       }
                       Keys.onReturnPressed: {
                           seecam130.setROIAutoExposure(See3Cam130.AutoExpFull, 0, 0, 0, 0, 0);
@@ -524,10 +532,10 @@ Item {
                 activeFocusOnPress: true
                 style: econComboBoxStyle
                 onCurrentIndexChanged: {
-                    if(settingautoExpWinSizeWhenUpdateInUI){
+                    if(skipUpdateUIOnExpWindowSize){
                         seecam130.setROIAutoExposure(See3Cam130.AutoExpManual, 0, 0, 0, 0, autoExpoWinSizeCombo.currentText)
                     }
-                    settingautoExpWinSizeWhenUpdateInUI = true
+                    skipUpdateUIOnExpWindowSize = true
                 }
             }
             Text {
@@ -554,10 +562,10 @@ Item {
                     maximumValue: qFactorMax
                     onValueChanged:  {
                         qFactorTextField.text = qFactorSlider.value
-                        if(settingWhenUpdateInUI){
+                        if(skipUpdateUIOnSetttings){
                             seecam130.setQFactor(qFactorSlider.value)
                         }
-                        settingWhenUpdateInUI = true
+                        skipUpdateUIOnSetttings = true
                     }
                 }
                 TextField {
@@ -610,11 +618,12 @@ Item {
                 }
                 activeFocusOnPress: true
                 style: econComboBoxStyle
-                onCurrentIndexChanged: {
-                    if(settingBurstLengthWhenUpdateInUI){
+                onCurrentIndexChanged: {                    
+                    root.receiveBurstLength(burstLengthCombo.currentIndex + 1) // combobox index starts from 0
+                    if(skipUpdateUIOnBurstLength){
                         seecam130.setBurstLength(burstLengthCombo.currentText)
                     }
-                    settingBurstLengthWhenUpdateInUI = true
+                    skipUpdateUIOnBurstLength = true
                 }
             }
             Row{
@@ -626,15 +635,15 @@ Item {
                     activeFocusOnPress : true
                     tooltip: "Click to view the firmware version of the camera"
                     style: ButtonStyle {
-                    background: Rectangle {
-                    border.width: control.activeFocus ? 3 :0
-                    color: "#222021"
-                    border.color: control.activeFocus ? "#ffffff" : "#222021"
-                    radius: 5
-                    }
-                    label: Image {
-                    source: "images/f_wversion_selected.png"
-                    }
+                        background: Rectangle {
+                        border.width: control.activeFocus ? 3 :0
+                        color: "#222021"
+                        border.color: control.activeFocus ? "#ffffff" : "#222021"
+                        radius: 5
+                        }
+                        label: Image {
+                        source: "images/f_wversion_selected.png"
+                        }
                     }
                     Keys.onReturnPressed: {
                     getFirmwareVersion()
@@ -672,7 +681,7 @@ Item {
             if(roiMode == See3Cam130.AFCentered){                
                 afCentered.checked = true
             }else if(roiMode == See3Cam130.AFManual){
-                settingafWinSizeWhenUpdateInUI = false
+                skipUpdateUIOnAFWindowSize = false
                 afManual.checked = true
                 afWindowSizeCombo.currentIndex = winSize-1
             }else if(roiMode == See3Cam130.AFDisabled){
@@ -685,7 +694,7 @@ Item {
             if(roiMode == See3Cam130.AutoExpFull){                
                 autoexpFull.checked = true
             }else if(roiMode == See3Cam130.AutoExpManual){
-                settingautoExpWinSizeWhenUpdateInUI = false
+                skipUpdateUIOnExpWindowSize = false
                 autoexpManual.checked = true
                 autoExpoWinSizeCombo.currentIndex = winSize-1
             }
@@ -696,9 +705,9 @@ Item {
             }
         }
         onSendBurstLength:{
-            settingBurstLengthWhenUpdateInUI = false
+            skipUpdateUIOnBurstLength = false
             burstLengthCombo.currentIndex = burstLength - 1
-        }
+        }       
     }
 
     Component {
@@ -812,16 +821,13 @@ Item {
             messageDialog.title = _title.toString()
             messageDialog.text = _text.toString()
             messageDialog.open()
-        }
-        onSerialNumber:{
-            messageDialog.title = qsTr("Serial Number")
-            messageDialog.text = serialNumber;
-        }
+        }        
     }
 
-    Component.onCompleted:{     
-        seecam130.getSceneMode()
-        seecam130.getEffectMode()
+    Component.onCompleted:{
+        //getting valid effect mode and scene mode takes some time.
+        //So In timer, after 200 ms, getting effect mode and scene mode is done
+        getCamValuesTimer.start()
         seecam130.getAutoFocusMode()
         seecam130.getiHDRMode()
         seecam130.getDenoiseValue()
@@ -829,12 +835,8 @@ Item {
         seecam130.getBurstLength()
         seecam130.getAutoFocusROIModeAndWindowSize()
         seecam130.getAutoExpROIModeAndWindowSize()
-    }    
-
-    function getSerialNumber() {
-        uvccamera.getSerialNumber()
-        messageDialog.open()
     }
+
 
     function getFirmwareVersion() {
         uvccamera.getFirmWareVersion()
@@ -842,10 +844,10 @@ Item {
     }
 
     function defaultSceneMode(mode)
-    {
+    {        
         switch(mode)
-        {
-            case See3Cam130.SCENE_NORMAL:
+        {            
+            case See3Cam130.SCENE_NORMAL:                
                 sceneNormal.checked = true
                 break;
             case See3Cam130.SCENE_DOCUMENT:
@@ -854,7 +856,7 @@ Item {
         }
     }
     function defaultEffectMode(mode)
-    {
+    {        
         switch(mode)
         {
             case See3Cam130.EFFECT_NORMAL:
@@ -907,6 +909,31 @@ Item {
                 hdrManual.checked = true
                 break;
         }
+    }
+    Connections{
+         target: root
+         onMouseRightClicked:{
+             if(afCentered.enabled && afCentered.checked){
+                seecam130.setROIAutoFoucs(See3Cam130.AFCentered, width, height, x, y, afWindowSizeCombo.currentText)
+             }else if(afManual.enabled && afManual.checked){
+                 seecam130.setROIAutoFoucs(See3Cam130.AFManual, width, height, x, y, afWindowSizeCombo.currentText)
+             }
+             if(autoexpFull.enabled && autoexpFull.checked){
+                seecam130.setROIAutoExposure(See3Cam130.AutoExpFull, width, height, x, y, autoExpoWinSizeCombo.currentText)
+             }else if(autoexpManual.enabled && autoexpManual.checked){
+                seecam130.setROIAutoExposure(See3Cam130.AutoExpManual, width, height, x, y, autoExpoWinSizeCombo.currentText)
+             }
+         }
+    }
+
+    Connections{
+         target: root
+         onPreBurstCapture:{
+             seecam130.enableDisableAFRectangle(false)
+         }
+         onPostBurstCapture:{
+             seecam130.enableDisableAFRectangle(true)
+         }
     }
 
 }

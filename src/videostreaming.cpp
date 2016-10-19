@@ -85,7 +85,7 @@ Videostreaming::Videostreaming()
     sf.denom = 1;
     sf.num = 1;
     flags = TJFLAG_NOREALLOC;
-    yuvpad = 1;
+    yuvpad = 1;    
 }
 
 Videostreaming::~Videostreaming()
@@ -367,7 +367,7 @@ void Videostreaming::capFrame()
     // m_burstShot - if continous number of shots are needed , this flag will be set.
     if((m_frame > 1 && m_snapShot) || (m_frame > 1 && m_burstShot)) {
         if(m_burstNumber == m_burstLength){
-            m_burstNumber = 1;            
+            m_burstNumber = 1;
         }
         // imgSaveSuccessCount - how many images taken and saved correctly
         imgSaveSuccessCount = 0;
@@ -407,7 +407,7 @@ void Videostreaming::capFrame()
                     qImage2.setColorTable(table);
 
                     if(!writer.write(qImage2)) {
-                        emit logCriticalHandle("Error while saving image:"+writer.errorString());
+                        emit logCriticalHandle("Error while savingak image:"+writer.errorString());
                         tmpRet = false;
                     }
                     else {
@@ -440,9 +440,9 @@ void Videostreaming::capFrame()
             } else {
                captureSaveTime("Capture time: " +(QString::number((double)captureTime.elapsed()/1000)) + "seconds");
                 makeSnapShot = false;
-                m_snapShot = false;               
+                m_snapShot = false;
                 if (!((stillSize == lastPreviewSize) && (stillOutFormat == lastFormat)))
-                {                    
+                {
                     freeBuffer(tempSrcBuffer);
                     freeBuffers(tempDestBuffer, copyDestBuffer);
                     freeBuffer((unsigned char *)tempCu40SrcBuffer);
@@ -466,13 +466,13 @@ void Videostreaming::capFrame()
                     }
                 }
                 else{
-                    qDebug()<<"capFrame:still and preview are same";
+                    emit logDebugHandle("still and preview resolution and format are same");
                 }
             }
         }
         if (!((stillSize == lastPreviewSize) && (stillOutFormat == lastFormat))){
             formatSaveSuccess(imgSaveSuccessCount, m_burstShot);
-            if(m_burstNumber > m_burstLength){                
+            if(m_burstNumber > m_burstLength){
                 m_burstShot = false;
                 return void();
             }
@@ -976,6 +976,7 @@ void Videostreaming::makeBurstShot(QString filePath,QString imgFormatType, uint 
     getFileName(filePath, imgFormatType);    
     m_burstLength = burstLength; // no of shots to take
     m_burstNumber = 1;
+    formatType = imgFormatType;
 
     makeSnapShot = true;
     triggerShot = false;
@@ -993,7 +994,7 @@ void Videostreaming::formatSaveSuccess(uint imgSaveSuccessCount, bool burstFlag)
     if(imgSaveSuccessCount) {       
         if(burstFlag){
             _title = "Captured";
-            _text = "Captured " +imgSaveSuccessCntStr+ " Image(s) and saved successfully saved in the location:" + m_filePath;
+            _text = "Captured " +imgSaveSuccessCntStr+ " image(s) and saved successfully in the location:" + m_filePath;
         }else{
             _title = "Captured";
             _text = "Image saved in the location:" + filename;
@@ -1008,7 +1009,7 @@ void Videostreaming::formatSaveSuccess(uint imgSaveSuccessCount, bool burstFlag)
     }
     // After capturing image need to enable RF rect in See3CAM_130 cam
     if(currentlySelectedCameraEnum == CommonEnums::SEE3CAM_130){
-        emit enableRfRectIn130Cam();
+        emit enableRfRectBackInPreview();
     }
 
 }
@@ -1571,4 +1572,3 @@ void Videostreaming::selectedCameraEnum(CommonEnums::ECameraNames selectedDevice
 {
     currentlySelectedCameraEnum = selectedDeviceEnum;
 }
-

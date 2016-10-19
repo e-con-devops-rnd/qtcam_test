@@ -710,8 +710,7 @@ Item {
                     exclusiveGroup: colorModegroup2
                     id: colorModeBinned
                     text: "Binned"
-                    activeFocusOnPress: true
-                   // enabled: ((JS.videoCaptureResolution === "1920x1080" && JS.videocaptureFps === "30 FPS") || JS.videoCaptureResolution === "2048x1536") ? 1 : 0
+                    activeFocusOnPress: true                   
                     opacity: enabled ? 1 : 0.1
                     style: econRadioButtonStyle
                     onClicked: {
@@ -730,8 +729,7 @@ Item {
                     exclusiveGroup: colorModegroup2
                     id: colorModeResized
                     text: "Resized"
-                    activeFocusOnPress: true
-                   // enabled: ((JS.videoCaptureResolution === "1920x1080" && JS.videocaptureFps === "30 FPS") || JS.videoCaptureResolution === "2048x1536") ? 1 : 0
+                    activeFocusOnPress: true                   
                     opacity: enabled ? 1 : 0.1
                     style: econRadioButtonStyle
                     onClicked: {

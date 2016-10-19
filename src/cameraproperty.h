@@ -121,6 +121,12 @@ public slots:
      * @param selectedCameraEnum - Camera enum name
      */
     void selectedDeviceEnum(CommonEnums::ECameraNames selectedCameraEnum);
+    //Added by Dhurka - 17th Oct 2016
+    /**
+     * @brief openHIDDevice - This slot is used to open HID device
+     * @param deviceName - device name
+     */
+    void openHIDDevice(QString deviceName);
 
 signals:
 
@@ -133,6 +139,11 @@ signals:
      * @param selectedDevice
      */
     void currentlySelectedCameraEnum(int selectedDevice);
+    //Added by Dhurka - 18th Oct 2016
+    /**
+     * @brief initExtensionUnitSuccess - This signal is used to emit after HID initialization is success
+     */
+    void initExtensionUnitSuccess();
 };
 
 

@@ -599,14 +599,9 @@ See3CamCu130 {
             }
 
             Component.onCompleted:{
-                uvccamera.initExtensionUnit("See3CAM_CU130")
                 seecamcu130.getSceneMode()
                 seecamcu130.getEffectMode()
             }
-            Component.onDestruction: {
-                uvccamera.exitExtensionUnit()
-            }
-
             function getSerialNumber() {
                 uvccamera.getSerialNumber()
                 messageDialog.open()

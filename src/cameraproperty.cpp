@@ -163,3 +163,14 @@ void Cameraproperty::logDebugWriter(QString tmpStr) {
 void Cameraproperty::logCriticalWriter(QString tmpStr) {
     log.logHandler(QtCriticalMsg,tmpStr);
 }
+//Added by Dhurka - 17th Oct 2016
+void Cameraproperty::openHIDDevice(QString deviceName)
+{
+    uvccam.exitExtensionUnit();
+    deviceName.remove(QRegExp("[\n\t\r]"));
+    bool hidInit = uvccam.initExtensionUnit(deviceName);    
+    if(hidInit)
+    {
+        emit initExtensionUnitSuccess();
+    }
+}

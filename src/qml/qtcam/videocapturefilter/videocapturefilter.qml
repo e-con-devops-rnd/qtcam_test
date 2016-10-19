@@ -26,8 +26,6 @@ import QtQuick.Layouts 1.1
 import QtQuick.Dialogs 1.1
 import econ.camera.property 1.0
 import econ.camera.stream 1.0
-import econ.camera.see3cam130 1.0
-import econ.camera.uvcsettings 1.0
 import "../JavaScriptFiles/tempValue.js" as JS
 import cameraenum 1.0
 
@@ -38,12 +36,11 @@ Rectangle {
     signal dispOutFormatCam()
     signal stopCamPreview()
     signal seeCamCu51Capture()
-    property var see3cam130Obj: seecam130
-    property var see3camAfROIMode
-    property var see3camAutoExpROIMode
-    property var see3cam130AfwinSize
-    property var see3cam130AutoExpwinSize
-    property int see3cam130burstLength;
+    signal mouseRightClicked(var x, var y, var width, var height)
+    signal preBurstCapture()
+    signal postBurstCapture()
+    signal receiveBurstLength(int burstLen)
+    property int burstLength;
     property bool ret;
     property bool vidFormatChanged: false
     property string stateDisplay:"";
@@ -144,14 +141,17 @@ Rectangle {
     property int expAscellaTxtFiledValue;
     //Added by Dhurka - 13th Oct 2016
     //This contains selected camera enum value for comparision instead of camera name
-    property int selectedDeviceEnumValue;
+    property int selectedDeviceEnumValue;    
+
 
     onSeeCamCu51Capture: {
         vidstreamproperty.setStillVideoSize(output_value.currentText.toString(), color_comp_box.currentIndex.toString())
         vidstreamproperty.makeShot(storage_path.text.toString(),imageFormatCombo.currentText.toString())
     }
-
-
+    // receive burst length from camera specific qml
+    onReceiveBurstLength: {
+        burstLength = burstLen
+    }
 
     width:Screen.width
     height:Screen.height
@@ -268,6 +268,14 @@ Rectangle {
         }
     }
 
+    Timer {
+        id: burstShotTimer
+        interval: 1000
+        onTriggered: {
+            vidstreamproperty.makeBurstShot(storage_path.text.toString(),imageFormatCombo.currentText.toString(), burstLength)
+            stop()
+        }
+    }
 
     Timer {
         id: statusTimer
@@ -405,21 +413,6 @@ Rectangle {
         Videostreaming {
             id: vidstreamproperty
             focus: true
-//            onEnableCaptureAndRecord:{
-//                vidstreamproperty.enabled = true
-//                capture.enabled = true
-//                capture.opacity = 1
-//                record.enabled = true
-//                record.opacity = 1
-//                webcamKeyAccept = true
-//                keyEventFiltering = false
-//            }
-
-//            onTitleTextChanged: {
-//                messageDialog.title = _title.toString()
-//                messageDialog.text = _text.toString()
-//                messageDialog.visible = true
-//            }
             onTitleTextChanged:{
                 vidstreamproperty.enabled = true
                 capture.enabled = true
@@ -432,11 +425,8 @@ Rectangle {
                 messageDialog.text = _text.toString()
                 messageDialog.visible = true               
             }
-            onEnableRfRectIn130Cam:{
-                if(!seecam130.enableDisableAFRectangle(true)){
-                    camproperty.logCriticalWriter("Not able to enable the RF Rect mode")
-                }
-
+            onEnableRfRectBackInPreview:{
+                postBurstCapture() // signal to do anything need to do after capture continuous[burst] shots. In c
             }
 
             onNewControlAdded: {
@@ -567,32 +557,12 @@ Rectangle {
                         } else if(record_stop.visible){
                             videoSaveVideo()
                         }
-                     }else if(mouse.button == Qt.RightButton && selectedDeviceEnumValue == CommonEnums.SEE3CAM_130){
-                         if(see3cam){
-                             see3cam130AfwinSize = see3cam.afROIwindowSizeCurrentIndex+1 // combo index starts from 0
-                             if(see3cam.afROImode){
-                                 see3camAfROIMode = See3Cam130.AFCentered
-                             }else{
-                                 see3camAfROIMode = See3Cam130.AFManual
-                             }
-                             see3cam130AutoExpwinSize = see3cam.autoExpROIwindowSizeCurrentIndex+1 // combo index starts from 0
-                             if(see3cam.autoExpROImode){
-                                 see3camAutoExpROIMode = See3Cam130.AutoExpFull
-                             }else{
-                                 see3camAutoExpROIMode = See3Cam130.AutoExpManual
-                             }
-                         }
-                         if(see3camAfROIMode === See3Cam130.AFCentered || see3camAfROIMode === See3Cam130.AFManual){
-                             seecam130.setROIAutoFoucs(see3camAfROIMode, vidstreamproperty.width, vidstreamproperty.height, mouse.x, mouse.y, see3cam130AfwinSize)
-                         }else{
-                             console.log("Auto focus ROI mode is invalid");
-                         }
-                         if(see3camAutoExpROIMode === See3Cam130.AutoExpFull || see3camAutoExpROIMode === See3Cam130.AutoExpManual){
-                             seecam130.setROIAutoExposure(see3camAutoExpROIMode, vidstreamproperty.width, vidstreamproperty.height, mouse.x, mouse.y, see3cam130AutoExpwinSize)
-                         }else{
-                             console.log("Auto exposure ROI mode is invalid");
-                         }
                      }
+                     else if(mouse.button == Qt.RightButton){
+                         // passing mouse x,y cororinates, preview width and height
+                         mouseRightClicked(mouse.x, mouse.y, vidstreamproperty.width, vidstreamproperty.height)
+                     }
+
                 }                
             }
         }
@@ -939,7 +909,7 @@ Rectangle {
                 }
             }
             onCurrentIndexChanged: {
-                if(currentIndex.toString() != "-1" && currentIndex.toString() != "0") {
+                if(currentIndex.toString() != "-1" && currentIndex.toString() != "0") {                    
                     if(oldIndex!=currentIndex) {
                         usb3speed = false
                         oldIndex = currentIndex
@@ -958,7 +928,7 @@ Rectangle {
                         vidstreamproperty.stopCapture()
                         vidstreamproperty.closeDevice()
                         selectCameraSettings()
-                        camproperty.setCurrentDevice(currentIndex.toString(),currentText.toString())
+                        camproperty.setCurrentDevice(currentIndex.toString(),currentText.toString())                        
                         vidstreamproperty.setDevice("/dev/video")
                         vidstreamproperty.displayOutputFormat()
                         vidstreamproperty.displayStillResolution()
@@ -972,13 +942,9 @@ Rectangle {
                                 menuitems.pop()
                             }
                         }
-                        if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_130){
-                            uvccamera.exitExtensionUnit()
-                            uvccamera.initExtensionUnit(device_box.currentText)
-                            seecam130.getAutoFocusROIModeAndWindowSize()
-                            seecam130.getAutoExpROIModeAndWindowSize()
-                            seecam130.getBurstLength()
-                        }
+                        //Added by Dhurka - Here commonly open HID device instead of open every QML file - 17th Oct 2016
+                        openHIDDevice(selectedDeviceEnumValue);
+                        createExtensionUnitQml(selectedDeviceEnumValue)
                         updateFPS(color_comp_box.currentText.toString(), output_value.currentText.toString())
                         brightValueChangeProperty = false
                         contrastValueChangeProperty = false
@@ -3162,18 +3128,9 @@ Rectangle {
         //This signal is caught from cameraproperty.cpp to get the selected camera enum value
         onCurrentlySelectedCameraEnum:
         {
-            selectedDeviceEnumValue = selectedDevice;
-        }
+            selectedDeviceEnumValue = selectedDevice;            
+        }        
     }
-    Uvccamera {
-       id: uvccamera
-       onTitleTextChanged: {
-       messageDialog.title = _title.toString()
-       messageDialog.text = _text.toString()
-       messageDialog.open()
-       }
-   }
-
     function mouseClickCapture() {
         m_Snap = false
         capture.enabled = false
@@ -3209,14 +3166,9 @@ Rectangle {
             }            
         } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_130) {
             vidstreamproperty.setStillVideoSize(output_value.currentText.toString(), color_comp_box.currentIndex.toString())
-            if(see3cam){
-                see3cam130burstLength = see3cam.burstLengthCurrentIndex+1
-            }
-            //AfRectangle - make disable while capturing image.
-            if(!seecam130.enableDisableAFRectangle(false)){
-                camproperty.logCriticalWriter("Not able to disable the RF Rect mode")
-            }
-            vidstreamproperty.makeBurstShot(storage_path.text.toString(),imageFormatCombo.currentText.toString(), see3cam130burstLength)
+            preBurstCapture() // signal to do anything need to do before capture continuous shots
+            burstShotTimer.start()
+
         }else {
             vidstreamproperty.setStillVideoSize(output_value.currentText.toString(), color_comp_box.currentIndex.toString())
             vidstreamproperty.makeShot(storage_path.text.toString(),imageFormatCombo.currentText.toString())
@@ -3376,9 +3328,7 @@ Rectangle {
         JS.videoCaptureFormat = color_comp_box_VideoPin.currentIndex.toString()
         JS.stillCaptureResolution = output_value.currentText.toString()
         if(JS.videoCaptureFormat !== JS.stillCaptureFormat  || JS.stillCaptureResolution !== JS.videoCaptureResolution)
-        {
-            console.log("JS.videoCaptureFormat"+JS.videoCaptureFormat)
-            console.log("JS.videoCaptureResolution"+JS.videoCaptureResolution)
+        {            
             vidstreamproperty.vidCapFormatChanged(JS.videoCaptureFormat)
             vidstreamproperty.setResoultion(JS.videoCaptureResolution)
         }
@@ -3659,63 +3609,15 @@ Rectangle {
             break;
         case 9:
             break;
-        }
-
-        //        controlId = ctrlID;
-        //        var labelObject = Qt.createQmlObject('import QtQuick 2.0;
-        //                        import QtQuick.Controls 1.1; Text {
-        //                        text: "'+controlName+'";font.pixelSize: 10;
-        //                        font.family: "Ubuntu";
-        //                        color: "#ffffff";
-        //                        smooth: true;
-        //                        width: 80;
-        //                        wrapMode:Text.WordWrap;
-        //                        x: -10;
-        //                        y: '+controly+';
-        //                        opacity: 1
-        //                        property string buttonId;
-        //                        signal clicked(string buttonId);
-        //                        MouseArea {
-        //                            anchors.fill: parent
-        //                            onClicked:parent.clicked(parent.buttonId)
-        //                        }
-        //                    }', ctrlRect);
-
-        //        if(ctrlType.toString() === "1")
-        //        {
-        //            var sliderObject = Qt.createQmlObject('import QtQuick 2.0;
-        //                            import QtQuick.Controls 1.1;   import QtQuick.Controls.Styles 1.0;
-        //                Slider {
-        //                x: 75
-        //                y: '+controly+'
-        //                minimumValue: 0
-        //                maximumValue: 100
-        //                stepSize: 1
-        //                opacity: 1
-        //                style: SliderStyle {
-        //                    groove: Image {
-        //                        source: "images/uvc_red_fill.png"
-        //                    }
-        //                    handle: Image {
-        //                        source: "images/uvc_red_scroller.png"
-        //                        y: -4
-        //                        opacity: 1
-        //                    }
-        //                }onValueChanged:  {
-        //console.log("Changing... i wondered")
-        //}
-        //            }',ctrlRect);
-        //        }
-        //        controly = controly + 30;
-        //        //newObject.destroy(1000);
+        }     
 
     }
 
     function selectCameraSettings(){
         camera_settings.forceActiveFocus()
         if(!cameraColumnLayout.visible)
-        {
-            see3cam.destroy()
+        {            
+            see3cam.visible = false
         }
         if(selectedDeviceEnumValue == CommonEnums.ECON_1MP_BAYER_RGB)
         {
@@ -3962,50 +3864,65 @@ Rectangle {
     function extensionTab() {
         if(cameraColumnLayout.visible) {
             cameraColumnLayout.visible = false
-            JS.cameraComboIndex = device_box.currentIndex
-            if(selectedDeviceEnumValue == CommonEnums.ECON_1MP_BAYER_RGB ) {
-                see3cam = Qt.createComponent("../UVCSettings/see3cam10/uvc10_c.qml").createObject(root)
-            } else if(selectedDeviceEnumValue == CommonEnums.ECON_1MP_MONOCHROME) {
-                see3cam = Qt.createComponent("../UVCSettings/see3cam10/uvc10_m.qml").createObject(root)
-            } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_11CUG) {
-                see3cam = Qt.createComponent("../UVCSettings/see3cam11/uvc11.qml").createObject(root)
-            } else if(selectedDeviceEnumValue == CommonEnums.ECON_8MP_CAMERA) {
-                see3cam = Qt.createComponent("../UVCSettings/see3cam80/uvc80.qml").createObject(root)
-            } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU50) {
-                see3cam = Qt.createComponent("../UVCSettings/see3cam50/uvc50.qml").createObject(root)
-            } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU130) {
-                see3cam = Qt.createComponent("../UVCSettings/see3camcu130/uvc_cu130.qml").createObject(root)
-            } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_130) {
-                see3cam = Qt.createComponent("../UVCSettings/see3cam130/uvc_130.qml").createObject(root)
-            } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU51) {
-                see3cam = Qt.createComponent("../UVCSettings/see3cam51/uvc51.qml").createObject(root)
-            } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_12CUNIR) {
-                see3cam = Qt.createComponent("../UVCSettings/see3camar0130/uvc_ar0130.qml").createObject(root)
-            } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU40) {
-                see3cam = Qt.createComponent("../UVCSettings/see3cam40/uvc40.qml").createObject(root)
-            } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU30) {
-                see3cam = Qt.createComponent("../UVCSettings/see3cam30/uvc30.qml").createObject(root)
-            } else if(selectedDeviceEnumValue == CommonEnums.CX3_UVC_CAM) {
-                see3cam = Qt.createComponent("../UVCSettings/ascella/cx3-uvc.qml").createObject(root)
-            } else {
-                see3cam = Qt.createComponent("../UVCSettings/others/others.qml").createObject(root)
-            }
+            see3cam.visible = true
         }
     }
-    See3Cam130 {
-        id: seecam130
-        onSendROIAfMode:{
-            see3camAfROIMode = roiMode
-            see3cam130AfwinSize = winSize
+
+    function createExtensionUnitQml(selectedDeviceEnumValue){
+        JS.cameraComboIndex = device_box.currentIndex
+        if(see3cam){
+            see3cam.destroy()
         }
-        onSendROIAutoExpMode:{
-            see3camAutoExpROIMode = roiMode
-            see3cam130AutoExpwinSize = winSize
+        if(selectedDeviceEnumValue == CommonEnums.ECON_1MP_BAYER_RGB ) {
+            see3cam = Qt.createComponent("../UVCSettings/see3cam10/uvc10_c.qml").createObject(root)
+        } else if(selectedDeviceEnumValue == CommonEnums.ECON_1MP_MONOCHROME) {
+            see3cam = Qt.createComponent("../UVCSettings/see3cam10/uvc10_m.qml").createObject(root)
+        } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_11CUG) {
+            see3cam = Qt.createComponent("../UVCSettings/see3cam11/uvc11.qml").createObject(root)
+        } else if(selectedDeviceEnumValue == CommonEnums.ECON_8MP_CAMERA) {
+            see3cam = Qt.createComponent("../UVCSettings/see3cam80/uvc80.qml").createObject(root)
+        } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU50) {
+            see3cam = Qt.createComponent("../UVCSettings/see3cam50/uvc50.qml").createObject(root)
+        } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU130) {
+            see3cam = Qt.createComponent("../UVCSettings/see3camcu130/uvc_cu130.qml").createObject(root)
+        } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_130) {
+            see3cam = Qt.createComponent("../UVCSettings/see3cam130/uvc_130.qml").createObject(root)
+        } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU51) {
+            see3cam = Qt.createComponent("../UVCSettings/see3cam51/uvc51.qml").createObject(root)
+        } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_12CUNIR) {
+            see3cam = Qt.createComponent("../UVCSettings/see3camar0130/uvc_ar0130.qml").createObject(root)
+        } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU40) {
+            see3cam = Qt.createComponent("../UVCSettings/see3cam40/uvc40.qml").createObject(root)
+        } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU30) {
+            see3cam = Qt.createComponent("../UVCSettings/see3cam30/uvc30.qml").createObject(root)
+        } else if(selectedDeviceEnumValue == CommonEnums.CX3_UVC_CAM) {
+            see3cam = Qt.createComponent("../UVCSettings/ascella/cx3-uvc.qml").createObject(root)
+        } else {
+            see3cam = Qt.createComponent("../UVCSettings/others/others.qml").createObject(root)
         }
-        onSendBurstLength:{
-            see3cam130burstLength = burstLength
-        }
+        see3cam.visible = false
     }
+
+    //Added by Dhurka - Here commonly open HID device instead of open every QML file - 17th Oct 2016
+    function openHIDDevice(selectedEnum)
+    {
+        switch(selectedEnum)
+        {
+            case CommonEnums.ECON_1MP_BAYER_RGB:
+            case CommonEnums.ECON_1MP_MONOCHROME:
+            case CommonEnums.SEE3CAM_11CUG:
+            case CommonEnums.SEE3CAM_CU30:
+            case CommonEnums.SEE3CAM_CU40:
+            case CommonEnums.SEE3CAM_CU50:
+            case CommonEnums.SEE3CAM_CU51:
+            case CommonEnums.SEE3CAM_CU130:
+            case CommonEnums.SEE3CAM_12CUNIR:
+            case CommonEnums.ECON_8MP_CAMERA:
+            case CommonEnums.SEE3CAM_130:
+                camproperty.openHIDDevice(device_box.currentText);
+            break;
+        }
+    }    
 
     Component.onCompleted: {
         setOpacityFalse()
@@ -4026,6 +3943,7 @@ Rectangle {
         JS.enableMasterMode_11cug()
         exitDialog.visible = false
     }
+
 
     Keys.onReleased: {
         if(event.key === Qt.Key_I) {

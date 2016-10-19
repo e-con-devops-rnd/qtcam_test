@@ -41,6 +41,7 @@
 #include "videoencoder.h"
 #include "h264decoder.h"
 #include "common_enums.h"
+#include "see3cam_130.h"
 
 #if !LIBAVCODEC_VER_AT_LEAST(54,25)
     #define AV_CODEC_ID_NONE CODEC_ID_NONE
@@ -97,7 +98,7 @@ public:
     QString lastFormat;
 
     VideoEncoder  *videoEncoder;
-    H264Decoder *h264Decode;
+    H264Decoder *h264Decode;    
 
     /* Jpeg decode */
     int doyuv;
@@ -380,7 +381,8 @@ public slots:
      * @brief selectedCameraEnum - This slot contains selected camera enum value
      * @param selectedDeviceEnum - Camera enum value
      */
-    void selectedCameraEnum(CommonEnums::ECameraNames selectedDeviceEnum);    
+    void selectedCameraEnum(CommonEnums::ECameraNames selectedDeviceEnum);
+
 
 signals:
     void logDebugHandle(QString _text);
@@ -399,7 +401,7 @@ signals:
     void addControls();
     void rcdStop(QString recordFail);
     void videoRecord(QString fileName);
-    void enableRfRectIn130Cam();
+    void enableRfRectBackInPreview();
 };
 
 #endif // VIDEOSTREAMING_H

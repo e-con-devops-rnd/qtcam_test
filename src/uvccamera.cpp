@@ -29,10 +29,12 @@ QMap<QString, QString> uvccamera::serialNumberMap;
  */
 CommonEnums::ECameraNames  uvccamera::selectedDeviceEnum;
 QString uvccamera::hidNode;
+//Modified by Dhurka
+QString uvccamera::openNode;
 
 int uvccamera::hid_fd;
 libusb_device_handle *uvccamera::handle;
-//Added bu Dhurka - 14th Oct 2016
+//Added by Dhurka - 14th Oct 2016
 /**
  * @brief econCameraVid - to avoid hard coded value checking in findEconDevice()
  */
@@ -466,7 +468,7 @@ void uvccamera::getDeviceNodeName(QString hidDeviceNode) {
 }
 
 void uvccamera::exitExtensionUnit() {
-    close(hid_fd);
+        close(hid_fd);
 }
 
 int uvccamera::exitExtensionUnitAscella(){
@@ -547,14 +549,9 @@ void uvccamera::getSerialNumber(){
     emit serialNumber("Serial Number: "+serialNumberMap.value(openNode));
 }
 
-bool See3CAM_Control::getFlashState(quint8 *flashState, QString cameraName) {
+bool See3CAM_Control::getFlashState(quint8 *flashState) {
 
-    *flashState = 0;
-    if(cameraName.isEmpty())
-    {
-        emit logHandle(QtCriticalMsg," cameraName Not passed to check flash state of camera\n");
-        return false;
-    }
+    *flashState = 0;    
     if(uvccamera::hid_fd < 0)
     {
         return false;
@@ -620,13 +617,8 @@ bool See3CAM_Control::getFlashState(quint8 *flashState, QString cameraName) {
     return true;
 }
 
-bool See3CAM_Control::setFlashState(flashTorchState flashState, QString cameraName)
-{
-    if(cameraName.isEmpty())
-    {
-        emit logHandle(QtCriticalMsg," cameraName Not passed to set flash state of camera\n");
-        return false;
-    }
+bool See3CAM_Control::setFlashState(flashTorchState flashState)
+{   
     if(uvccamera::hid_fd < 0)
     {
         return false;
@@ -702,15 +694,10 @@ bool See3CAM_Control::setFlashState(flashTorchState flashState, QString cameraNa
     return true;
 }
 
-bool See3CAM_Control::getTorchState(quint8 *torchState, QString cameraName)
+bool See3CAM_Control::getTorchState(quint8 *torchState)
 {
 
-    *torchState = 0;
-    if(cameraName.isEmpty())
-    {
-        emit logHandle(QtCriticalMsg," cameraName Not passed to get torch state of camera\n");
-        return false;
-    }
+    *torchState = 0;    
     if(uvccamera::hid_fd < 0)
     {
         return false;
@@ -771,13 +758,8 @@ bool See3CAM_Control::getTorchState(quint8 *torchState, QString cameraName)
     return true;
 }
 
-bool See3CAM_Control::setTorchState(flashTorchState torchState, QString cameraName)
-{
-    if(cameraName.isEmpty())
-    {
-        emit logHandle(QtCriticalMsg," cameraName Not passed to set torch state of camera\n");
-        return false;
-    }
+bool See3CAM_Control::setTorchState(flashTorchState torchState)
+{    
     if(uvccamera::hid_fd < 0)
     {
         return false;
@@ -861,32 +843,21 @@ bool See3CAM_Control::setTorchState(flashTorchState torchState, QString cameraNa
     return true;
 }
 
-void See3CAM_Control::setFlashControlState(const int flashState,QString cameraName)
-{
-
-    if(cameraName.isEmpty())
-    {
-        emit logHandle(QtCriticalMsg," cameraName Not passed to set flash control state of camera\n");
-        return void();
-    }
+void See3CAM_Control::setFlashControlState(const int flashState)
+{    
     if(flashState == 1)
         flashCheckBoxState = flashOn;
     else
         flashCheckBoxState = flashOff;
-    setFlashState(flashCheckBoxState,cameraName);
+    setFlashState(flashCheckBoxState);
 }
 
-void See3CAM_Control::setTorchControlState(const int torchState,QString cameraName) {
-    if(cameraName.isEmpty())
-    {
-        emit logHandle(QtCriticalMsg," cameraName Not passed to set torch control state of camera\n");
-        return void();
-    }
+void See3CAM_Control::setTorchControlState(const int torchState) {
     if(torchState == 1)
         torchCheckBoxState = torchOn;
     else
         torchCheckBoxState = torchOff;
-    setTorchState(torchCheckBoxState,cameraName);
+    setTorchState(torchCheckBoxState);
 }
 
 void See3CAM_GPIOControl::getGpioLevel(camGpioPin gpioPinNumber)

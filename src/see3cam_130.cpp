@@ -68,7 +68,7 @@ bool See3CAM_130::getSceneMode()
             } else if(g_in_packet_buf[0] == CAMERA_CONTROL_130 &&
                 g_in_packet_buf[1]==GET_SCENEMODE_130 &&
                 g_in_packet_buf[6]==GET_SUCCESS) {
-                    sceneMode = g_in_packet_buf[2];
+                    sceneMode = g_in_packet_buf[2];                    
                     emit sendSceneMode(sceneMode);
                     timeout = false;
             }
@@ -127,7 +127,7 @@ bool See3CAM_130::getEffectMode()
                 g_in_packet_buf[1]==GET_SPECIALEFFECT_130 &&
                 g_in_packet_buf[6]==GET_SUCCESS) {
                     effectMode = g_in_packet_buf[2];
-                    emit sendEffectMode(effectMode);
+                    emit sendEffectMode(effectMode);                    
                     timeout = false;
             }
         }
@@ -676,8 +676,7 @@ bool See3CAM_130::setBurstLength(uint burstLength){
             } else if(g_in_packet_buf[0] == CAMERA_CONTROL_130 &&
                 g_in_packet_buf[1]==SET_BURST_LENGTH_130 &&
                 g_in_packet_buf[2]==burstLength &&
-                g_in_packet_buf[6]==SET_SUCCESS) {
-                qDebug()<<"setBurstLength:Success";
+                g_in_packet_buf[6]==SET_SUCCESS) {                
                     timeout=false;
             }
         }
@@ -937,7 +936,7 @@ bool See3CAM_130::setROIAutoFoucs(camROIAfMode see3camAfROIMode, uint vidResolnW
             } else if(g_in_packet_buf[0] == CAMERA_CONTROL_130 &&
                 g_in_packet_buf[1]== SET_AF_ROI_MODE_130 &&
                 g_in_packet_buf[2]==see3camAfROIMode &&
-                g_in_packet_buf[6]==SET_SUCCESS) {
+                g_in_packet_buf[6]==SET_SUCCESS) {                
                     timeout=false;
             }
         }
@@ -1084,7 +1083,7 @@ bool See3CAM_130::setROIAutoExposure(camROIAutoExpMode see3camAutoexpROIMode, ui
             } else if(g_in_packet_buf[0] == CAMERA_CONTROL_130 &&
                 g_in_packet_buf[1]== SET_EXP_ROI_MODE_130 &&
                 g_in_packet_buf[2]==see3camAutoexpROIMode &&
-                g_in_packet_buf[6]==SET_SUCCESS) {
+                g_in_packet_buf[6]==SET_SUCCESS) {                
                     timeout=false;
             }
         }
@@ -1215,6 +1214,7 @@ bool See3CAM_130::enableDisableAFRectangle(bool enableRFRect){
                 g_in_packet_buf[1]==ENABLE_DISABLE_MODE_AF_RECTANGLE_130 &&
                 g_in_packet_buf[2]==inputRFRectMode &&
                 g_in_packet_buf[6]==SET_SUCCESS) {
+                qDebug()<<"success"<<inputRFRectMode;
                     timeout=false;
             }
         }

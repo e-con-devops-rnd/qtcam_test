@@ -287,7 +287,7 @@ private:
      */
     void initCameraEnumMap();
 
-    QString openNode;
+    static QString openNode;
     /**
      * @brief pidVidMap - This map contains the deviceName and Vid,Pid value
      */
@@ -388,13 +388,11 @@ public:
      * @brief Get the torch state
      *  - Reads the torch state from the device
      * @param torchState
-     * This value will hold the state level of the torch (either 0-torch not enabled or 1-torch enabled)
-     * @param cameraName
-     * cameraName - Camera physical name
+     * This value will hold the state level of the torch (either 0-torch not enabled or 1-torch enabled)     
      * @return
      * true - read successfully the torch state level, false- fails to read the torch state level
      */
-    bool getTorchState(quint8 *torchState, QString cameraName);
+    bool getTorchState(quint8 *torchState);
 
     /**
      * @brief   Set the Torch state of the Device.
@@ -404,18 +402,16 @@ public:
      * @return
      * false - Failure (Torch state is not set as per the torchState).
      */
-    bool setTorchState(flashTorchState torchState, QString cameraName);
+    bool setTorchState(flashTorchState torchState);
 
     /**
      * @brief Get the flash state
      * @param Level
-     * This value will hold the state level of the flash (either 0-flash not enabled or 1-flash is enabled)
-     * @param cameraName
-     * cameraName - Camera physical name
+     * This value will hold the state level of the flash (either 0-flash not enabled or 1-flash is enabled)     
      * @return
      * true - read successfully the flash state level, false- fails to read the flash state level
      */
-    bool getFlashState(quint8 *flashState, QString cameraName);
+    bool getFlashState(quint8 *flashState);
 
     /**
      * @brief   Set the Flash state of the Device.
@@ -425,7 +421,7 @@ public:
      * @return
      * false - Failure (Torch state is not set as per the flashState).
      */
-    bool setFlashState(flashTorchState flashState, QString cameraName);
+    bool setFlashState(flashTorchState flashState);
 
     flashTorchState flashCheckBoxState;
     flashTorchState torchCheckBoxState;
@@ -434,8 +430,8 @@ signals:
     void deviceStatus(QString title, QString message);
 public slots:
 
-    void setFlashControlState(const int flashState,QString cameraName);
-    void setTorchControlState(const int torchState, QString cameraName);
+    void setFlashControlState(const int flashState);
+    void setTorchControlState(const int torchState);
 };
 
 
