@@ -39,6 +39,8 @@ Rectangle {
     signal mouseRightClicked(var x, var y, var width, var height)
     signal preBurstCapture()
     signal postBurstCapture()
+    signal preRecordVideo()
+    signal postRecordVideo()
     signal receiveBurstLength(int burstLen)
     property int burstLength;
     property bool ret;
@@ -273,6 +275,15 @@ Rectangle {
         interval: 1000
         onTriggered: {
             vidstreamproperty.makeBurstShot(storage_path.text.toString(),imageFormatCombo.currentText.toString(), burstLength)
+            stop()
+        }
+    }
+
+    Timer {
+        id: recordTimerWithoutAFRect // Record after disabling Auto Focus Rectangle
+        interval: 1000
+        onTriggered: {
+            vidstreamproperty.recordBegin(JS.videoEncoder,JS.videoExtension, videoStoragePath)
             stop()
         }
     }
@@ -3706,11 +3717,16 @@ Rectangle {
     }
 
     function videoRecordBegin() {
+        preRecordVideo() // signal to do before starting record video
         seconds2 = 0
         minutes = 0
         hours = 0
         videoTimer.start()
-        vidstreamproperty.recordBegin(JS.videoEncoder,JS.videoExtension, videoStoragePath)
+        if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_130){
+            recordTimerWithoutAFRect.start()
+        }else{
+            vidstreamproperty.recordBegin(JS.videoEncoder,JS.videoExtension, videoStoragePath)
+        }
         videoCaptureProperty.enabled = false
         videoCaptureProperty.opacity = 0.5
         stillproperties.enabled = false
@@ -3748,6 +3764,7 @@ Rectangle {
         uvc_settings.enabled = true
         uvc_settings.opacity = 1
         statusTimer.start()
+        postRecordVideo() // signal to do after finishing record video
     }
 
     function videoControlFilter() {
@@ -4016,4 +4033,3 @@ Rectangle {
         open_sideBar.visible = false
    }
 }
-

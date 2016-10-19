@@ -934,6 +934,12 @@ Item {
          onPostBurstCapture:{
              seecam130.enableDisableAFRectangle(true)
          }
+         onPreRecordVideo:{
+             seecam130.enableDisableAFRectangle(false)
+         }
+         onPostRecordVideo:{
+             seecam130.enableDisableAFRectangle(true)
+         }
     }
 
 }
