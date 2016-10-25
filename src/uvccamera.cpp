@@ -586,7 +586,6 @@ bool See3CAM_Control::getFlashState(quint8 *flashState) {
     else if(selectedDeviceEnum == CommonEnums::SEE3CAM_CU50)
     {
         g_out_packet_buf[1] = CAMERA_CONTROL_50; /* Report Number */
-
     }
     else if(selectedDeviceEnum == CommonEnums::SEE3CAM_12CUNIR)
     {

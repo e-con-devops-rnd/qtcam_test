@@ -169,9 +169,14 @@
 #define ENABLE_AF_RECTANGLE_130     0x01
 #define DISABLE_AF_RECTANGLE_130     0x00
 #define SET_TO_DEFAULT                0x17
-
-#define MANUAL_ROI_AF_130				0x02
-#define MANUAL_ROI_EXP_130				0x02
+#define MANUAL_ROI_AF_130             0x02
+#define MANUAL_ROI_EXP_130			  0x02
+#define SET_FLIP_MODE_130                 0x19
+#define GET_FLIP_MODE_130                 0x18
+#define FLIP_ENABLE                   0x01
+#define FLIP_DISABLE                  0x00
+#define SET_HORZ_FLIP_MODE_130             0x00
+#define SET_VERT_FLIP_MODE_130             0x01
 
 /* SEE3CAM_CU51 */
 

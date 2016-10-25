@@ -67,6 +67,19 @@ public:
     };
     Q_ENUMS(camAFRectMode)
 
+    enum camFlipMode {
+        FlipHorizontal = 0x00,
+        FlipVertical = 0x01,
+        FlipBoth = 0x02
+    };
+    Q_ENUMS(camFlipMode)
+
+    enum camFlipEnableDisableMode {
+        FlipEnable = 0x01,
+        FlipDisable = 0x00
+    };
+    Q_ENUMS(camFlipEnableDisableMode)
+
 signals:
      void sendSceneMode(uint sceneMode);
      void sendEffectMode(uint effectMode);
@@ -78,6 +91,7 @@ signals:
      void sendROIAfMode(uint roiMode, uint winSize);
      void sendROIAutoExpMode(uint roiMode, uint winSize);
      void sendAfRectMode(uint afRectMode);
+     void sendFlipMode(uint flipMode, uint flipEnableDisableMode);
 
 public slots:
     bool getSceneMode();
@@ -101,5 +115,8 @@ public slots:
     bool enableDisableAFRectangle(bool enableRFRect);    
     bool getAFRectMode();
     bool setToDefault();
+    bool setFlipHorzMode(bool horizModeSel);
+    bool setFlipVertiMode(bool vertiModeSel);
+    bool getFlipMode();
 };
 #endif // SEE3CAM_130_H

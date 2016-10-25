@@ -676,7 +676,7 @@ Item {
             }
 
             Row{
-                spacing:25
+                spacing:75
                 ExclusiveGroup { id: afRectGroup }
                 RadioButton {
                     exclusiveGroup: afRectGroup
@@ -705,6 +705,44 @@ Item {
                     }
                 }
             }
+            Text {
+                id: flipText
+                text: "--- Flip Control ---"
+                font.pixelSize: 14
+                font.family: "Ubuntu"
+                color: "#ffffff"
+                smooth: true
+                Layout.alignment: Qt.AlignCenter
+                opacity: 0.50196078431373
+            }
+            Row{
+                spacing: 55
+                CheckBox {
+                    id: flipCtrlHorizotal
+                    activeFocusOnPress : true
+                    text: "Horizontal"
+                    style: econCheckBoxStyle
+                    onClicked:{
+                        seecam130.setFlipHorzMode(checked)
+                    }
+                    Keys.onReturnPressed: {
+                        seecam130.setFlipHorzMode(checked)
+                    }
+                }
+                CheckBox {
+                    id: flipCtrlVertical
+                    activeFocusOnPress : true
+                    text: "Vertical"
+                    style: econCheckBoxStyle
+                    onClicked:{
+                        seecam130.setFlipVertiMode(checked)
+                    }
+                    Keys.onReturnPressed: {
+                        seecam130.setFlipVertiMode(checked)
+                    }
+                }
+            }
+
             Row{
                 Layout.alignment: Qt.AlignCenter
                 Button {
@@ -772,7 +810,6 @@ Item {
                     opacity: 0
                 }
             }
-
         }
     }
 
@@ -839,6 +876,9 @@ Item {
                 rectDisable.checked = true
             }
 
+        }
+        onSendFlipMode:{
+           updateFlipMode(flipMode, flipEnableDisableMode)
         }
     }
 
@@ -930,6 +970,23 @@ Item {
     }
 
     Component {
+        id: econCheckBoxStyle
+        CheckBoxStyle {
+            label: Text {
+                text: control.text
+                font.pixelSize: 14
+                font.family: "Ubuntu"
+                color: "#ffffff"
+                smooth: true
+                opacity: 1
+            }
+            background: Rectangle {
+                color: "#222021"
+                border.color: control.activeFocus ? "#ffffff" : "#222021"
+            }
+        }
+    }
+    Component {
         id: econRadioButtonStyle
         RadioButtonStyle {
             label: Text {
@@ -972,8 +1029,37 @@ Item {
         seecam130.getAutoFocusROIModeAndWindowSize()
         seecam130.getAutoExpROIModeAndWindowSize()
         seecam130.getAFRectMode()
+        seecam130.getFlipMode()
     }
 
+    function updateFlipMode(flipMode, FlipEnableDisableMode){
+        switch(flipMode){
+        case See3Cam130.FlipHorizontal:
+            if(FlipEnableDisableMode == See3Cam130.FlipEnable){
+                flipCtrlHorizotal.checked = true
+            }else{
+                flipCtrlHorizotal.checked = false
+            }
+            break;
+        case See3Cam130.FlipVertical:
+            if(FlipEnableDisableMode == See3Cam130.FlipEnable){
+                flipCtrlVertical.checked = true
+            }else{
+                flipCtrlVertical.checked = false
+            }
+            break;
+        case See3Cam130.FlipBoth:
+            if(FlipEnableDisableMode == See3Cam130.FlipEnable){
+                flipCtrlHorizotal.checked = true
+                flipCtrlVertical.checked = true
+            }else{
+                flipCtrlHorizotal.checked = false
+                flipCtrlVertical.checked = false
+            }
+            break;
+        }
+
+    }
 
     function getSerialNumber() {
         uvccamera.getSerialNumber()
@@ -996,6 +1082,7 @@ Item {
         seecam130.getAutoFocusROIModeAndWindowSize()
         seecam130.getAutoExpROIModeAndWindowSize()
         seecam130.getAFRectMode()
+        seecam130.getFlipMode()
     }
 
     function defaultSceneMode(mode)
