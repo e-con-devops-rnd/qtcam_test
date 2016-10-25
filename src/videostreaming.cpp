@@ -70,6 +70,7 @@ Videostreaming::Videostreaming()
     openSuccess = false;
     updateOnce = true;
     m_snapShot = false;
+    m_burstShot = false;
     makeSnapShot = false;
     triggerShot = false;
     correctionDisplay = 0;
@@ -436,6 +437,7 @@ void Videostreaming::capFrame()
                 captureSaveTime("Capture time: " +(QString::number((double)captureTime.elapsed()/1000)) + "seconds");
                 makeSnapShot = false;
                 m_snapShot = false;
+                m_burstShot = false;
                 formatSaveSuccess(tmpValue, m_burstShot);
             } else {
                captureSaveTime("Capture time: " +(QString::number((double)captureTime.elapsed()/1000)) + "seconds");

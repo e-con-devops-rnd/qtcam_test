@@ -165,8 +165,10 @@
 #define GET_Q_FACTOR_130				0x11
 #define SET_Q_FACTOR_130				0x12
 #define ENABLE_DISABLE_MODE_AF_RECTANGLE_130     0x13
+#define GET_AF_RECT_MODE                0x16
 #define ENABLE_AF_RECTANGLE_130     0x01
 #define DISABLE_AF_RECTANGLE_130     0x00
+#define SET_TO_DEFAULT                0x17
 
 #define MANUAL_ROI_AF_130				0x02
 #define MANUAL_ROI_EXP_130				0x02
@@ -249,7 +251,7 @@ public:
      */
     int findEconDevice(QString);
     void getDeviceNodeName(QString);
-    int closeAscellaDevice();
+    bool closeAscellaDevice();
 
     static libusb_device_handle* handle;  /* handle for USB device */
     int kernelDriverDetached;
@@ -362,7 +364,7 @@ public slots:
      *  - This function will close the last opened HID device
      * @
      */
-    int exitExtensionUnitAscella();
+    bool exitExtensionUnitAscella();
     /**
      * @brief currentlySelectedDevice - This slot contains currently selected device name
      * @param deviceName - Name of the camera device

@@ -61,6 +61,12 @@ public:
     };
     Q_ENUMS(camROIAutoExpMode)
 
+    enum camAFRectMode {
+        AFRectEnable = 0x01,
+        AFRectDisable = 0x00
+    };
+    Q_ENUMS(camAFRectMode)
+
 signals:
      void sendSceneMode(uint sceneMode);
      void sendEffectMode(uint effectMode);
@@ -71,6 +77,7 @@ signals:
      void sendqFactor(uint qFactor);
      void sendROIAfMode(uint roiMode, uint winSize);
      void sendROIAutoExpMode(uint roiMode, uint winSize);
+     void sendAfRectMode(uint afRectMode);
 
 public slots:
     bool getSceneMode();
@@ -92,5 +99,7 @@ public slots:
     bool setQFactor(uint qFactor);
     bool getQFactor();
     bool enableDisableAFRectangle(bool enableRFRect);    
+    bool getAFRectMode();
+    bool setToDefault();
 };
 #endif // SEE3CAM_130_H

@@ -28,10 +28,32 @@ Item {
 
     Timer {
         id: getCamValuesTimer
-        interval: 200
+        interval: 500
         onTriggered: {
             seecam130.getSceneMode()
             seecam130.getEffectMode()
+            seecam130.getDenoiseValue()
+            seecam130.getQFactor()
+            stop()
+        }
+    }
+
+    // Used when selecting auto focus in image Quality settings menu
+    Timer {
+        id: getAutoFocusControlValues
+        interval: 500
+        onTriggered: {
+            seecam130.getAutoFocusROIModeAndWindowSize()
+            stop()
+        }
+    }
+
+    // Used when selecting auto exposure in image Quality settings menu
+    Timer {
+        id: getAutoExpsoureControlValues
+        interval: 500
+        onTriggered: {
+            seecam130.getAutoExpROIModeAndWindowSize()
             stop()
         }
     }
@@ -48,6 +70,21 @@ Item {
         onTriggered:
         {
             getFirmwareVersion()
+        }
+    }
+
+    Action {
+        id: serialNumber
+        onTriggered: {
+            getSerialNumber()
+        }
+    }
+
+    Action {
+        id: setDefault
+        onTriggered:
+        {
+            setToDefaultValues()
         }
     }
 
@@ -246,10 +283,11 @@ Item {
                     activeFocusOnPress : true
                     text: "Trigger"
                     style: econButtonStyle
-                    opacity: (radioOneshot.checked) ? 1 : 0.1
+                    enabled: (radioOneshot.enabled && radioOneshot.checked) ? true : false
+                    opacity: (radioOneshot.enabled && radioOneshot.checked) ? 1 : 0.1
                     implicitHeight: 25
                     implicitWidth: 120
-                    action: (radioOneshot.checked) ? triggerAction : null
+                    action: (radioOneshot.enabled && radioOneshot.checked) ? triggerAction : null
                     Keys.onReturnPressed: {
                         seecam130.setAutoFocusMode(See3Cam130.OneShot);
                     }
@@ -416,8 +454,8 @@ Item {
                       id: afCentered
                       text: "Centered"
                       activeFocusOnPress: true
-                      style: econRadioButtonStyle                     
-                      opacity: enabled ? 1 : 0.1
+                      style: econRadioButtonStyle
+                      opacity: afCentered.enabled ? 1 : 0.1
                       // setROIAutoFoucs() args:  mode, videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord, WinSize]
                       // videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord - these parameters are required only when click in preview]
                       // winSize is required only for manual mode
@@ -433,8 +471,8 @@ Item {
                       id: afManual
                       text: "Manual"
                       activeFocusOnPress: true
-                      style: econRadioButtonStyle                     
-                      opacity: enabled ? 1 : 0.1
+                      style: econRadioButtonStyle
+                      opacity: afManual.enabled ? 1 : 0.1
                       onClicked: {
                             seecam130.setROIAutoFoucs(See3Cam130.AFManual, 0, 0, 0, 0, afWindowSizeCombo.currentText)
                       }
@@ -447,8 +485,8 @@ Item {
             ComboBox
             {
                 id: afWindowSizeCombo                
-                enabled: afManual.checked ? true : false
-                opacity: enabled ? 1 : 0.1
+                enabled: (afManual.enabled && afManual.checked) ? true : false
+                opacity: (afManual.enabled && afManual.checked) ? 1 : 0.1
                 model: ListModel {
                     ListElement { text: "1" }
                     ListElement { text: "2" }
@@ -518,7 +556,7 @@ Item {
             ComboBox
             {
                 id: autoExpoWinSizeCombo
-                opacity: autoexpManual.checked ? 1 : 0.1                
+                opacity: (autoexpManual.enabled && autoexpManual.checked) ? 1 : 0.1
                 model: ListModel {
                     ListElement { text: "1" }
                     ListElement { text: "2" }
@@ -626,10 +664,67 @@ Item {
                     skipUpdateUIOnBurstLength = true
                 }
             }
+            Text {
+                id: enableDisableAFRectText
+                text: "--- Enable/Disable AF Rectangle ---"
+                font.pixelSize: 14
+                font.family: "Ubuntu"
+                color: "#ffffff"
+                smooth: true
+                Layout.alignment: Qt.AlignCenter
+                opacity: 0.50196078431373
+            }
+
+            Row{
+                spacing:25
+                ExclusiveGroup { id: afRectGroup }
+                RadioButton {
+                    exclusiveGroup: afRectGroup
+                    id: rectEnable
+                    text: "Enable"
+                    activeFocusOnPress: true
+                    style: econRadioButtonStyle
+                    onClicked:{
+                        seecam130.enableDisableAFRectangle(true)
+                    }
+                    Keys.onReturnPressed: {
+                        seecam130.enableDisableAFRectangle(true)
+                    }
+                }
+                RadioButton {
+                    exclusiveGroup: afRectGroup
+                    id:rectDisable
+                    text: "Disable"
+                    activeFocusOnPress: true
+                    style: econRadioButtonStyle
+                    onClicked: {
+                        seecam130.enableDisableAFRectangle(false)
+                    }
+                    Keys.onReturnPressed: {
+                        seecam130.enableDisableAFRectangle(false)
+                    }
+                }
+            }
             Row{
                 Layout.alignment: Qt.AlignCenter
                 Button {
-                    id: f_wversion_selectedCU130
+                    id: defaultValue
+                    opacity: 1
+                    activeFocusOnPress : true
+                    text: "Default"
+                    tooltip: "Click to set default values in extension controls"
+                    action: setDefault
+                    style: econButtonStyle
+                    Keys.onReturnPressed: {
+                        seecam130.setToDefault()
+                    }
+                }
+            }
+
+            Row{
+               // Layout.alignment: Qt.AlignCenter
+                Button {
+                    id: f_wversion_selected130
                     opacity: 1
                     action: firmwareVersion
                     activeFocusOnPress : true
@@ -649,7 +744,35 @@ Item {
                     getFirmwareVersion()
                     }
                 }
+                Button {
+                    id: serial_no_selected
+                    opacity: 1
+                    action: serialNumber
+                    activeFocusOnPress : true
+                    tooltip: "Click to view the Serial Number"
+                    style: ButtonStyle {
+                        background: Rectangle {
+                        border.width: control.activeFocus ? 3 :0
+                        color: "#222021"
+                        border.color: control.activeFocus ? "#ffffff" : "#222021"
+                        radius: 5
+                        }
+                        label: Image {
+                        source: "images/serial_no_selected.png"
+                        }
+                    }
+                    Keys.onReturnPressed: {
+                    getSerialNumber()
+                    }
+                }
             }
+            Row{
+                Button {
+                    id: dummy
+                    opacity: 0
+                }
+            }
+
         }
     }
 
@@ -678,7 +801,7 @@ Item {
               qFactorSlider.value = qFactor
         }
         onSendROIAfMode:{
-            if(roiMode == See3Cam130.AFCentered){                
+            if(roiMode == See3Cam130.AFCentered){
                 afCentered.checked = true
             }else if(roiMode == See3Cam130.AFManual){
                 skipUpdateUIOnAFWindowSize = false
@@ -707,7 +830,16 @@ Item {
         onSendBurstLength:{
             skipUpdateUIOnBurstLength = false
             burstLengthCombo.currentIndex = burstLength - 1
-        }       
+        }
+        onSendAfRectMode:{
+            if(afRectMode == See3Cam130.AFRectEnable){
+                rectEnable.checked = true
+
+            }else if(afRectMode == See3Cam130.AFRectDisable){
+                rectDisable.checked = true
+            }
+
+        }
     }
 
     Component {
@@ -821,7 +953,11 @@ Item {
             messageDialog.title = _title.toString()
             messageDialog.text = _text.toString()
             messageDialog.open()
-        }        
+        }
+        onSerialNumber:{
+            messageDialog.title = qsTr("Serial Number")
+            messageDialog.text = serialNumber;
+        }
     }
 
     Component.onCompleted:{
@@ -830,17 +966,36 @@ Item {
         getCamValuesTimer.start()
         seecam130.getAutoFocusMode()
         seecam130.getiHDRMode()
+        //seecam130.getDenoiseValue()
+        seecam130.getQFactor()
+        seecam130.getBurstLength()
+        seecam130.getAutoFocusROIModeAndWindowSize()
+        seecam130.getAutoExpROIModeAndWindowSize()
+        seecam130.getAFRectMode()
+    }
+
+
+    function getSerialNumber() {
+        uvccamera.getSerialNumber()
+        messageDialog.open()
+    }
+
+    function getFirmwareVersion() {
+        uvccamera.getFirmWareVersion()
+        messageDialog.open()
+    }
+    function setToDefaultValues(){
+        seecam130.setToDefault()
+        seecam130.getSceneMode()
+        seecam130.getEffectMode()
+        seecam130.getAutoFocusMode()
+        seecam130.getiHDRMode()
         seecam130.getDenoiseValue()
         seecam130.getQFactor()
         seecam130.getBurstLength()
         seecam130.getAutoFocusROIModeAndWindowSize()
         seecam130.getAutoExpROIModeAndWindowSize()
-    }
-
-
-    function getFirmwareVersion() {
-        uvccamera.getFirmWareVersion()
-        messageDialog.open()
+        seecam130.getAFRectMode()
     }
 
     function defaultSceneMode(mode)
@@ -910,6 +1065,50 @@ Item {
                 break;
         }
     }
+    function enableDisableAutoFocusUIControls(autoFocusSelect){
+        if(autoFocusSelect){
+            radioContin.enabled = true
+            radioOneshot.enabled = true
+            trigger.enabled = true
+            afCentered.enabled = true
+            afManual.enabled = true
+            afWindowSizeCombo.enabled = true
+            radioContin.opacity = 1
+            radioOneshot.opacity = 1
+            afCentered.opacity = 1
+            afManual.opacity = 1
+        }else{
+            radioContin.enabled = false
+            radioOneshot.enabled = false
+            trigger.enabled = false
+            afCentered.enabled = false
+            afManual.enabled = false
+            afWindowSizeCombo.enabled = false
+            radioContin.opacity = 0.1
+            radioOneshot.opacity = 0.1
+            afCentered.opacity = 0.1
+            afManual.opacity = 0.1
+        }
+        getAutoFocusControlValues.start()
+    }
+
+    function enableDisableAutoExposureControls(autoExposureSelect){
+        if(autoExposureSelect){
+            autoexpManual.enabled = true
+            autoexpFull.enabled = true
+            autoExpoWinSizeCombo.enabled = true
+            autoexpManual.opacity = 1
+            autoexpFull.opacity = 1
+        }else{
+            autoexpManual.enabled = false
+            autoexpFull.enabled = false
+            autoExpoWinSizeCombo.enabled = false
+            autoexpManual.opacity = 0.1
+            autoexpFull.opacity = 0.1
+        }
+        getAutoExpsoureControlValues.start()
+    }
+
     Connections{
          target: root
          onMouseRightClicked:{
@@ -924,22 +1123,32 @@ Item {
                 seecam130.setROIAutoExposure(See3Cam130.AutoExpManual, width, height, x, y, autoExpoWinSizeCombo.currentText)
              }
          }
+         onAutoFocusSelected:{
+             enableDisableAutoFocusUIControls(autoFocusSelect)
+         }
+         onAutoExposureSelected:{
+             enableDisableAutoExposureControls(autoExposureSelect)
+         }
     }
 
     Connections{
          target: root
-         onPreBurstCapture:{
+         onBeforeBurst:{
              seecam130.enableDisableAFRectangle(false)
          }
-         onPostBurstCapture:{
-             seecam130.enableDisableAFRectangle(true)
+         onAfterBurst:{
+             if(rectEnable.checked){
+                seecam130.enableDisableAFRectangle(true)
+             }
          }
-         onPreRecordVideo:{
+         onBeforeRecordVideo:{
              seecam130.enableDisableAFRectangle(false)
          }
-         onPostRecordVideo:{
-             seecam130.enableDisableAFRectangle(true)
-         }
+         onAfterRecordVideo:{
+             if(rectEnable.checked){
+                seecam130.enableDisableAFRectangle(true)
+             }
+         }         
     }
 
 }

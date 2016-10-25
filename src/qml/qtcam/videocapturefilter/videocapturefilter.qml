@@ -37,11 +37,13 @@ Rectangle {
     signal stopCamPreview()
     signal seeCamCu51Capture()
     signal mouseRightClicked(var x, var y, var width, var height)
-    signal preBurstCapture()
-    signal postBurstCapture()
-    signal preRecordVideo()
-    signal postRecordVideo()
+    signal beforeBurst()
+    signal afterBurst()
+    signal beforeRecordVideo()
+    signal afterRecordVideo()    
     signal receiveBurstLength(int burstLen)
+    signal autoFocusSelected(bool autoFocusSelect)
+    signal autoExposureSelected(bool autoExposureSelect)
     property int burstLength;
     property bool ret;
     property bool vidFormatChanged: false
@@ -437,7 +439,7 @@ Rectangle {
                 messageDialog.visible = true               
             }
             onEnableRfRectBackInPreview:{
-                postBurstCapture() // signal to do anything need to do after capture continuous[burst] shots. In c
+                afterBurst() // signal to do anything need to do after capture continuous[burst] shots. In c
             }
 
             onNewControlAdded: {
@@ -954,8 +956,7 @@ Rectangle {
                             }
                         }
                         //Added by Dhurka - Here commonly open HID device instead of open every QML file - 17th Oct 2016
-                        openHIDDevice(selectedDeviceEnumValue);
-                        createExtensionUnitQml(selectedDeviceEnumValue)
+                        openHIDDevice(selectedDeviceEnumValue);                        
                         updateFPS(color_comp_box.currentText.toString(), output_value.currentText.toString())
                         brightValueChangeProperty = false
                         contrastValueChangeProperty = false
@@ -984,10 +985,11 @@ Rectangle {
                         vidstreamproperty.lastPreviewResolution(output_value.currentText.toString(),color_comp_box.currentIndex.toString())
                         JS.stillCaptureFormat = color_comp_box.currentIndex.toString()
                         JS.stillCaptureResolution = output_value.currentText.toString()
-                        JS.videoCaptureFormat = JS.stillCaptureFormat
+                        JS.videoCaptureFormat = JS.stillCaptureFormat                        
                         JS.videoCaptureResolution = JS.stillCaptureResolution
-                        JS.videocaptureFps = frame_rate_box.currentText.toString()
+                        JS.videocaptureFps = frame_rate_box.currentText.toString()                        
                         vidstreamproperty.masterModeEnabled()
+                        createExtensionUnitQml(selectedDeviceEnumValue)
                     }
                 }
                 else {
@@ -1708,6 +1710,7 @@ Rectangle {
                                         if(exposureComboEnable) {
                                             vidstreamproperty.selectMenuIndex(exposureAutoControlId,currentIndex)
                                             if(currentText.toString() == "Manual Mode") {
+                                                autoExposureSelected(false)
                                                 JS.autoExposureSelected = false
                                                 exposure_absolute.opacity = 1
                                                 exposure_Slider.opacity = 1
@@ -1715,6 +1718,7 @@ Rectangle {
                                                 exposure_value.opacity = 1
                                                 exposure_value.enabled = true
                                             } else {
+                                                autoExposureSelected(true)
                                                 JS.autoExposureSelected = true
                                                 exposure_absolute.opacity = 0.1
                                                 exposure_Slider.opacity = 0.1
@@ -2138,6 +2142,7 @@ Rectangle {
                                         onCheckedChanged: {
                                             if(checked) {
                                                 JS.autoFocusChecked = true
+                                                autoFocusSelected(true)
                                                 camproperty.logDebugWriter("Focus control set in Auto Mode")
                                                 vidstreamproperty.changeSettings(focusControlAutoId,1)
                                                 focus_Slider.opacity = 0.1
@@ -2146,6 +2151,7 @@ Rectangle {
                                                 focus_value.enabled = false
                                             } else {
                                                 JS.autoFocusChecked = false
+                                                autoFocusSelected(false)
                                                 camproperty.logDebugWriter("Focus control set in Manual Mode")
                                                 vidstreamproperty.changeSettings(focusControlAutoId,0)
                                                 focus_Slider.opacity = 1
@@ -2678,7 +2684,7 @@ Rectangle {
                                     }
                                     onCurrentIndexChanged: {
                                         if(output_size_box_Video.count > 0){
-                                            if(colorSpace) {
+                                            if(colorSpace) {                                                
                                                 vidFormatChanged = true
                                                 JS.videoCaptureFormat = color_comp_box_VideoPin.currentIndex.toString()
                                                 updateScenePreview(vidstreamproperty.width.toString() +"x"+vidstreamproperty.height.toString(), color_comp_box_VideoPin.currentIndex.toString(),frame_rate_box.currentIndex)
@@ -3177,7 +3183,7 @@ Rectangle {
             }            
         } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_130) {
             vidstreamproperty.setStillVideoSize(output_value.currentText.toString(), color_comp_box.currentIndex.toString())
-            preBurstCapture() // signal to do anything need to do before capture continuous shots
+            beforeBurst() // signal to do anything need to do before capture continuous shots
             burstShotTimer.start()
 
         }else {
@@ -3717,7 +3723,7 @@ Rectangle {
     }
 
     function videoRecordBegin() {
-        preRecordVideo() // signal to do before starting record video
+        beforeRecordVideo() // signal to do before starting record video
         seconds2 = 0
         minutes = 0
         hours = 0
@@ -3764,7 +3770,7 @@ Rectangle {
         uvc_settings.enabled = true
         uvc_settings.opacity = 1
         statusTimer.start()
-        postRecordVideo() // signal to do after finishing record video
+        afterRecordVideo() // signal to do after finishing record video
     }
 
     function videoControlFilter() {
@@ -3959,6 +3965,7 @@ Rectangle {
         JS.enableMasterMode_10cugB()
         JS.enableMasterMode_11cug()
         exitDialog.visible = false
+        camproperty.closeLibUsbDeviceAscella()
     }
 
 

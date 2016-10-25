@@ -174,3 +174,7 @@ void Cameraproperty::openHIDDevice(QString deviceName)
         emit initExtensionUnitSuccess();
     }
 }
+
+void Cameraproperty::closeLibUsbDeviceAscella(){
+    uvccam.exitExtensionUnitAscella();
+}

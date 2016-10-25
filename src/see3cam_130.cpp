@@ -851,7 +851,7 @@ bool See3CAM_130::getQFactor()
                 g_in_packet_buf[1]==GET_Q_FACTOR_130 &&
                 g_in_packet_buf[6]==GET_SUCCESS) {
                     qFactor = g_in_packet_buf[2];                    
-                    emit sendqFactor(qFactor);
+                    emit sendqFactor(qFactor);                    
                     timeout = false;
             }
         }
@@ -1213,8 +1213,124 @@ bool See3CAM_130::enableDisableAFRectangle(bool enableRFRect){
             } else if(g_in_packet_buf[0] == CAMERA_CONTROL_130 &&
                 g_in_packet_buf[1]==ENABLE_DISABLE_MODE_AF_RECTANGLE_130 &&
                 g_in_packet_buf[2]==inputRFRectMode &&
+                g_in_packet_buf[6]==SET_SUCCESS) {                
+                    timeout=false;
+            }
+        }
+        end = uvc.getTickCount();
+        if(end - start > TIMEOUT)
+        {
+            timeout = false;
+            return false;
+        }
+    }
+    return true;
+}
+
+/**
+ * @brief See3CAM_130::getAFRectMode - get AF rectangle mode[ disable/enable ] from camera
+ * return true - success /false - failure
+ */
+bool See3CAM_130::getAFRectMode()
+{
+    if(uvccamera::hid_fd < 0)
+    {
+        return false;
+    }
+    bool timeout = true;
+    int ret =0;
+    unsigned int start, end = 0;
+
+    uint afRectMode;
+    //Initialize the buffer
+    memset(g_out_packet_buf, 0x00, sizeof(g_out_packet_buf));
+    //Set the Report Number
+    g_out_packet_buf[1] = CAMERA_CONTROL_130; /* Report Number */
+    g_out_packet_buf[2] = GET_AF_RECT_MODE; /* Report Number */
+
+    ret = write(uvccamera::hid_fd , g_out_packet_buf, BUFFER_LENGTH);
+
+    if (ret < 0) {
+        perror("write");
+        return false;
+    }
+
+    /* Read the Status code from the device */
+    start = uvc.getTickCount();
+
+    while(timeout)
+    {
+        /* Get a report from the device */
+        ret = read(uvccamera::hid_fd, g_in_packet_buf, BUFFER_LENGTH);
+        if (ret < 0) {
+            //perror("read");
+        } else {
+            if (g_in_packet_buf[6]==GET_FAIL) {
+                return false;
+            } else if(g_in_packet_buf[0] == CAMERA_CONTROL_130 &&
+                g_in_packet_buf[1]==GET_AF_RECT_MODE &&
+                g_in_packet_buf[6]==GET_SUCCESS) {
+                    afRectMode = g_in_packet_buf[2];                    
+                    emit sendAfRectMode(afRectMode);
+                    timeout = false;
+            }
+        }
+        end = uvc.getTickCount();
+        if(end - start > TIMEOUT)
+        {
+            timeout = false;
+            return false;
+        }
+    }
+    return true;
+}
+
+/**
+ * @brief See3CAM_130::setToDefault - set all the values to default in camera
+ * @return true/false
+ */
+bool See3CAM_130::setToDefault(){    
+
+    if(uvccamera::hid_fd < 0)
+    {
+        return false;
+    }
+    bool timeout = true;
+    int ret =0;
+    unsigned int start, end = 0;
+
+    //Initialize the buffer
+    memset(g_out_packet_buf, 0x00, sizeof(g_out_packet_buf));
+
+    //Set the Report Number
+    g_out_packet_buf[1] = CAMERA_CONTROL_130; /* Report Number */
+    g_out_packet_buf[2] = SET_TO_DEFAULT; /* Report Number */
+
+    ret = write(uvccamera::hid_fd, g_out_packet_buf, BUFFER_LENGTH);
+
+    if (ret < 0) {
+        perror("write");
+        return false;
+    }
+
+    /* Read the Status code from the device */
+    start = uvc.getTickCount();
+
+
+    while(timeout)
+    {
+
+        /* Get a report from the device */
+        ret = read(uvccamera::hid_fd, g_in_packet_buf, BUFFER_LENGTH);        
+
+        if (ret < 0) {
+            //perror("read");
+        } else {
+            if (g_in_packet_buf[6]==SET_FAIL) {
+                return false;
+            } else if(g_in_packet_buf[0] == CAMERA_CONTROL_130 &&
+                g_in_packet_buf[1]==SET_TO_DEFAULT &&
                 g_in_packet_buf[6]==SET_SUCCESS) {
-                qDebug()<<"success"<<inputRFRectMode;
                     timeout=false;
             }
         }

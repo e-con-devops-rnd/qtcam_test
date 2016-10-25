@@ -128,6 +128,8 @@ public slots:
      */
     void openHIDDevice(QString deviceName);
 
+    void closeLibUsbDeviceAscella();
+
 signals:
 
     void setFirstCamDevice(int);

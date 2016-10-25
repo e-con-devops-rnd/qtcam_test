@@ -49,6 +49,7 @@ uvccamera::uvccamera()
      * enum value
      */
     initCameraEnumMap();
+    handle = NULL;
 }
 
 void uvccamera::initCameraEnumMap()
@@ -223,6 +224,8 @@ void uvccamera::currentlySelectedDevice(QString deviceName)
 int uvccamera::initExtensionUnitAscella(){
     int ret;
 
+    exitExtensionUnitAscella();
+
     //Added by Nithyesh
     ret = -1;
     kernelDriverDetached = 0;
@@ -260,14 +263,18 @@ int uvccamera::initExtensionUnitAscella(){
 
 }
 
-int uvccamera::closeAscellaDevice(){
+bool uvccamera::closeAscellaDevice(){
     int res;
 
+    if(handle == NULL){
+        return false;
+    }
     res = libusb_release_interface(handle, 2);
 
     if (0 != res)
     {
        emit logHandle(QtCriticalMsg, "Error releasing interface\n");
+       return false;
     }
 
     if (kernelDriverDetached)
@@ -285,7 +292,7 @@ int uvccamera::closeAscellaDevice(){
     libusb_exit(NULL);
     handle = NULL;
 
-    return res;
+    return true;
 }
 
 bool uvccamera::readFirmwareVersion(quint8 *pMajorVersion, quint8 *pMinorVersion1, quint16 *pMinorVersion2, quint16 *pMinorVersion3) {
@@ -471,8 +478,11 @@ void uvccamera::exitExtensionUnit() {
         close(hid_fd);
 }
 
-int uvccamera::exitExtensionUnitAscella(){
-    int ret = closeAscellaDevice();
+bool uvccamera::exitExtensionUnitAscella(){
+    bool ret = false;        
+    if(handle != NULL){        
+        ret = closeAscellaDevice();
+    }
     return ret;
 }
 
