@@ -840,7 +840,6 @@ int Videostreaming::findMax(QList<int> *list) {
     {
         index_of_min = x;
         for(int y=x; y<list->count(); y++)
-
         {
             if(array[index_of_min] > array[y])
             {

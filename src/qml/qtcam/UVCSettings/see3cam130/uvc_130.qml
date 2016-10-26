@@ -461,9 +461,11 @@ Item {
                       // winSize is required only for manual mode
                       onClicked: {
                             seecam130.setROIAutoFoucs(See3Cam130.AFCentered, 0, 0, 0, 0, 0);
+                            afWindowSizeCombo.enabled = false
                       }                      
                       Keys.onReturnPressed: {
                             seecam130.setROIAutoFoucs(See3Cam130.AFCentered, 0, 0, 0, 0, 0);
+                            afWindowSizeCombo.enabled = false
                       }
                   }
                   RadioButton {
@@ -475,9 +477,11 @@ Item {
                       opacity: afManual.enabled ? 1 : 0.1
                       onClicked: {
                             seecam130.setROIAutoFoucs(See3Cam130.AFManual, 0, 0, 0, 0, afWindowSizeCombo.currentText)
+                            afWindowSizeCombo.enabled = true
                       }
                       Keys.onReturnPressed: {
                             seecam130.setROIAutoFocusMode(See3Cam130.AFManual, 0, 0, 0, 0, afWindowSizeCombo.currentText);
+                            afWindowSizeCombo.enabled = true
                       }
                   }
             }
@@ -532,9 +536,11 @@ Item {
                       // winSize is required only for manual mode
                       onClicked: {
                           seecam130.setROIAutoExposure(See3Cam130.AutoExpFull, 0, 0, 0, 0, 0);
+                          autoExpoWinSizeCombo.enabled = false
                       }
                       Keys.onReturnPressed: {
                           seecam130.setROIAutoExposure(See3Cam130.AutoExpFull, 0, 0, 0, 0, 0);
+                          autoExpoWinSizeCombo.enabled = false
                       }
                   }
                   RadioButton {
@@ -546,9 +552,11 @@ Item {
                       opacity: enabled ? 1 : 0.1
                       onClicked: {
                           seecam130.setROIAutoExposure(See3Cam130.AutoExpManual, 0, 0, 0, 0, 0);
+                          autoExpoWinSizeCombo.enabled = true
                       }
                       Keys.onReturnPressed: {
                           seecam130.setROIAutoExposure(See3Cam130.AutoExpManual, 0, 0, 0, 0, 0);
+                          autoExpoWinSizeCombo.enabled = true
                       }
                   }
             }
@@ -556,6 +564,7 @@ Item {
             ComboBox
             {
                 id: autoExpoWinSizeCombo
+                enabled: (autoexpManual.enabled && autoexpManual.checked) ? true : false
                 opacity: (autoexpManual.enabled && autoexpManual.checked) ? 1 : 0.1
                 model: ListModel {
                     ListElement { text: "1" }
@@ -1159,7 +1168,10 @@ Item {
             trigger.enabled = true
             afCentered.enabled = true
             afManual.enabled = true
-            afWindowSizeCombo.enabled = true
+            if(afCentered.checked)
+                afWindowSizeCombo.enabled = false
+            if(afManual.checked)
+                afWindowSizeCombo.enabled = true
             radioContin.opacity = 1
             radioOneshot.opacity = 1
             afCentered.opacity = 1
@@ -1183,7 +1195,10 @@ Item {
         if(autoExposureSelect){
             autoexpManual.enabled = true
             autoexpFull.enabled = true
-            autoExpoWinSizeCombo.enabled = true
+            if(autoexpManual.checked)
+                autoExpoWinSizeCombo.enabled = true
+            if(autoexpFull.checked)
+                autoExpoWinSizeCombo.enabled = false
             autoexpManual.opacity = 1
             autoexpFull.opacity = 1
         }else{
