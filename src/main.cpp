@@ -39,6 +39,8 @@
 #include "see3cam_130.h"
 #include "seecam_ar0130.h"
 #include "seecam_cu30.h"
+// Added by Sankari : 07 Feb 2017
+#include "see3cam_30.h"
 #include "ascella.h"
 #include "about.h"
 #include "common.h"
@@ -64,10 +66,14 @@ int main(int argc, char *argv[])
     qmlRegisterType<See3CAM_10CUG_Bayer>("econ.camera.see3cam10Bayer", 1, 0, "See3Cam10Bayer");
     qmlRegisterType<See3CAM_10CUG_Mono>("econ.camera.see3cam10Mono", 1, 0, "See3Cam10Mono");
     qmlRegisterType<See3CAM_80>("econ.camera.see3cam80", 1, 0, "See3Cam80");
+
+  // Added by Sankari : 07 Feb 2017
+    qmlRegisterType<See3CAM_30>("econ.camera.see3cam30", 1, 0, "See3Cam30");
+
     qmlRegisterType<See3CAM_CU50>("econ.camera.see3cam50", 1, 0, "See3Cam50");    
     qmlRegisterType<See3CAM_CU130>("econ.camera.see3camcu130", 1, 0, "See3CamCu130");
     qmlRegisterType<See3CAM_130>("econ.camera.see3cam130", 1, 0, "See3Cam130");
-    qmlRegisterType<See3CAM_CU30>("econ.camera.see3cam30", 1, 0, "See3Cam30");
+    qmlRegisterType<See3CAM_CU30>("econ.camera.see3camcu30", 1, 0, "See3Camcu30");
     qmlRegisterType<See3CAM_CU51>("econ.camera.see3cam51", 1, 0, "See3Cam51");
     qmlRegisterType<ASCELLA>("econ.camera.ascella", 1, 0, "Ascella");
     qmlRegisterType<See3CAM_Control>("econ.camera.see3camControl", 1, 0, "See3CamCtrl");
@@ -106,9 +112,9 @@ int main(int argc, char *argv[])
     viewer.rootContext()->setContextProperty("SystemPictureFolder",QStandardPaths::standardLocations(QStandardPaths::PicturesLocation).first());
     viewer.rootContext()->setContextProperty("SystemVideoFolder",QStandardPaths::standardLocations(QStandardPaths::MoviesLocation).first());
 #if LAUNCHPAD
-    viewer.setMainQmlFile(QStringLiteral("/usr/share/qml/qtcam/videocapturefilter/videocapturefilter.qml"));
+    viewer.setMainQmlFile(QStringLiteral("/usr/share/qml/qtcam/Views/qtcam.qml"));
 #else
-    viewer.setMainQmlFile(QStringLiteral("qml/qtcam/videocapturefilter/videocapturefilter.qml"));
+    viewer.setMainQmlFile(QStringLiteral("qml/qtcam/Views/qtcam.qml"));
 #endif
     QObject *rootObject = dynamic_cast<QObject*>(viewer.rootObject());
 

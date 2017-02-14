@@ -7,6 +7,7 @@ import econ.camera.see3camar0130 1.0
 import econ.camera.see3camControl 1.0
 import econ.camera.see3camGpioControl 1.0
 import "../../JavaScriptFiles/tempValue.js" as JS
+import cameraenum 1.0
 
 Item {
     width:268
@@ -14,6 +15,54 @@ Item {
     property bool outputPinFlag
     property bool masterMode
     property bool triggerMode
+
+    Connections
+    {
+        target: root
+        onTakeScreenShot:
+        {
+            if(JS.masterMode_12cuinr === 1)
+            {
+                if(root.webcamKeyAccept) {
+                    root.imageCapture(CommonEnums.SNAP_SHOT);
+                    root.webcamKeyAccept = false
+                }
+            }
+            else
+            {
+                if(isWebKeyPressed)
+                {
+                    // Added by Sankari : 09 Nov 2016
+                    // Trigger shot  - continuous shots - init trigger shot
+                    if(root.webcamKeyTriggerShot){
+                        seecamar0130.initTriggerShotCapture()
+                    }
+                }
+            }
+        }
+        onGetVideoPinStatus:
+        {
+            var videoPin = JS.masterMode_12cuinr === 1 ? true : false
+            root.enableVideoPin(videoPin);
+        }
+        onGetStillImageFormats:
+        {
+            var stillImageFormat = []
+            stillImageFormat.push("jpg")
+            stillImageFormat.push("bmp")
+            stillImageFormat.push("raw")
+            stillImageFormat.push("png")
+            root.insertStillImageFormat(stillImageFormat);
+        }
+        onCameraDeviceUnplugged:
+        {
+            JS.enableMasterMode_12cuinr()
+        }
+        onSetMasterMode:
+        {
+            enableMasterMode();
+        }
+    }
 
     Action {
         id: serialNumber
@@ -115,6 +164,11 @@ Item {
         style: econAR0130ButtonStyle
         Keys.onReturnPressed: {
              enableTriggerMode()
+        }
+        onFocusChanged: {
+            // Disable saving image when focus is changed from trigger mode to master mode
+            // or changing to any other camera if it is m_saveImage flag set as true to avoid displaying unnecessary pop up dialog.
+           root.disableSaveImage()
         }
     }
 
@@ -370,6 +424,9 @@ Item {
             messageDialog.text = message.toString()
             messageDialog.open()
         }
+        onTriggershotSignal:{
+            root.takeTriggershot()
+        }
 
     }
     function enableMasterMode() {
@@ -450,11 +507,18 @@ Item {
         outputPinFlag = true
         see3camGpio.getGpioLevel(See3CamGpio.OUT3)
         mastermmode_selected.forceActiveFocus()
-        if(JS.triggerMode_ar0130 === 1) {
+        if(JS.triggerMode_12cuinr === 1) {
             vga60fps_selected.enabled = false
             vga60fps_selected.opacity = 0.2
             vga30fps_selected.enabled = false
             vga30fps_selected.opacity = 0.2
         }
     }
+//    Connections{
+//         target: root
+//         // Init Trigger shot capture
+//         onInitTriggershot:{
+//            seecamar0130.initTriggerShotCapture()
+//         }
+//    }
 }

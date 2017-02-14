@@ -41,15 +41,6 @@
 #include "videoencoder.h"
 #include "h264decoder.h"
 #include "common_enums.h"
-#include "see3cam_130.h"
-
-#if !LIBAVCODEC_VER_AT_LEAST(54,25)
-    #define AV_CODEC_ID_NONE CODEC_ID_NONE
-    #define AV_CODEC_ID_MJPEG CODEC_ID_MJPEG
-    #define AV_CODEC_ID_RAWVIDEO CODEC_ID_RAWVIDEO
-    #define AV_CODEC_ID_H264 CODEC_ID_H264
-    #define AV_CODEC_ID_VP8 CODEC_ID_VP8
-#endif
 
 
 class Videostreaming : public QQuickPaintedItem, public v4l2
@@ -91,11 +82,16 @@ public:
     bool findNativeFormat(__u32 format, QImage::Format &dstFmt);
     bool startCapture();
 
+    // get current resoution set in v4l2
+    QString getResoultion();
+
     v4l2_format fmt;
     QString _title;
     QString _text;
     QString lastPreviewSize;
     QString lastFormat;
+    // Added by Sankari - To maintain last set framerate
+    QString lastFPSValue;
 
     VideoEncoder  *videoEncoder;
     H264Decoder *h264Decode;    
@@ -168,6 +164,7 @@ private:
     QString formatType;
     QString filename;
     QString ubuntuVersion;
+    QStringList availableFPS; // Moved from funtion updateFrameInterval() in videostreaming.c to here
 
     QMap<QString,QString> pixFormat;
 
@@ -179,8 +176,7 @@ private:
     unsigned char *m_buf;
     unsigned m_size;
 
-    uint m_nbuffers;
-    int correctionDisplay;
+    uint m_nbuffers;    
     static int deviceNumber;
     static QString camDeviceName;
  /**
@@ -189,7 +185,13 @@ private:
     static CommonEnums::ECameraNames currentlySelectedCameraEnum;
 
     uint m_burstLength;
-    uint m_burstNumber;    
+    uint m_burstNumber;
+
+    // Added by Sankari  - 10 Nov 2016 - To decide whether display pop up dialog will appear in while capturing image
+    bool m_displayCaptureDialog;
+
+    // Added by Sankari  - 10 Nov 2016 - To decide whether to save image or not
+    bool m_saveImage;
 
     QString getSettings(unsigned int);
     void getFrameRates();
@@ -208,6 +210,19 @@ private:
 
 
 public slots:
+	// Added by Sankari : 18 Jan 2017 -  Get frame rate denominator value. [for ex: 1/30 , here denominator = 30 ]
+    void getCurrentFrameRateIntervalDenominator();
+
+    // Added by Sankari : 10 Dec 2016
+    // To Disable image capture dialog when taking trigger shot in trigger mode for 12cunir camera
+    void disableImageCaptureDialog();
+
+    // Added by Sankari : 10 Dec 2016
+    // Disable saving image when focus is changed from trigger mode to master mode
+    // or changing to any other camera if it is m_saveImage flag set as true to avoid displaying unnecessary pop up dialog.
+    // It is used in 12cunir camera. It can be used for other cameras also.
+    void disableSavingImage();
+
     /**
      * @brief Query buffer and Deque buffer
      *  -
@@ -330,6 +345,8 @@ public slots:
     void vidCapFormatChanged(QString idx);
     void setStillVideoSize(QString stillValue,QString stillFormat);
     void lastPreviewResolution(QString resolution,QString format);
+    // Added by Sankari - To maintain last set framerate
+    void lastFPS(QString fps);
     void formatSaveSuccess(uint imgSaveSuccessCount, bool burstFlag);
     void updateFrameInterval(QString pixelFormat, QString frameSize);
 
@@ -383,6 +400,8 @@ public slots:
      */
     void selectedCameraEnum(CommonEnums::ECameraNames selectedDeviceEnum);
 
+	void enumerateFPSList();
+
 
 signals:
     void logDebugHandle(QString _text);
@@ -402,6 +421,11 @@ signals:
     void rcdStop(QString recordFail);
     void videoRecord(QString fileName);
     void enableRfRectBackInPreview();
+
+// To get FPS list
+    void sendFPSlist(QString fpsList);
+
+    void frameRateInterval(uint currentfpsInterval);
 };
 
 #endif // VIDEOSTREAMING_H

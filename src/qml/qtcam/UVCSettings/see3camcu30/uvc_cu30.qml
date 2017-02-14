@@ -22,8 +22,9 @@ import QtQuick.Controls 1.1
 import QtQuick.Controls.Styles 1.0
 import QtQuick.Dialogs 1.1
 import econ.camera.uvcsettings 1.0
-import econ.camera.see3cam30 1.0
+import econ.camera.see3camcu30 1.0
 import QtQuick.Layouts 1.1
+import cameraenum 1.0
 
 Item {
     width:240
@@ -31,7 +32,28 @@ Item {
     property int defaultNoiseVal: 8
     property int denoiseMin: 0
     property int denoiseMax: 15
-    property var uvccameraObj
+
+    Connections
+    {
+        target: root
+        onTakeScreenShot:
+        {
+            root.imageCapture(CommonEnums.SNAP_SHOT);
+        }
+        onGetVideoPinStatus:
+        {
+            root.enableVideoPin(true);
+        }
+        onGetStillImageFormats:
+        {
+            var stillImageFormat = []
+            stillImageFormat.push("jpg")
+            stillImageFormat.push("bmp")
+            stillImageFormat.push("raw")
+            stillImageFormat.push("png")
+            root.insertStillImageFormat(stillImageFormat);
+        }
+    }
 
     Action {
     id: firmwareVersion
@@ -68,7 +90,7 @@ Item {
             exclusiveGroup: sceneInputGroup
             activeFocusOnPress: true
             onClicked: {
-                see3camcu30.setEffectMode(See3Cam30.EFFECT_NORMAL)
+                see3camcu30.setEffectMode(See3Camcu30.EFFECT_NORMAL)
             }
         }
         RadioButton {
@@ -78,7 +100,8 @@ Item {
             exclusiveGroup: sceneInputGroup
             activeFocusOnPress: true
             onClicked: {
-                see3camcu30.setEffectMode(See3Cam30.EFFECT_BLACK_WHITE)
+                defaultValue.enabled = true
+                see3camcu30.setEffectMode(See3Camcu30.EFFECT_BLACK_WHITE)
             }
         }
         RadioButton {
@@ -88,7 +111,8 @@ Item {
             exclusiveGroup: sceneInputGroup
             activeFocusOnPress: true
             onClicked: {
-                see3camcu30.setEffectMode(See3Cam30.EFFECT_GREYSCALE)
+                defaultValue.enabled = true
+                see3camcu30.setEffectMode(See3Camcu30.EFFECT_GREYSCALE)
             }
         }
         RadioButton {
@@ -98,7 +122,8 @@ Item {
             exclusiveGroup: sceneInputGroup
             activeFocusOnPress: true
             onClicked: {
-                see3camcu30.setEffectMode(See3Cam30.EFFECT_SKETCH)
+                defaultValue.enabled = true
+                see3camcu30.setEffectMode(See3Camcu30.EFFECT_SKETCH)
             }
         }
         RadioButton {
@@ -108,7 +133,8 @@ Item {
             exclusiveGroup: sceneInputGroup
             activeFocusOnPress: true
             onClicked: {
-                see3camcu30.setEffectMode(See3Cam30.EFFECT_NEGATIVE)
+                defaultValue.enabled = true
+                see3camcu30.setEffectMode(See3Camcu30.EFFECT_NEGATIVE)
             }
         }
     }
@@ -130,14 +156,16 @@ Item {
         text: "Default"
         tooltip: "Click to set default values"
         style: econButtonStyle
-        onClicked: {
-            see3camcu30.setEffectMode(See3Cam30.EFFECT_NORMAL)
+        onClicked: {            
+            defaultValue.enabled = false
+            see3camcu30.setEffectMode(See3Camcu30.EFFECT_NORMAL)
             rdoEffectNormal.checked = true
             see3camcu30.setDenoiseValue(defaultNoiseVal)
             deNoiseSlider.value = defaultNoiseVal
         }
         Keys.onReturnPressed: {
-            see3camcu30.setEffectMode(See3Cam30.EFFECT_NORMAL)
+            defaultValue.enabled = false
+            see3camcu30.setEffectMode(See3Camcu30.EFFECT_NORMAL)
             rdoEffectNormal.checked = true
             see3camcu30.setDenoiseValue(defaultNoiseVal)
             deNoiseSlider.value = defaultNoiseVal
@@ -183,6 +211,7 @@ Item {
         minimumValue: denoiseMin
         maximumValue: denoiseMax
         onValueChanged:  {
+            defaultValue.enabled = true
             deNoiseTextField.text = deNoiseSlider.value
             see3camcu30.setDenoiseValue(deNoiseSlider.value)
         }
@@ -200,6 +229,7 @@ Item {
         validator: IntValidator {bottom: deNoiseSlider.minimumValue; top: deNoiseSlider.maximumValue}
         onTextChanged: {
             if(text != ""){
+                defaultValue.enabled = true
                 deNoiseSlider.value = deNoiseTextField.text
             }
         }
@@ -270,7 +300,7 @@ Item {
     }
 
 
-    See3Cam30 {
+    See3Camcu30 {
         id: see3camcu30
         onSendEffectMode:{
             switch(effectMode){
@@ -300,8 +330,8 @@ Item {
 
     Component.onCompleted:{        
         see3camcu30.getEffectMode()
-        see3camcu30.getDenoiseValue()
-
+        see3camcu30.getDenoiseValue()        
+        defaultValue.enabled = true
     }
 
     function getFirmwareVersion() {

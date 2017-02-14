@@ -19,6 +19,7 @@
  */
 
 #include "videostreaming.h"
+#include "common.h"
 #include <QtCore/QCoreApplication>
 #include <QtGui/QGuiApplication>
 #include <QtWidgets>
@@ -73,7 +74,8 @@ Videostreaming::Videostreaming()
     m_burstShot = false;
     makeSnapShot = false;
     triggerShot = false;
-    correctionDisplay = 0;
+    m_displayCaptureDialog = false;
+    m_saveImage = false;
     m_VideoRecord = false;
     dotile = 0;
     pf = TJPF_RGB;
@@ -87,6 +89,8 @@ Videostreaming::Videostreaming()
     sf.num = 1;
     flags = TJFLAG_NOREALLOC;
     yuvpad = 1;    
+
+
 }
 
 Videostreaming::~Videostreaming()
@@ -171,16 +175,18 @@ void Videostreaming::capFrame()
         qImage = QPixmap::fromImage(tempImage);
         update();
         emit deviceUnplugged("Disconnected","Device Not Found");
-        emit logCriticalHandle("Device disconnected");
+        emit logCriticalHandle("Device disconnected");        
         return;
     }
-    if (again) {
+
+    if (again) {        
         return;
     }
+
     if (buf.flags & V4L2_BUF_FLAG_ERROR) {        
-        qbuf(buf);
+        qbuf(buf);        
         return;
-    }
+    }    
 #if 0
     switch(m_capSrcFormat.fmt.pix.pixelformat) {
         case V4L2_PIX_FMT_YUYV: {
@@ -364,7 +370,8 @@ void Videostreaming::capFrame()
     free(asil);
 
     delete qq;
-    int tmpRet;        
+    int tmpRet;
+
     // m_burstShot - if continous number of shots are needed , this flag will be set.
     if((m_frame > 1 && m_snapShot) || (m_frame > 1 && m_burstShot)) {
         if(m_burstNumber == m_burstLength){
@@ -372,75 +379,64 @@ void Videostreaming::capFrame()
         }
         // imgSaveSuccessCount - how many images taken and saved correctly
         imgSaveSuccessCount = 0;
+
         while(m_burstLength >= m_burstNumber){
             // increasing burst number
             m_burstNumber++;
-            // get file name to save
-            getFileName(getFilePath(),getImageFormatType());
-            bool tmpValue;
-            // saving raw format
-            if(formatType == "raw") {
-                QFile file(filename);
-                if(file.open(QIODevice::WriteOnly)) {
-                    tmpRet = file.write((const char*)m_buffers[buf.index].start[0], buf.bytesused);
-                    if(tmpRet != -1) {
-                        tmpValue = true;
-                        imgSaveSuccessCount++;
-                    } else {
-                        emit logCriticalHandle("Failure to save raw image");
-                        tmpValue = false;
+            getFileName(getFilePath(),getImageFormatType());                       
+              if(m_saveImage){
+                // saving raw format
+                if(formatType == "raw") {
+                    QFile file(filename);
+                    if(file.open(QIODevice::WriteOnly)) {
+                        tmpRet = file.write((const char*)m_buffers[buf.index].start[0], buf.bytesused);
+                        if(tmpRet != -1) {                            
+                            imgSaveSuccessCount++;
+                        } else {
+                            emit logCriticalHandle("Failure to save raw image");                            
+                        }
+                        file.close();
                     }
-                    file.close();
-                } else {
-                    tmpValue = false;
-                }
-            }else if(formatType == "IR data(8bit BMP)"){           // saving IR 8bit bmp
-                irBuffer = (unsigned char *)malloc(width * height/4);
-                if(extractIRImage(tempCu40SrcBuffer, irBuffer)){
-                    QImage qImage2(irBuffer, width/2, height/2, QImage::Format_Indexed8);
-                    bool tmpRet;
+                }else if(formatType == "IR data(8bit BMP)"){           // saving IR 8bit bmp
+                    irBuffer = (unsigned char *)malloc(width * height/4);
+                    if(extractIRImage(tempCu40SrcBuffer, irBuffer)){
+                        QImage qImage2(irBuffer, width/2, height/2, QImage::Format_Indexed8);                        
+                        QImageWriter writer(filename);
+
+                        /* For 8 bit bmp, We have to use Format_Indexed8 and set color table */
+                        QVector<QRgb>table;
+                        for(int i=0; i<256; i++)
+                            table.push_back(qRgb(i,i,i));
+                        qImage2.setColorTable(table);
+
+                        if(!writer.write(qImage2)) {
+                            emit logCriticalHandle("Error while savingak image:"+writer.errorString());                            
+                        }
+                        else {                            
+                            imgSaveSuccessCount++;
+                        }                        
+                    }
+                }else {                    
+                    // other than raw and [IR data(8bit BMP)] format
+                    QImage qImage3(displaybuf, width, height, QImage::Format_RGB888);                    
+
                     QImageWriter writer(filename);
 
-                    /* For 8 bit bmp, We have to use Format_Indexed8 and set color table */
-                    QVector<QRgb>table;
-                    for(int i=0; i<256; i++)
-                        table.push_back(qRgb(i,i,i));
-                    qImage2.setColorTable(table);
-
-                    if(!writer.write(qImage2)) {
-                        emit logCriticalHandle("Error while savingak image:"+writer.errorString());
-                        tmpRet = false;
+                    if(!writer.write(qImage3)) {
+                        emit logCriticalHandle("Error while saving image:"+writer.errorString());                                                
+                    } else {
+                        imgSaveSuccessCount++;                        
                     }
-                    else {
-                        tmpRet = true;
-                        imgSaveSuccessCount++;
-                    }
-                    tmpValue = tmpRet;
-                }else{
-                    tmpValue = false;
                 }
-            }else { // other than raw and [IR data(8bit BMP)] format
-                QImage qImage3(displaybuf, width, height, QImage::Format_RGB888);
-                bool tmpRet;
-                QImageWriter writer(filename);
-
-                if(!writer.write(qImage3)) {
-                    emit logCriticalHandle("Error while saving image:"+writer.errorString());
-                    tmpRet = false;
-                } else {
-                    tmpRet = true;
-                    imgSaveSuccessCount++;
-                }
-                tmpValue = tmpRet;
             }
+
             if(triggerShot) {
                 captureSaveTime("Capture time: " +(QString::number((double)captureTime.elapsed()/1000)) + "seconds");
                 makeSnapShot = false;
                 m_snapShot = false;
-                m_burstShot = false;
-                formatSaveSuccess(tmpValue, m_burstShot);
+				m_burstShot = false;                
             } else {
-               captureSaveTime("Capture time: " +(QString::number((double)captureTime.elapsed()/1000)) + "seconds");
+                captureSaveTime("Capture time: " +(QString::number((double)captureTime.elapsed()/1000)) + "seconds");
                 makeSnapShot = false;
                 m_snapShot = false;
                 if (!((stillSize == lastPreviewSize) && (stillOutFormat == lastFormat)))
@@ -471,16 +467,38 @@ void Videostreaming::capFrame()
                     emit logDebugHandle("still and preview resolution and format are same");
                 }
             }
-        }
-        if (!((stillSize == lastPreviewSize) && (stillOutFormat == lastFormat))){
-            formatSaveSuccess(imgSaveSuccessCount, m_burstShot);
+        }        
+        if (!((stillSize == lastPreviewSize) && (stillOutFormat == lastFormat))){                        
+            if(m_saveImage){
+                if(currentlySelectedCameraEnum == CommonEnums::SEE3CAM_12CUNIR){
+                    if(m_displayCaptureDialog){ // Enable image saving pop up only for master mode
+                        formatSaveSuccess(imgSaveSuccessCount, m_burstShot);
+                    }
+                }else{
+                    formatSaveSuccess(imgSaveSuccessCount, m_burstShot);
+                }
+            }
+            // Added by Sankari: reenable paint in preview after capturing image when still and preview resolution 
+            //are different 
+            if(m_burstShot)
+                updateStop = false;
+
             if(m_burstNumber > m_burstLength){
                 m_burstShot = false;
+                qbuf(buf);
                 return void();
             }
         }
         else{
-            formatSaveSuccess(imgSaveSuccessCount, m_burstShot);
+            if(m_saveImage){
+                if(currentlySelectedCameraEnum == CommonEnums::SEE3CAM_12CUNIR){
+                    if(m_displayCaptureDialog){
+                        formatSaveSuccess(imgSaveSuccessCount, m_burstShot);
+                    }
+                }else{
+                    formatSaveSuccess(imgSaveSuccessCount, m_burstShot);
+                }
+            }
              m_burstShot = false;
         }
     }
@@ -855,12 +873,13 @@ int Videostreaming::findMax(QList<int> *list) {
 
 
 
-void Videostreaming::makeShot(QString filePath,QString imgFormatType) {
+void Videostreaming::makeShot(QString filePath,QString imgFormatType) {    
     captureTime.start();
     m_snapShot = true;
     m_burstShot = false;
     m_burstNumber = 1;
     m_burstLength = 1; // for single shot
+    m_saveImage = true;
 
     /* cu40 - IR image in bmp format */
     if(imgFormatType == "IR data(8bit BMP)"){
@@ -873,7 +892,7 @@ void Videostreaming::makeShot(QString filePath,QString imgFormatType) {
     getFileName(filePath, imgFormatType);
     makeSnapShot = true;
     triggerShot = false;
-   // formatType = imgFormatType;
+    m_displayCaptureDialog = true;   
 
     if (!((stillSize == lastPreviewSize) && (stillOutFormat == lastFormat)))
     {
@@ -889,8 +908,8 @@ void Videostreaming::triggerModeShot(QString filePath,QString imgFormatType) {
     captureTime.restart();
     m_snapShot = true;
     m_burstShot = false;
-    QDateTime dateTime = QDateTime::currentDateTime();
-    QDir tmpDir;
+    m_burstLength = 1;
+    m_burstNumber = 1;
 
     /* cu40 - IR image in bmp format */
     if(imgFormatType == "IR data(8bit BMP)"){
@@ -900,14 +919,13 @@ void Videostreaming::triggerModeShot(QString filePath,QString imgFormatType) {
         formatType = imgFormatType;
     }
 
-    if(tmpDir.cd(filePath)) {
-        filename = filePath +"/Qtcam_" + dateTime.toString("yy_MM_dd:hh_mm_ss")+"."+ imgFormatType;
-    } else {
-        filename = "Qtcam_" + dateTime.toString("yy_MM_dd:hh_mm_ss")+"." + imgFormatType;
-    }
+    getFileName(filePath, imgFormatType);    
+
     makeSnapShot = true;
     triggerShot = true;
-    m_frame = 3;
+    m_saveImage = true;
+    m_displayCaptureDialog = false;
+    m_frame = 3;   
 }
 
 void Videostreaming::getFileName(QString filePath,QString imgFormatType){
@@ -948,6 +966,7 @@ void Videostreaming::getFileName(QString filePath,QString imgFormatType){
             filename = "Qtcam_" + dateTime.toString("yy_MM_dd:hh_mm_ss")+"-" +QString::number(1,10)+"."+ imgFormatType;
         }
     }
+
     setFilePath(filePath);
     setImageFormatType(imgFormatType);
 }
@@ -969,7 +988,7 @@ QString Videostreaming::getImageFormatType(){
 }
 
 
-void Videostreaming::makeBurstShot(QString filePath,QString imgFormatType, uint burstLength){
+void Videostreaming::makeBurstShot(QString filePath,QString imgFormatType, uint burstLength){    
     captureTime.start();
     m_burstShot = true;
     m_snapShot = false;
@@ -981,8 +1000,13 @@ void Videostreaming::makeBurstShot(QString filePath,QString imgFormatType, uint 
 
     makeSnapShot = true;
     triggerShot = false;
+    m_displayCaptureDialog = true;
+    m_saveImage = true;
     if (!((stillSize == lastPreviewSize) && (stillOutFormat == lastFormat)))
     {       
+        // Added by Sankari: disable paint in preview while capturing image when still and preview resolution 
+        //are different 
+        updateStop = true;
         stopCapture();
         vidCapFormatChanged(stillOutFormat);
         setResoultion(stillSize);
@@ -1008,11 +1032,8 @@ void Videostreaming::formatSaveSuccess(uint imgSaveSuccessCount, bool burstFlag)
         emit logCriticalHandle("Still image not saved successfully");
         emit titleTextChanged(_title,_text);
     }
-    // After capturing image need to enable RF rect in See3CAM_130 cam
-    if(currentlySelectedCameraEnum == CommonEnums::SEE3CAM_130){
-        emit enableRfRectBackInPreview();
-    }
-
+    // After capturing image need to enable RF rect in See3CAM_130 or See3CAM_30 cam
+    emit enableRfRectBackInPreview();
 }
 
 bool Videostreaming::getInterval(struct v4l2_fract &interval)
@@ -1086,6 +1107,15 @@ void Videostreaming::displayFrame() {
     }
 }
 
+/**
+ * @brief Videostreaming::getCurrentFrameRateIntervalDenominator - get current frame interval denominator value [ for ex: denominator "30" for 30 fps ]
+ */
+void Videostreaming::getCurrentFrameRateIntervalDenominator(){
+    getInterval(interval);
+    // send the frame interval to qml [ for ex: denominator "30" for 30 fps ]
+    emit frameRateInterval(interval.denominator);
+}
+
 void Videostreaming::stopCapture() {
     if (fd() >= 0) {
         emit logDebugHandle("Stop Previewing...");
@@ -1143,6 +1173,14 @@ void Videostreaming::lastPreviewResolution(QString resolution,QString format) {
     emit logDebugHandle("Last Resolution displayed at::"+resolution);
 }
 
+/**
+ * @brief Videostreaming::lastFPS - setting lastly set FPS
+ * @param fps
+ */
+void Videostreaming::lastFPS(QString fps) {
+    lastFPSValue = fps;
+}
+
 void Videostreaming::setResoultion(QString resolution)
 {
 
@@ -1159,6 +1197,27 @@ void Videostreaming::setResoultion(QString resolution)
     m_height = height;
     try_fmt(fmt);
     s_fmt(fmt);
+}
+
+/**
+ * @brief Videostreaming::getResoultion - get the resolution
+ * @return - QString - current resolution
+ */
+QString Videostreaming::getResoultion()
+{
+
+    v4l2_format fmt;
+    unsigned int width, height;
+    QString resolutionStr;
+    g_fmt_cap(V4L2_BUF_TYPE_VIDEO_CAPTURE, fmt);
+    width = fmt.fmt.pix.width;
+    height = fmt.fmt.pix.height;
+
+    resolutionStr.append(QString::number(width));
+    resolutionStr.append("x");
+    resolutionStr.append(QString::number(height));
+
+    return resolutionStr;
 }
 
 void Videostreaming::displayStillResolution() {
@@ -1292,7 +1351,6 @@ void Videostreaming::displayOutputFormat() {
 
     }
     emit logDebugHandle("Output format supported: " +dispOutFormat.join(", "));
-    //dispOutFormat.sort();
     resolution.setStringList(dispOutFormat);
     updateVidOutFormat();
 }
@@ -1315,8 +1373,7 @@ void Videostreaming::updateFrameInterval(QString pixelFormat, QString frameSize)
 
     ok = enum_frameintervals(frmival,pixFormat.value(pixFmtValue).toInt(), width, height);
     m_has_interval = ok && frmival.type == V4L2_FRMIVAL_TYPE_DISCRETE;
-    QStringList availableFPS;
-    availableFPS.clear();
+    availableFPS.clear();    
     if (m_has_interval) {
         m_interval = frmival.discrete;
         curr_ok = v4l2::get_interval(m_buftype, curr);
@@ -1329,6 +1386,13 @@ void Videostreaming::updateFrameInterval(QString pixelFormat, QString frameSize)
         } while (enum_frameintervals(frmival));
     }
     emit logDebugHandle("Available FPS:"+ availableFPS.join(", "));
+    // send fps list to qml
+    emit sendFPSlist(availableFPS.join(", "));
+
+}
+
+// Added by Sankari: setting stringlist model is moved from updateFrameInterval() as a separate function
+void Videostreaming::enumerateFPSList(){
     fpsList.setStringList(availableFPS);
 }
 
@@ -1503,7 +1567,7 @@ void Videostreaming::recordBegin(int videoEncoderType, QString videoFormatType, 
     if(videoFormatType.isEmpty()) {
         videoFormatType = "avi";        //Application never enters in this condition
     }
-
+#if !LIBAVCODEC_VER_AT_LEAST(54, 25)
     if(ubuntuVersion == ">=15"){
         switch(videoEncoderType) {
         case 0:
@@ -1533,6 +1597,37 @@ void Videostreaming::recordBegin(int videoEncoderType, QString videoFormatType, 
         }
 
     }
+#else
+    if(ubuntuVersion == ">=15"){
+        switch(videoEncoderType) {
+        case 0:
+            videoEncoderType = AV_CODEC_ID_MJPEG;
+            break;
+        case 1:
+            videoEncoderType = AV_CODEC_ID_H264;
+            break;
+        case 2:
+            videoEncoderType = AV_CODEC_ID_VP8;
+            break;
+        }
+    } else if(ubuntuVersion == "<15"){
+        switch(videoEncoderType) {
+        case 0:
+            videoEncoderType = AV_CODEC_ID_RAWVIDEO;
+            break;
+        case 1:
+            videoEncoderType = AV_CODEC_ID_MJPEG;
+            break;
+        case 2:
+            videoEncoderType = AV_CODEC_ID_H264;
+            break;
+        case 3:
+            videoEncoderType = AV_CODEC_ID_VP8;
+            break;
+        }
+
+    }
+#endif
 
     fileName = fileLocation +"/Qtcam-" + QDateTime::currentDateTime().toString("yy_MM_dd:hh_mm_ss")+"."+ videoFormatType;
     v4l2_frmivalenum frmival;
@@ -1572,4 +1667,18 @@ void Videostreaming::masterModeEnabled() {
 void Videostreaming::selectedCameraEnum(CommonEnums::ECameraNames selectedDeviceEnum)
 {
     currentlySelectedCameraEnum = selectedDeviceEnum;
+}
+
+/**
+ * @brief Videostreaming::disableImageCaptureDialog - Disable image saving pop up for trigger shots
+ */
+void Videostreaming::disableImageCaptureDialog(){
+    m_displayCaptureDialog = false;
+}
+
+/**
+ * @brief Videostreaming::disableSavingImage - disable writing image file
+ */
+void Videostreaming::disableSavingImage(){
+    m_saveImage = false;
 }
