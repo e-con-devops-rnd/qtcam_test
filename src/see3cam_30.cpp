@@ -203,7 +203,7 @@ bool See3CAM_30::getEffectMode()
                 g_in_packet_buf[6]==GET_SUCCESS) {
                     qDebug()<<"get effect mode 4444";
                     effectMode = g_in_packet_buf[2];
-                    emit sendEffectMode(effectMode);
+                    emit effectModeChanged(effectMode);
                     timeout = false;
             }
         }
@@ -267,7 +267,7 @@ bool See3CAM_30::getDenoiseValue()
                 g_in_packet_buf[6]==GET_SUCCESS) {
                 qDebug()<<"getDenoiseValue 4444";
                     denoiseValue = g_in_packet_buf[2];
-                    emit sendDenoiseValue(denoiseValue);
+                    emit denoiseValueChanged(denoiseValue);
                     timeout = false;
             }
         }
@@ -396,7 +396,7 @@ bool See3CAM_30::getAutoFocusMode()
                 g_in_packet_buf[6]==GET_SUCCESS) {
                 qDebug()<<"get auto focus mode success";
                     autoFocusMode = g_in_packet_buf[2];
-                    emit sendAfMode(autoFocusMode);
+                    emit afModeChanged(autoFocusMode);
                     timeout = false;
             }
         }
@@ -516,7 +516,7 @@ bool See3CAM_30::getQFactor()
                 g_in_packet_buf[1]==GET_Q_FACTOR_30 &&
                 g_in_packet_buf[6]==GET_SUCCESS) {
                     qFactor = g_in_packet_buf[2];
-                    emit sendqFactor(qFactor);
+                    emit qFactorChanged(qFactor);
                     timeout = false;
             }
         }
@@ -641,7 +641,7 @@ bool See3CAM_30::getOrientation()
                 g_in_packet_buf[1]==GET_ORIENTATION_30 &&
                 g_in_packet_buf[6]==GET_SUCCESS) {
                     flipMirrorMode = g_in_packet_buf[2];
-                    emit sendFlipMirrorMode(flipMirrorMode);
+                    emit flipMirrorModeChanged(flipMirrorMode);
                     timeout = false;
             }
         }
@@ -788,7 +788,7 @@ bool See3CAM_30::getAutoFocusROIModeAndWindowSize(){
                     if(roiMode == AFManual){
                         windowSize = g_in_packet_buf[5];
                     }
-                    emit sendROIAfMode(roiMode, windowSize);
+                    emit roiAfModeChanged(roiMode, windowSize);
                     timeout = false;
             }
         }
@@ -935,7 +935,7 @@ bool See3CAM_30::getAutoExpROIModeAndWindowSize(){
                     if(roiMode == AutoExpManual){
                         windowSize = g_in_packet_buf[5];
                     }
-                    emit sendROIAutoExpMode(roiMode, windowSize);
+                    emit roiAutoExpModeChanged(roiMode, windowSize);
                     timeout = false;
             }
         }
@@ -1065,7 +1065,7 @@ bool See3CAM_30::getAFRectMode()
                 g_in_packet_buf[6]==GET_SUCCESS) {
                     afRectMode = g_in_packet_buf[2];
                     qDebug()<<"AF Rect mode"<<afRectMode;
-                    emit sendAfRectMode(afRectMode);
+                    emit afRectModeChanged(afRectMode);
                     timeout = false;
             }
         }
@@ -1184,7 +1184,7 @@ bool See3CAM_30::getBurstLength()
                 g_in_packet_buf[6]==GET_SUCCESS) {
                 qDebug()<<"get burst length success"<<burstLength;
                     burstLength = g_in_packet_buf[2];
-                    emit sendBurstLength(burstLength);
+                    emit burstLengthChanged(burstLength);
                     timeout = false;
             }
         }

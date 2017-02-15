@@ -786,19 +786,19 @@ Item {
 
     See3Cam30 {
         id: see3cam30
-        onSendEffectMode: {
+        onEffectModeChanged: {
             currentEffectMode(effectMode)
         }
-        onSendDenoiseValue:{
+        onDenoiseValueChanged:{
             deNoiseSlider.value = denoiseValue
         }
-        onSendAfMode:{
+        onAfModeChanged:{
             currentAfMode(afMode)
         }
-        onSendqFactor:{
+        onQFactorChanged:{
               qFactorSlider.value = qFactor
         }
-        onSendROIAfMode:{
+        onRoiAfModeChanged:{
             if(roiMode == See3Cam30.AFCentered){
                 afCentered.checked = true
                 afWindowSizeCombo.enabled = false
@@ -812,7 +812,7 @@ Item {
                 afWindowSizeCombo.enabled = false
             }
         }
-        onSendROIAutoExpMode:{
+        onRoiAutoExpModeChanged:{
             if(roiMode == See3Cam30.AutoExpFull){
                 autoexpFull.checked = true
                 autoExpoWinSizeCombo.enabled = false
@@ -820,25 +820,24 @@ Item {
                 skipUpdateUIOnExpWindowSize = false
                 autoexpManual.checked = true
                 autoExpoWinSizeCombo.currentIndex = winSize-1
-            }
-            else if(roiMode == See3Cam30.AutoExpDisabled){
+            }else if(roiMode == See3Cam30.AutoExpDisabled){
                 autoexpFull.enabled = false
                 autoexpManual.enabled = false
                 autoExpoWinSizeCombo.enabled = false
             }
         }
-        onSendBurstLength:{            
+        onBurstLengthChanged:{
             skipUpdateUIOnBurstLength = false
             burstLengthCombo.currentIndex = burstLength - 1
         }
-        onSendAfRectMode:{
+        onAfRectModeChanged:{
             if(afRectMode == See3Cam30.AFRectEnable){
                 rectEnable.checked = true
             }else if(afRectMode == See3Cam30.AFRectDisable){
                 rectDisable.checked = true
             }
         }
-        onSendFlipMirrorMode:{
+        onFlipMirrorModeChanged:{
             currentFlipMirrorMode(flipMirrorMode)
         }
 

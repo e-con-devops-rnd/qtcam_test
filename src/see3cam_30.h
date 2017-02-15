@@ -68,16 +68,15 @@ public:
     static bool setOrientationBackgrndFn(See3CAM_30 *see3cam30obj, bool horzModeSel, bool vertiModeSel);
 
 signals:
-    void sendEffectMode(uint effectMode);
-    void sendDenoiseValue(uint denoiseValue);
-    void sendAfMode(uint afMode);
-    void sendqFactor(uint qFactor);
-    void sendFlipMode(uint flipMode, uint flipEnableDisableMode);
-    void sendROIAfMode(uint roiMode, uint winSize);
-    void sendROIAutoExpMode(uint roiMode, uint winSize);
-    void sendAfRectMode(uint afRectMode);
-    void sendBurstLength(uint burstLength);
-    void sendFlipMirrorMode(uint flipMirrorMode);
+    void effectModeChanged(uint effectMode);
+    void denoiseValueChanged(uint denoiseValue);
+    void afModeChanged(uint afMode);
+    void qFactorChanged(uint qFactor);
+    void roiAfModeChanged(uint roiMode, uint winSize);
+    void roiAutoExpModeChanged(uint roiMode, uint winSize);
+    void afRectModeChanged(uint afRectMode);
+    void burstLengthChanged(uint burstLength);
+    void flipMirrorModeChanged(uint flipMirrorMode);
 
 public slots:
     bool setEffectMode(const specialEffects &specialEffect);    
@@ -91,9 +90,6 @@ public slots:
 
     bool setQFactor(uint qFactor);
     bool getQFactor();
-
-    //bool setOrientation(bool horzModeSel, bool vertiModeSel);
-    bool getOrientation();
 
     bool setROIAutoFoucs(camROIAfMode see3camAfROIMode, uint vidResolnWidth, uint vidResolnHeight, uint xCord, uint yCord, QString winSize);
     bool setROIAutoExposure(camROIAutoExpMode see3camAutoexpROIMode, uint vidResolnWidth, uint vidResolnHeight, uint xCord, uint yCord, QString winSize);
@@ -110,6 +106,6 @@ public slots:
     bool setToDefault();
 
     void setOrientation(bool horzModeSel, bool vertiModeSel);
-    //bool setOrientationBackgrndFn(See3CAM_30 *see3cam30obj, bool horzModeSel, bool vertiModeSel);
+    bool getOrientation();
 };
 #endif // SEE3CAM_30_H
