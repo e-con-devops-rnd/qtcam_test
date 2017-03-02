@@ -19,8 +19,6 @@
  */
 
 #include <QtWidgets/QApplication>
-//#include <QQmlApplicationEngine>
-//#include <QQmlComponent>
 #include <QDateTime>
 #include <QtWidgets/QWidget>
 #include <QIcon>

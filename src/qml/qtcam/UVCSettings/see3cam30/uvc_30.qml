@@ -867,6 +867,7 @@ Item {
         see3cam30.getAutoFocusROIModeAndWindowSize()
         see3cam30.getAutoExpROIModeAndWindowSize()
         see3cam30.getAFRectMode()
+        see3cam30.getOrientation()
     }
 
     function currentFlipMirrorMode(mode)

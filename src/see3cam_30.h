@@ -91,6 +91,8 @@ public slots:
     bool setQFactor(uint qFactor);
     bool getQFactor();
 
+    bool getOrientation();
+
     bool setROIAutoFoucs(camROIAfMode see3camAfROIMode, uint vidResolnWidth, uint vidResolnHeight, uint xCord, uint yCord, QString winSize);
     bool setROIAutoExposure(camROIAutoExpMode see3camAutoexpROIMode, uint vidResolnWidth, uint vidResolnHeight, uint xCord, uint yCord, QString winSize);
 
@@ -105,7 +107,6 @@ public slots:
 
     bool setToDefault();
 
-    void setOrientation(bool horzModeSel, bool vertiModeSel);
-    bool getOrientation();
+    void setOrientation(bool horzModeSel, bool vertiModeSel);    
 };
 #endif // SEE3CAM_30_H

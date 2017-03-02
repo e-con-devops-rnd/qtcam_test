@@ -32,8 +32,7 @@ See3CAM_30::See3CAM_30(QObject *parent) :
 bool See3CAM_30::setEffectMode(const specialEffects &specialEffect)
 {
     if(uvccamera::hid_fd < 0)
-    {
-        qDebug()<<"set effect mode 1111";
+    {        
         return false;
     }
     bool timeout = true;
@@ -50,8 +49,7 @@ bool See3CAM_30::setEffectMode(const specialEffects &specialEffect)
 
     ret = write(uvccamera::hid_fd, g_out_packet_buf, BUFFER_LENGTH);
 
-    if (ret < 0) {
-        qDebug()<<"set effect mode 2222";
+    if (ret < 0) {        
         perror("write");
         return false;
     }
@@ -67,21 +65,18 @@ bool See3CAM_30::setEffectMode(const specialEffects &specialEffect)
         if (ret < 0) {
             perror("read");
         } else {
-            if (g_in_packet_buf[6]==SET_FAIL) {
-                qDebug()<<"set effect mode 3333";
+            if (g_in_packet_buf[6]==SET_FAIL) {                
                 return false;
             } else if(g_in_packet_buf[0] == CAMERA_CONTROL_30 &&
                 g_in_packet_buf[1]==SET_SPECIAL_EFFECT &&
                 g_in_packet_buf[2]==specialEffect &&
-                g_in_packet_buf[6]==SET_SUCCESS) {
-                qDebug()<<"set effect mode 4444";
+                g_in_packet_buf[6]==SET_SUCCESS) {                
                     timeout=false;
             }
         }
         end = uvc.getTickCount();
         if(end - start > SET_COMMAND_TIMEOUT)
-        {
-            qDebug()<<"set effect mode 5555";
+        {            
             timeout = false;
             return false;
         }
@@ -97,8 +92,7 @@ bool See3CAM_30::setEffectMode(const specialEffects &specialEffect)
 bool See3CAM_30::setDenoiseValue(int deNoiseVal)
 {
     if(uvccamera::hid_fd < 0)
-    {
-        qDebug()<<"set setDenoiseValue 1111";
+    {        
         return false;
     }
 
@@ -116,8 +110,7 @@ bool See3CAM_30::setDenoiseValue(int deNoiseVal)
 
     ret = write(uvccamera::hid_fd, g_out_packet_buf, BUFFER_LENGTH);
 
-    if (ret < 0) {
-        qDebug()<<"set setDenoiseValue 2222";
+    if (ret < 0) {        
         perror("write");
         return false;
     }
@@ -130,21 +123,18 @@ bool See3CAM_30::setDenoiseValue(int deNoiseVal)
         if (ret < 0) {
             //perror("read");
         } else {
-            if (g_in_packet_buf[6]==SET_FAIL) {
-                qDebug()<<"set setDenoiseValue 3333";
+            if (g_in_packet_buf[6]==SET_FAIL) {                
                 return false;
             } else if(g_in_packet_buf[0] == CAMERA_CONTROL_30 &&
                 g_in_packet_buf[1]==SET_DENOISE_CONTROL &&
                 g_in_packet_buf[2]==deNoiseVal &&
-                g_in_packet_buf[6]==SET_SUCCESS) {
-                qDebug()<<"set setDenoiseValue 4444";
+                g_in_packet_buf[6]==SET_SUCCESS) {                
                     timeout=false;
             }
         }
         end = uvc.getTickCount();
         if(end - start > SET_COMMAND_TIMEOUT)
-        {
-            qDebug()<<"set setDenoiseValue 5555";
+        {            
             timeout = false;
             return false;
         }
@@ -159,11 +149,9 @@ bool See3CAM_30::setDenoiseValue(int deNoiseVal)
  * return true - success /false - failure
  */
 bool See3CAM_30::getEffectMode()
-{
-    qDebug()<<"get effect mode";
+{    
     if(uvccamera::hid_fd < 0)
     {
-        qDebug()<<"get effect mode 1111";
         return false;
     }
     bool timeout = true;
@@ -180,7 +168,6 @@ bool See3CAM_30::getEffectMode()
     ret = write(uvccamera::hid_fd, g_out_packet_buf, BUFFER_LENGTH);
 
     if (ret < 0) {
-        qDebug()<<"get effect mode 22222";
         perror("write");
         return false;
     }
@@ -195,13 +182,11 @@ bool See3CAM_30::getEffectMode()
         if (ret < 0) {
             //perror("read");
         } else {
-            if (g_in_packet_buf[6]==GET_FAIL) {
-                qDebug()<<"get effect mode 33333";
+            if (g_in_packet_buf[6]==GET_FAIL) {                
                 return false;
             } else if(g_in_packet_buf[0] == CAMERA_CONTROL_30 &&
                 g_in_packet_buf[1]==GET_SPECIAL_EFFECT &&
-                g_in_packet_buf[6]==GET_SUCCESS) {
-                    qDebug()<<"get effect mode 4444";
+                g_in_packet_buf[6]==GET_SUCCESS) {                    
                     effectMode = g_in_packet_buf[2];
                     emit effectModeChanged(effectMode);
                     timeout = false;
@@ -209,8 +194,7 @@ bool See3CAM_30::getEffectMode()
         }
         end = uvc.getTickCount();
         if(end - start > TIMEOUT)
-        {
-            qDebug()<<"get effect mode 5555";
+        {            
             timeout = false;
             return false;
         }
@@ -226,7 +210,6 @@ bool See3CAM_30::getDenoiseValue()
 {
     if(uvccamera::hid_fd < 0)
     {
-        qDebug()<<"getDenoiseValue 1111";
         return false;
     }
     bool timeout = true;
@@ -243,7 +226,6 @@ bool See3CAM_30::getDenoiseValue()
     ret = write(uvccamera::hid_fd, g_out_packet_buf, BUFFER_LENGTH);
 
     if (ret < 0) {
-        qDebug()<<"getDenoiseValue 2222";
         perror("write");
         return false;
     }
@@ -259,13 +241,11 @@ bool See3CAM_30::getDenoiseValue()
         if (ret < 0) {
             //perror("read");
         } else {
-            if (g_in_packet_buf[6]==GET_FAIL) {
-                qDebug()<<"getDenoiseValue 3333";
+            if (g_in_packet_buf[6]==GET_FAIL) {                
                 return false;
             } else if(g_in_packet_buf[0] == CAMERA_CONTROL_30 &&
                 g_in_packet_buf[1]==GET_DENOISE_CONTROL &&
-                g_in_packet_buf[6]==GET_SUCCESS) {
-                qDebug()<<"getDenoiseValue 4444";
+                g_in_packet_buf[6]==GET_SUCCESS) {                
                     denoiseValue = g_in_packet_buf[2];
                     emit denoiseValueChanged(denoiseValue);
                     timeout = false;
@@ -273,8 +253,7 @@ bool See3CAM_30::getDenoiseValue()
         }
         end = uvc.getTickCount();
         if(end - start > TIMEOUT)
-        {
-            qDebug()<<"getDenoiseValue 5555";
+        {            
             timeout = false;
             return false;
         }
@@ -377,24 +356,15 @@ bool See3CAM_30::getAutoFocusMode()
     while(timeout)
     {
         /* Get a report from the device */
-        ret = read(uvccamera::hid_fd, g_in_packet_buf, BUFFER_LENGTH);
-        qDebug()<<"g_in_packet_buf[0]"<<g_in_packet_buf[0];
-        qDebug()<<"g_in_packet_buf[1]"<<g_in_packet_buf[1];
-        qDebug()<<"g_in_packet_buf[2]"<<g_in_packet_buf[2];
-        qDebug()<<"g_in_packet_buf[3]"<<g_in_packet_buf[3];
-        qDebug()<<"g_in_packet_buf[4]"<<g_in_packet_buf[4];
-        qDebug()<<"g_in_packet_buf[5]"<<g_in_packet_buf[5];
-        qDebug()<<"g_in_packet_buf[6]"<<g_in_packet_buf[6];
+        ret = read(uvccamera::hid_fd, g_in_packet_buf, BUFFER_LENGTH);        
         if (ret < 0) {
             //perror("read");
         } else {
             if (g_in_packet_buf[6]==GET_FAIL) {
-                qDebug()<<"get auto focus mode failed";
                 return false;
             } else if(g_in_packet_buf[0] == CAMERA_CONTROL_30 &&
                 g_in_packet_buf[1]==GET_AF_MODE_30 &&
                 g_in_packet_buf[6]==GET_SUCCESS) {
-                qDebug()<<"get auto focus mode success";
                     autoFocusMode = g_in_packet_buf[2];
                     emit afModeChanged(autoFocusMode);
                     timeout = false;
@@ -402,8 +372,7 @@ bool See3CAM_30::getAutoFocusMode()
         }
         end = uvc.getTickCount();
         if(end - start > TIMEOUT)
-        {
-            qDebug()<<"get auto focus mode failed";
+        {            
             timeout = false;
             return false;
         }
@@ -530,72 +499,6 @@ bool See3CAM_30::getQFactor()
     return true;
 }
 
-
-///**
-// * @brief See3CAM_30::setOrientation - Setting horizontal flip/vertical flip/both flip mode
-// * @param horizModeSel - mode selected / unselected in UI
-// * @return true/false
-// */
-//bool See3CAM_30::setOrientation(bool horzModeSel, bool vertiModeSel){
-//    if(uvccamera::hid_fd < 0)
-//    {
-//        return false;
-//    }
-//    bool timeout = true;
-//    int ret =0;
-//    unsigned int start, end = 0;
-
-//    //Initialize the buffer
-//    memset(g_out_packet_buf, 0x00, sizeof(g_out_packet_buf));
-
-//    //Set the Report Number
-//    g_out_packet_buf[1] = CAMERA_CONTROL_30; /* camera control for see3cam_30 camera */
-//    g_out_packet_buf[2] = SET_ORIENTATION_30; /* set flip mode for 30 camera */
-//    if(horzModeSel && vertiModeSel){
-//        g_out_packet_buf[3] = SET_ORIENTATION_BOTHFLIP_ENABLE_30; /* both flip enable */
-//    }else if(horzModeSel && !vertiModeSel){
-//        g_out_packet_buf[3] = SET_ORIENTATION_HORZFLIP_30; /* horizontal flip only mode */
-//    }else if(!horzModeSel && vertiModeSel){
-//        g_out_packet_buf[3] = SET_ORIENTATION_VERTFLIP_30; /* vertical flip only mode */
-//    }else
-//        g_out_packet_buf[3] = SET_ORIENTATION_BOTHFLIP_DISABLE_30; /* both flip disable */
-
-//    ret = write(uvccamera::hid_fd, g_out_packet_buf, BUFFER_LENGTH);
-
-
-//    if (ret < 0) {
-//        perror("write");
-//        return false;
-//    }
-
-//    /* Read the Status code from the device */
-//    start = uvc.getTickCount();
-
-//    while(timeout)
-//    {
-//        /* Get a report from the device */
-//        ret = read(uvccamera::hid_fd, g_in_packet_buf, BUFFER_LENGTH);
-//        if (ret < 0) {
-//            //perror("read");
-//        } else {
-//            if (g_in_packet_buf[6]==SET_FAIL) {
-//                return false;
-//            } else if(g_in_packet_buf[0] == CAMERA_CONTROL_30 &&
-//                      g_in_packet_buf[1]==SET_ORIENTATION_30 &&
-//                      g_in_packet_buf[3]==SET_SUCCESS) {
-//                timeout = false;
-//            }
-//        }
-//        end = uvc.getTickCount();
-//        if(end - start > TIMEOUT)
-//        {
-//            timeout = false;
-//            return false;
-//        }
-//    }
-//    return true;
-
-//}
 
 /**
  * @brief See3CAM_30::getOrientation - getting flip mode from the camera
@@ -957,7 +860,6 @@ bool See3CAM_30::getAutoExpROIModeAndWindowSize(){
  */
 bool See3CAM_30::enableDisableAFRectangle(bool enableRFRect){
 
-    qDebug()<<"enableDisableAFRectangle";
     if(uvccamera::hid_fd < 0)
     {
         return false;
@@ -999,20 +901,17 @@ bool See3CAM_30::enableDisableAFRectangle(bool enableRFRect){
             //perror("read");
         } else {
             if (g_in_packet_buf[6]==SET_FAIL) {
-                qDebug()<<"enableDisableAFRectangle fail";
                 return false;
             } else if(g_in_packet_buf[0] == CAMERA_CONTROL_30 &&
                 g_in_packet_buf[1]==SET_AF_RECT_MODE_30 &&
                 g_in_packet_buf[2]==inputRFRectMode &&
                 g_in_packet_buf[6]==SET_SUCCESS) {
-                qDebug()<<"enableDisableAFRectangle success"<<inputRFRectMode;
                     timeout=false;
             }
         }
         end = uvc.getTickCount();
         if(end - start > TIMEOUT)
         {
-            qDebug()<<"enableDisableAFRectangle - timeout";
             timeout = false;
             return false;
         }
@@ -1064,7 +963,6 @@ bool See3CAM_30::getAFRectMode()
                 g_in_packet_buf[1]==GET_AF_RECT_MODE_30 &&
                 g_in_packet_buf[6]==GET_SUCCESS) {
                     afRectMode = g_in_packet_buf[2];
-                    qDebug()<<"AF Rect mode"<<afRectMode;
                     emit afRectModeChanged(afRectMode);
                     timeout = false;
             }
@@ -1177,12 +1075,10 @@ bool See3CAM_30::getBurstLength()
             //perror("read");
         } else {
             if (g_in_packet_buf[6]==GET_FAIL) {
-                qDebug()<<"get burstLength - failed";
                 return false;
             } else if(g_in_packet_buf[0] == CAMERA_CONTROL_30 &&
                 g_in_packet_buf[1]==GET_BURST_LENGTH_30 &&
                 g_in_packet_buf[6]==GET_SUCCESS) {
-                qDebug()<<"get burst length success"<<burstLength;
                     burstLength = g_in_packet_buf[2];
                     emit burstLengthChanged(burstLength);
                     timeout = false;
@@ -1191,7 +1087,6 @@ bool See3CAM_30::getBurstLength()
         end = uvc.getTickCount();
         if(end - start > TIMEOUT)
         {
-            qDebug()<<"get burstLength - timeout";
             timeout = false;
             return false;
         }
@@ -1258,6 +1153,9 @@ bool See3CAM_30::setToDefault(){
     return true;
 }
 
+/**
+ * @brief See3CAM_30::setOrientation - Setting orientation
+*/
 void See3CAM_30::setOrientation(bool horzModeSel, bool vertiModeSel)
 {
     QtConcurrent::run(setOrientationBackgrndFn, this, horzModeSel, vertiModeSel);
@@ -1265,10 +1163,10 @@ void See3CAM_30::setOrientation(bool horzModeSel, bool vertiModeSel)
 
 
 /**
- * @brief See3CAM_81::setOrientationBackgrndFn - Setting orientation
- * @param see3cam81obj object of the class
- * @param gpioControlsCam81 gpioPin
- * @param camGpioValue gpioValue
+ * @brief See3CAM_30::setOrientationBackgrndFn - Setting orientation
+ * @param see3cam30obj object of the class
+ * @param horzModeSel
+ * @param vertiModeSel
  * @return true/false
  */
 bool See3CAM_30::setOrientationBackgrndFn(See3CAM_30 *see3cam30obj, bool horzModeSel, bool vertiModeSel){
