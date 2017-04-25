@@ -19,8 +19,6 @@
  */
 
 #include <QtWidgets/QApplication>
-//#include <QQmlApplicationEngine>
-//#include <QQmlComponent>
 #include <QDateTime>
 #include <QtWidgets/QWidget>
 #include <QIcon>
@@ -35,6 +33,8 @@
 #include "seecam_cu50.h"
 #include "seecam_cu51.h"
 #include "seecam_cu80.h"
+#include "seecam_81.h"
+#include "see3cam_cu40.h"
 #include "see3cam_cu130.h"
 #include "see3cam_130.h"
 #include "seecam_ar0130.h"
@@ -67,8 +67,11 @@ int main(int argc, char *argv[])
     qmlRegisterType<See3CAM_10CUG_Mono>("econ.camera.see3cam10Mono", 1, 0, "See3Cam10Mono");
     qmlRegisterType<See3CAM_80>("econ.camera.see3cam80", 1, 0, "See3Cam80");
 
-  // Added by Sankari : 07 Feb 2017
+    // Added by Sankari : 07 Feb 2017
     qmlRegisterType<See3CAM_30>("econ.camera.see3cam30", 1, 0, "See3Cam30");
+
+// Added by Sankari: 21 Apr 2017
+    qmlRegisterType<See3CAM_CU40>("econ.camera.see3camcu40", 1, 0, "See3Camcu40");
 
     qmlRegisterType<See3CAM_CU50>("econ.camera.see3cam50", 1, 0, "See3Cam50");    
     qmlRegisterType<See3CAM_CU130>("econ.camera.see3camcu130", 1, 0, "See3CamCu130");
