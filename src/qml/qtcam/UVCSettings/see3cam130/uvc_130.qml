@@ -69,8 +69,8 @@ Item {
         interval: 500
         onTriggered: {
             seecam130.getSceneMode()
-            seecam130.getEffectMode()
-            seecam130.getDenoiseValue()
+            seecam130.getEffectMode()            
+            seecam130.getDenoiseValue()            
             seecam130.getQFactor()
             seecam130.getExposureCompensation()            
             seecam130.getFrameRateCtrlValue()
