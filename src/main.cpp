@@ -70,6 +70,9 @@ int main(int argc, char *argv[])
     // Added by Sankari : 07 Feb 2017
     qmlRegisterType<See3CAM_30>("econ.camera.see3cam30", 1, 0, "See3Cam30");
 
+    // Added by Sankari: 17 Dec 2016
+    qmlRegisterType<See3CAM_81>("econ.camera.see3cam81", 1, 0, "See3Cam81");
+
 // Added by Sankari: 21 Apr 2017
     qmlRegisterType<See3CAM_CU40>("econ.camera.see3camcu40", 1, 0, "See3Camcu40");
 
@@ -94,9 +97,9 @@ int main(int argc, char *argv[])
     Cameraproperty camProperty;    
 
     if(argc > 1){
-	if(strcmp(argv[1],"-l") == 0 || strcmp(argv[1],"--log") == 0){
-		Cameraproperty camPropertyParam(true);
-	}
+        if(strcmp(argv[1],"-l") == 0 || strcmp(argv[1],"--log") == 0){
+            Cameraproperty camPropertyParam(true);
+        }
         else{
             qDebug()<<"Usage: qtcam [OPTION]";
             qDebug()<<"-l, --log    to create log in a directory\n";
