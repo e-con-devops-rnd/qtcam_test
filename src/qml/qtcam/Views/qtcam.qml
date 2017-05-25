@@ -56,7 +56,16 @@ Rectangle {
     property bool m_Snap : true
     property bool stillPreview : false
     property bool webcamKeyAccept: true
-// Added by Sankari: 16 Dec 2016 
+
+    // Added by Sankari : 25 May 2017, the flag to indicate side bar items are opened/closed
+    property bool closeSideBarClicked: false
+
+    // Added by Sankari : 25 May 2017, store the status of capture/record button visiblity[used when closing side bar items]
+    property bool captureButtonVisibleStatus: false
+    property bool videoRecButtonVisibleStatus: false
+    property bool recordStopBtnVisibleStatus: false
+
+    // Added by Sankari: 16 Dec 2016
     property bool webcamKeyTriggerShot: true
     property string statusText
     property string videofileName
@@ -66,14 +75,14 @@ Rectangle {
     property int selectedDeviceEnumValue;
     //Added by Dhurka - 19th Oct 2016
     //create object for statusbar qml - Added by Dhurka - 18th Oct 2016
-	property variant statusBarRootObject
-	property variant aboutViewRootObject
+    property variant statusBarRootObject
+    property variant aboutViewRootObject
     property variant imageSettingsRootObject
     property variant stillSettingsRootObject
     property variant videoSettingsRootObject
     property variant captureVideoRecordRootObject
     //Disabling side bar controls - Added below by Dhurka
-	signal sidebarVisibleStatus(variant status);
+    signal sidebarVisibleStatus(variant status);
     signal cameraSettingsTabEnable(variant status);
     //Send control values to imagequalitysettings
     signal setControlValues(string controlName,int controlType,int controlMinValue,int controlMaxValue,int controlDefaultValue,int controlID);
@@ -147,7 +156,7 @@ Rectangle {
     signal setMasterMode();
 
     // Added by Sankari: 16 Dec 2016 - To init trigger shot for 12CUNIR camera
-    signal initTriggershot();    
+    signal initTriggershot();
 
     //Added by Sankari: 23 Dec 2016
     signal videoResolutionChanged();
@@ -176,7 +185,7 @@ Rectangle {
             selectCameraSettings()
         }
     }
-	Timer {
+    Timer {
         id: recordTimerWithoutAFRect // Record after disabling Auto Focus Rectangle
         interval: 1000
         onTriggered: {
@@ -285,6 +294,9 @@ Rectangle {
                 device_box.oldIndex = 0
                 device_box.currentIndex = 0
                 disableImageSettings();
+                // Added by Sankari: 25 May 2017. When device is unplugged, make preview area disabled
+                vidstreamproperty.enabled = false
+
                 if(captureVideoRecordRootObject.recordStopBtnVisible) {
                     statusText = "Saving..."
                     vidstreamproperty.recordStop()
@@ -295,7 +307,6 @@ Rectangle {
                     videoPropertyItemEnable(true)
                     stillPropertyItemEnable(true)
                     device_box.enabled = true
-                    vidstreamproperty.enabled = true
                     device_box.opacity = 1
                     videoRecordBtnVisible(true)
                     uvc_settings.enabled = true
@@ -328,7 +339,7 @@ Rectangle {
                 }
             }
 
-            onDefaultFrameSize: {                
+            onDefaultFrameSize: {
                 if(m_Snap) {
                     setColorComboOutputIndex(false,outputIndexValue)
                 }
@@ -350,7 +361,7 @@ Rectangle {
                 }
             }
 
-            onDefaultFrameInterval:{                
+            onDefaultFrameInterval:{
                 videoFrameInterval(frameInterval)
             }
             onRcdStop: {
@@ -368,7 +379,7 @@ Rectangle {
                 videofileName = fileName
             }
 
-            onStillSkipCount:{                
+            onStillSkipCount:{
                 frameSkipCount(stillResoln, videoResoln);
             }
 
@@ -386,22 +397,27 @@ Rectangle {
                 acceptedButtons: Qt.LeftButton | Qt.RightButton
                 onReleased:
                 {
-                     if (mouse.button == Qt.LeftButton){
-                        if(captureVideoRecordRootObject.captureBtnVisible){
-                            mouseClickCapture()
-                        } else if(captureVideoRecordRootObject.recordBtnVisible){
-                            videoRecordBegin()
-                        } else if(captureVideoRecordRootObject.recordStopBtnVisible){
-                            videoSaveVideo()
+                    if (mouse.button == Qt.LeftButton){
+                        if(closeSideBarClicked){
+                            captureRecordWhenSideBarItemsClosed()
                         }
-                     }
-                     else if(mouse.button == Qt.RightButton){
-                         // passing mouse x,y cororinates, preview width and height
-                         mouseRightClicked(mouse.x, mouse.y, vidstreamproperty.width, vidstreamproperty.height)
-                     }
-                }                
+                        else{
+                            if(captureVideoRecordRootObject.captureBtnVisible){
+                                mouseClickCapture()
+                            } else if(captureVideoRecordRootObject.recordBtnVisible){
+                                videoRecordBegin()
+                            } else if(captureVideoRecordRootObject.recordStopBtnVisible){
+                                videoSaveVideo()
+                            }
+                        }
+                    }else if(mouse.button == Qt.RightButton){
+                        // passing mouse x,y cororinates, preview width and height
+                        mouseRightClicked(mouse.x, mouse.y, vidstreamproperty.width, vidstreamproperty.height)
+                    }
+                }
             }
         }
+
     }
 
     Image {
@@ -423,6 +439,7 @@ Rectangle {
                 open_sideBar.opacity = 1
             }
             onReleased: {
+                closeSideBarClicked = false
                 sideBarItems.visible = true
                 sidebarVisibleStatus(sideBarItems.visible)
                 open_sideBar.visible = false
@@ -486,7 +503,7 @@ Rectangle {
                 }
             }
             onCurrentIndexChanged: {
-                if(currentIndex.toString() != "-1" && currentIndex.toString() != "0") {                    
+                if(currentIndex.toString() != "-1" && currentIndex.toString() != "0") {
                     if(oldIndex!=currentIndex) {
                         oldIndex = currentIndex
                         //Added by Dhurka - 20th Oct 2016
@@ -497,7 +514,7 @@ Rectangle {
                         captureBtnEnable(true)
                         videoRecordBtnEnable(true)
                         keyEventFiltering = false
-                        vidstreamproperty.enabled = true                                                
+                        vidstreamproperty.enabled = true
                         webcamKeyAccept = true
                         vidstreamproperty.stopCapture()
                         vidstreamproperty.closeDevice()
@@ -509,15 +526,15 @@ Rectangle {
                         vidstreamproperty.displayVideoResolution()
                         vidstreamproperty.displayEncoderList()
                         //Added by Dhurka - 24th Oct 2016 - Push Auto mode item in image quality settings for ascella camera
-                        addAutoModeMenuItem();                        
+                        addAutoModeMenuItem();
                         //Added by Sankari - 06th Mar 2016
                         queryUvcControls();
                         //Added by Dhurka - 20th Oct 2016
                         disableImageSettings()
                         //Added by Dhurka - Here commonly open HID device instead of open every QML file - 17th Oct 2016
-                        openHIDDevice(selectedDeviceEnumValue);                        
+                        openHIDDevice(selectedDeviceEnumValue);
                         updateFPS(stillSettingsRootObject.stillClorComboValue, stillSettingsRootObject.stillOutputTextValue)
-                        vidstreamproperty.startAgain()                        
+                        vidstreamproperty.startAgain()
                         vidstreamproperty.width = stillSettingsRootObject.stillOutputTextValue.split("x")[0].toString()
                         vidstreamproperty.height = stillSettingsRootObject.stillOutputTextValue.split("x")[1].toString()
                         vidstreamproperty.lastPreviewResolution(stillSettingsRootObject.stillOutputTextValue,stillSettingsRootObject.stillColorComboIndexValue)
@@ -526,7 +543,7 @@ Rectangle {
                         JS.videoCaptureFormat = JS.stillCaptureFormat
                         JS.videoCaptureResolution = JS.stillCaptureResolution
                         JS.videocaptureFps = videoSettingsRootObject.videoFrameRate
-						// retain lastly set fps index
+                        // retain lastly set fps index
                         vidstreamproperty.lastFPS(videoSettingsRootObject.videoFrameRateIndex)
                         vidstreamproperty.masterModeEnabled()
                         createExtensionUnitQml(selectedDeviceEnumValue)
@@ -681,6 +698,15 @@ Rectangle {
                 }
 
                 onReleased: {
+                    // Added by Sankari : 25 May 2017, set the flag to indicate side bar items are closed
+                    closeSideBarClicked = true
+
+                    // Added by Sankari : 25 May 2017
+                    // Store the last visible status of capture and record buttons when clicking close side bar button
+                    captureButtonVisibleStatus = captureVideoRecordRootObject.captureBtnVisible
+                    videoRecButtonVisibleStatus = captureVideoRecordRootObject.recordBtnVisible
+                    recordStopBtnVisibleStatus = captureVideoRecordRootObject.recordStopBtnVisible
+
                     if(!cameraColumnLayout.visible)
                         selectCameraSettings()
                     sideBarItems.visible = false
@@ -700,7 +726,7 @@ Rectangle {
         }
     }
 
-	// Added by Sankari : Update frame to skip 
+    // Added by Sankari : Update frame to skip
     function updateFrametoSkip(stillSkip){
         vidstreamproperty.updateFrameToSkip(stillSkip)
     }
@@ -711,20 +737,24 @@ Rectangle {
         keyEventFiltering = true
         vidstreamproperty.enabled = false
         mouseClickCap = true
-        //Added by Sankari : 08 Mar 2017
-        // Disable camera settings/extension settings tab before capturing image
-        imageQualitySettingsEnable(false)
-        videoPropertyItemEnable(false)
-        stillPropertyItemEnable(false)
-        uvc_settings.enabled = false
-        uvc_settings.opacity = 0.5
-        selectCameraSettings()
+        // Added by Sankari : 25 May 2017,
+        // if side bar items are not visible, then enable settings are not needed, after capture image
+        if(!closeSideBarClicked){
+            //Added by Sankari : 08 Mar 2017
+            // Disable camera settings/extension settings tab before capturing image
+            imageQualitySettingsEnable(false)
+            videoPropertyItemEnable(false)
+            stillPropertyItemEnable(false)
+            uvc_settings.enabled = false
+            uvc_settings.opacity = 0.5
+            selectCameraSettings()
+        }
         takeScreenShot(false);
     }
 
     function updateScenePreview(str, format, fps) {
-        m_Snap = false        
-        if (!vidFormatChanged){            
+        m_Snap = false
+        if (!vidFormatChanged){
             vidstreamproperty.width = str.toString().split("x")[0].toString()
             vidstreamproperty.height = str.toString().split("x")[1].toString()
         }
@@ -741,8 +771,8 @@ Rectangle {
     }
 
     function updateStillPreview(str, format) {
-		m_Snap = false
-        stillPreview = true        
+        m_Snap = false
+        stillPreview = true
         vidstreamproperty.stopCapture()
         vidstreamproperty.vidCapFormatChanged(format)
         vidstreamproperty.displayStillResolution()
@@ -774,7 +804,7 @@ Rectangle {
         vidstreamproperty.startAgain()
     }
 
-    function updateFPS(pix, size) {        
+    function updateFPS(pix, size) {
         vidstreamproperty.updateFrameInterval(pix, size)
         vidstreamproperty.enumerateFPSList()
     }
@@ -826,7 +856,7 @@ Rectangle {
             vidstreamproperty.stopCapture()
             vidstreamproperty.vidCapFormatChanged(JS.videoCaptureFormat)
             vidstreamproperty.setResoultion(JS.videoCaptureResolution);
-            vidstreamproperty.startAgain();            
+            vidstreamproperty.startAgain();
         }
     }
 
@@ -846,7 +876,8 @@ Rectangle {
         keyEventFiltering = true
         uvc_settings.enabled = false
         uvc_settings.opacity = 0.5
-        selectCameraSettings()
+        if(!videoRecButtonVisibleStatus)
+            selectCameraSettings()
     }
 
     function videoSaveVideo() {
@@ -871,8 +902,28 @@ Rectangle {
     function extensionTab() {
         if(cameraColumnLayout.visible) {
             cameraSettingsTabEnable(false)
-            cameraColumnLayout.visible = false            
+            cameraColumnLayout.visible = false
             see3cam.visible = true
+        }
+    }
+
+    // Added by Sankari: 25 May 2017
+    // Capture and Record When side bar items closed.
+    function captureRecordWhenSideBarItemsClosed(){
+        if(captureButtonVisibleStatus){
+            mouseClickCapture()
+        } else if(videoRecButtonVisibleStatus){
+            videoRecordBegin()
+            // make record start button visibility false
+            videoRecButtonVisibleStatus = false
+            // make record stop button visibility true
+            recordStopBtnVisibleStatus = true
+        } else if(recordStopBtnVisibleStatus){
+            videoSaveVideo()
+            // make record start button visibility true
+            videoRecButtonVisibleStatus = true
+            // make record stop button visibility true
+            recordStopBtnVisibleStatus = false
         }
     }
 
@@ -929,25 +980,25 @@ Rectangle {
     {
         switch(selectedEnum)
         {
-            case CommonEnums.ECON_1MP_BAYER_RGB:
-            case CommonEnums.ECON_1MP_MONOCHROME:
-            case CommonEnums.SEE3CAM_11CUG:
-            case CommonEnums.SEE3CAM_CU30:
-            case CommonEnums.SEE3CAM_CU40:
-            case CommonEnums.SEE3CAM_CU50:
-            case CommonEnums.SEE3CAM_CU51:
-            case CommonEnums.SEE3CAM_CU130:
-            case CommonEnums.SEE3CAM_12CUNIR:
-            case CommonEnums.ECON_8MP_CAMERA:
-            case CommonEnums.SEE3CAM_130:
-            case CommonEnums.SEE3CAM_30:
-			case CommonEnums.SEE3CAM_81:
- 			// Added by Sankari : 22 Feb 2017
-            case CommonEnums.SEE3CAM_CU135:
-                camproperty.openHIDDevice(device_box.currentText);
+        case CommonEnums.ECON_1MP_BAYER_RGB:
+        case CommonEnums.ECON_1MP_MONOCHROME:
+        case CommonEnums.SEE3CAM_11CUG:
+        case CommonEnums.SEE3CAM_CU30:
+        case CommonEnums.SEE3CAM_CU40:
+        case CommonEnums.SEE3CAM_CU50:
+        case CommonEnums.SEE3CAM_CU51:
+        case CommonEnums.SEE3CAM_CU130:
+        case CommonEnums.SEE3CAM_12CUNIR:
+        case CommonEnums.ECON_8MP_CAMERA:
+        case CommonEnums.SEE3CAM_130:
+        case CommonEnums.SEE3CAM_30:
+        case CommonEnums.SEE3CAM_81:
+            // Added by Sankari : 22 Feb 2017
+        case CommonEnums.SEE3CAM_CU135:
+            camproperty.openHIDDevice(device_box.currentText);
             break;
         }
-    }    
+    }
 
     Component.onCompleted: {
         camproperty.createLogger()
@@ -1003,21 +1054,21 @@ Rectangle {
         }
         camproperty.closeLibUsbDeviceAscella()
         setMasterMode();
-    }    
+    }
 
     Keys.onReleased: {
         if(event.key === Qt.Key_I) {
             if((!keyEventFiltering)) {
                 mouseClickCapture()
             }
-        } else if(event.key === Qt.Key_WebCam){            
+        } else if(event.key === Qt.Key_WebCam){
             m_Snap = false
             if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_12CUNIR){
                 takeScreenShot(true);
                 event.accepted = true
             }
-            else{                
-                if(webcamKeyAccept) {                    
+            else{
+                if(webcamKeyAccept) {
                     //Take screen shot for camera in the corressponding qml
                     takeScreenShot(true);
                     webcamKeyAccept = false
@@ -1028,6 +1079,15 @@ Rectangle {
     }
 
     Keys.onLeftPressed: {
+        // Added by Sankari : 25 May 2017, set the flag to indicate side bar items are closed
+        closeSideBarClicked = true
+
+        // Added by Sankari : 25 May 2017
+        // Store the last visible status of capture and record buttons when clicking close side bar button
+        captureButtonVisibleStatus = captureVideoRecordRootObject.captureBtnVisible
+        videoRecButtonVisibleStatus = captureVideoRecordRootObject.recordBtnVisible
+        recordStopBtnVisibleStatus = captureVideoRecordRootObject.recordStopBtnVisible
+
         if(!cameraColumnLayout.visible)
             selectCameraSettings()
         sideBarItems.visible = false
@@ -1036,10 +1096,12 @@ Rectangle {
     }
 
     Keys.onRightPressed: {
+        // Added by Sankari : 25 May 2017, set the flag to indicate side bar items are opened
+        closeSideBarClicked = false
         sideBarItems.visible = true
         sidebarVisibleStatus(sideBarItems.visible)
         open_sideBar.visible = false
-   }
+    }
 
     function enableAllSettingsTab(){
         imageQualitySettingsEnable(true)
@@ -1082,74 +1144,74 @@ Rectangle {
         webcamKeyTriggerShot = true
     }
 
-   //Added below by Dhurka - 24th Oct 2016
+    //Added below by Dhurka - 24th Oct 2016
     function stillBurstLength(burstLen)
     {
         burstLength = burstLen
     }
-   //for taking snap shot
-   function imageCapture(shotType)
-   {       
-       vidstreamproperty.setStillVideoSize(stillSettingsRootObject.stillOutputTextValue, stillSettingsRootObject.stillColorComboIndexValue)
-       switch(shotType)
-       {
-       case CommonEnums.SNAP_SHOT:
-           vidstreamproperty.makeShot(stillSettingsRootObject.stillStoragePath,stillSettingsRootObject.stillImageFormatComboText)
-           break;
-       case CommonEnums.TRIGGER_SHOT:
-           vidstreamproperty.triggerModeShot(stillSettingsRootObject.stillStoragePath,stillSettingsRootObject.stillImageFormatComboText)
-           break;
-       case CommonEnums.BURST_SHOT:
-           vidstreamproperty.makeBurstShot(stillSettingsRootObject.stillStoragePath,stillSettingsRootObject.stillImageFormatComboText, burstLength)
-           break;
-       case CommonEnums.CHANGE_FPS_SHOT:
-           //vidstreamproperty.setStillFPS(videoSettingsRootObject.videoFrameRate)
-           vidstreamproperty.changeFPSandTakeShot(stillSettingsRootObject.stillStoragePath,stillSettingsRootObject.stillImageFormatComboText, fpsIndexToChange)
-           break;
-       }
-   }
-   function enableCameraControls()
-   {
-       stillChildVisibleState(false)
-       videoChildMenuVisible(false)
-       vidstreamproperty.cameraFilterControls()
-   }
-   function logInfo(log)
-   {
-       camproperty.logDebugWriter(log)
-   }
-   function changeCameraSettings(controlId,value)
-   {
-       vidstreamproperty.changeSettings(controlId,value.toString())
-   }
-   function selectMenuIndex(controlId,index)
-   {
-       vidstreamproperty.selectMenuIndex(controlId,index)
-   }
-   function cameraFilterControls(value)
-   {
-       vidstreamproperty.cameraFilterControls(value)
-   }
-   function updateVideoResolution(colorComboText,frameRateIndex)
-   {
-       root.updateScenePreview(vidstreamproperty.width.toString() +"x"+vidstreamproperty.height.toString(),colorComboText,frameRateIndex)
-       vidstreamproperty.displayVideoResolution()
-   }
-   function imageSettingVisibleChanged()
-   {
-       if(videoCaptureChildVisible)
-       {
-           getStillPropertyPositionValues();
-       }
-       else
-       {
-           imageFormatYValue = defaultImageFormatYValue
-           stillPropertyYValue = defaultStillPropertyYValue
-       }
-       updateVideoMenuPosition();
-   }
-   function enableVideoPin(videoPinEnable)
-   {
-       videoSettingsRootObject.enableVideoPin(videoPinEnable)
-   }
+    //for taking snap shot
+    function imageCapture(shotType)
+    {
+        vidstreamproperty.setStillVideoSize(stillSettingsRootObject.stillOutputTextValue, stillSettingsRootObject.stillColorComboIndexValue)
+        switch(shotType)
+        {
+        case CommonEnums.SNAP_SHOT:
+            vidstreamproperty.makeShot(stillSettingsRootObject.stillStoragePath,stillSettingsRootObject.stillImageFormatComboText)
+            break;
+        case CommonEnums.TRIGGER_SHOT:
+            vidstreamproperty.triggerModeShot(stillSettingsRootObject.stillStoragePath,stillSettingsRootObject.stillImageFormatComboText)
+            break;
+        case CommonEnums.BURST_SHOT:
+            vidstreamproperty.makeBurstShot(stillSettingsRootObject.stillStoragePath,stillSettingsRootObject.stillImageFormatComboText, burstLength)
+            break;
+        case CommonEnums.CHANGE_FPS_SHOT:
+            //vidstreamproperty.setStillFPS(videoSettingsRootObject.videoFrameRate)
+            vidstreamproperty.changeFPSandTakeShot(stillSettingsRootObject.stillStoragePath,stillSettingsRootObject.stillImageFormatComboText, fpsIndexToChange)
+            break;
+        }
+    }
+    function enableCameraControls()
+    {
+        stillChildVisibleState(false)
+        videoChildMenuVisible(false)
+        vidstreamproperty.cameraFilterControls()
+    }
+    function logInfo(log)
+    {
+        camproperty.logDebugWriter(log)
+    }
+    function changeCameraSettings(controlId,value)
+    {
+        vidstreamproperty.changeSettings(controlId,value.toString())
+    }
+    function selectMenuIndex(controlId,index)
+    {
+        vidstreamproperty.selectMenuIndex(controlId,index)
+    }
+    function cameraFilterControls(value)
+    {
+        vidstreamproperty.cameraFilterControls(value)
+    }
+    function updateVideoResolution(colorComboText,frameRateIndex)
+    {
+        root.updateScenePreview(vidstreamproperty.width.toString() +"x"+vidstreamproperty.height.toString(),colorComboText,frameRateIndex)
+        vidstreamproperty.displayVideoResolution()
+    }
+    function imageSettingVisibleChanged()
+    {
+        if(videoCaptureChildVisible)
+        {
+            getStillPropertyPositionValues();
+        }
+        else
+        {
+            imageFormatYValue = defaultImageFormatYValue
+            stillPropertyYValue = defaultStillPropertyYValue
+        }
+        updateVideoMenuPosition();
+    }
+    function enableVideoPin(videoPinEnable)
+    {
+        videoSettingsRootObject.enableVideoPin(videoPinEnable)
+    }
 }
