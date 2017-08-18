@@ -224,9 +224,9 @@ Item {
                         width: 110
                         stepSize: 1
                         style:econSliderStyle
-                        opacity: enabled ? 1 : 0.1                        
+                        opacity: enabled ? 1 : 0.1
                         onValueChanged: {
-                            if(contrastValueChangeProperty) {                                
+                            if(contrastValueChangeProperty) {
                                 root.changeCameraSettings(contrastControlId,value.toString())
                             }
                         }

@@ -75,14 +75,14 @@ Rectangle {
     property int selectedDeviceEnumValue;
     //Added by Dhurka - 19th Oct 2016
     //create object for statusbar qml - Added by Dhurka - 18th Oct 2016
-    property variant statusBarRootObject
-    property variant aboutViewRootObject
+	property variant statusBarRootObject
+	property variant aboutViewRootObject
     property variant imageSettingsRootObject
     property variant stillSettingsRootObject
     property variant videoSettingsRootObject
     property variant captureVideoRecordRootObject
     //Disabling side bar controls - Added below by Dhurka
-    signal sidebarVisibleStatus(variant status);
+	signal sidebarVisibleStatus(variant status);
     signal cameraSettingsTabEnable(variant status);
     //Send control values to imagequalitysettings
     signal setControlValues(string controlName,int controlType,int controlMinValue,int controlMaxValue,int controlDefaultValue,int controlID);
@@ -156,7 +156,7 @@ Rectangle {
     signal setMasterMode();
 
     // Added by Sankari: 16 Dec 2016 - To init trigger shot for 12CUNIR camera
-    signal initTriggershot();
+    signal initTriggershot();    
 
     //Added by Sankari: 23 Dec 2016
     signal videoResolutionChanged();
@@ -185,7 +185,7 @@ Rectangle {
             selectCameraSettings()
         }
     }
-    Timer {
+	Timer {
         id: recordTimerWithoutAFRect // Record after disabling Auto Focus Rectangle
         interval: 1000
         onTriggered: {
@@ -339,7 +339,7 @@ Rectangle {
                 }
             }
 
-            onDefaultFrameSize: {
+            onDefaultFrameSize: {                
                 if(m_Snap) {
                     setColorComboOutputIndex(false,outputIndexValue)
                 }
@@ -361,7 +361,7 @@ Rectangle {
                 }
             }
 
-            onDefaultFrameInterval:{
+            onDefaultFrameInterval:{                
                 videoFrameInterval(frameInterval)
             }
             onRcdStop: {
@@ -379,7 +379,7 @@ Rectangle {
                 videofileName = fileName
             }
 
-            onStillSkipCount:{
+            onStillSkipCount:{                
                 frameSkipCount(stillResoln, videoResoln);
             }
 
@@ -503,7 +503,7 @@ Rectangle {
                 }
             }
             onCurrentIndexChanged: {
-                if(currentIndex.toString() != "-1" && currentIndex.toString() != "0") {
+                if(currentIndex.toString() != "-1" && currentIndex.toString() != "0") {                    
                     if(oldIndex!=currentIndex) {
                         oldIndex = currentIndex
                         //Added by Dhurka - 20th Oct 2016
@@ -514,7 +514,7 @@ Rectangle {
                         captureBtnEnable(true)
                         videoRecordBtnEnable(true)
                         keyEventFiltering = false
-                        vidstreamproperty.enabled = true
+                        vidstreamproperty.enabled = true                                                
                         webcamKeyAccept = true
                         vidstreamproperty.stopCapture()
                         vidstreamproperty.closeDevice()
@@ -526,15 +526,15 @@ Rectangle {
                         vidstreamproperty.displayVideoResolution()
                         vidstreamproperty.displayEncoderList()
                         //Added by Dhurka - 24th Oct 2016 - Push Auto mode item in image quality settings for ascella camera
-                        addAutoModeMenuItem();
+                        addAutoModeMenuItem();                        
                         //Added by Sankari - 06th Mar 2016
                         queryUvcControls();
                         //Added by Dhurka - 20th Oct 2016
                         disableImageSettings()
                         //Added by Dhurka - Here commonly open HID device instead of open every QML file - 17th Oct 2016
-                        openHIDDevice(selectedDeviceEnumValue);
+                        openHIDDevice(selectedDeviceEnumValue);                        
                         updateFPS(stillSettingsRootObject.stillClorComboValue, stillSettingsRootObject.stillOutputTextValue)
-                        vidstreamproperty.startAgain()
+                        vidstreamproperty.startAgain()                        
                         vidstreamproperty.width = stillSettingsRootObject.stillOutputTextValue.split("x")[0].toString()
                         vidstreamproperty.height = stillSettingsRootObject.stillOutputTextValue.split("x")[1].toString()
                         vidstreamproperty.lastPreviewResolution(stillSettingsRootObject.stillOutputTextValue,stillSettingsRootObject.stillColorComboIndexValue)
@@ -543,7 +543,7 @@ Rectangle {
                         JS.videoCaptureFormat = JS.stillCaptureFormat
                         JS.videoCaptureResolution = JS.stillCaptureResolution
                         JS.videocaptureFps = videoSettingsRootObject.videoFrameRate
-                        // retain lastly set fps index
+						// retain lastly set fps index
                         vidstreamproperty.lastFPS(videoSettingsRootObject.videoFrameRateIndex)
                         vidstreamproperty.masterModeEnabled()
                         createExtensionUnitQml(selectedDeviceEnumValue)
@@ -725,8 +725,8 @@ Rectangle {
             selectedDeviceEnumValue = selectedDevice;
         }
     }
-
-    // Added by Sankari : Update frame to skip
+	
+    // Added by Sankari : Update frame to skip 
     function updateFrametoSkip(stillSkip){
         vidstreamproperty.updateFrameToSkip(stillSkip)
     }
@@ -753,8 +753,8 @@ Rectangle {
     }
 
     function updateScenePreview(str, format, fps) {
-        m_Snap = false
-        if (!vidFormatChanged){
+        m_Snap = false        
+        if (!vidFormatChanged){            
             vidstreamproperty.width = str.toString().split("x")[0].toString()
             vidstreamproperty.height = str.toString().split("x")[1].toString()
         }
@@ -771,8 +771,8 @@ Rectangle {
     }
 
     function updateStillPreview(str, format) {
-        m_Snap = false
-        stillPreview = true
+		m_Snap = false
+        stillPreview = true        
         vidstreamproperty.stopCapture()
         vidstreamproperty.vidCapFormatChanged(format)
         vidstreamproperty.displayStillResolution()
@@ -804,7 +804,7 @@ Rectangle {
         vidstreamproperty.startAgain()
     }
 
-    function updateFPS(pix, size) {
+    function updateFPS(pix, size) {        
         vidstreamproperty.updateFrameInterval(pix, size)
         vidstreamproperty.enumerateFPSList()
     }
@@ -856,7 +856,7 @@ Rectangle {
             vidstreamproperty.stopCapture()
             vidstreamproperty.vidCapFormatChanged(JS.videoCaptureFormat)
             vidstreamproperty.setResoultion(JS.videoCaptureResolution);
-            vidstreamproperty.startAgain();
+            vidstreamproperty.startAgain();            
         }
     }
 
@@ -902,7 +902,7 @@ Rectangle {
     function extensionTab() {
         if(cameraColumnLayout.visible) {
             cameraSettingsTabEnable(false)
-            cameraColumnLayout.visible = false
+            cameraColumnLayout.visible = false            
             see3cam.visible = true
         }
     }
@@ -980,25 +980,25 @@ Rectangle {
     {
         switch(selectedEnum)
         {
-        case CommonEnums.ECON_1MP_BAYER_RGB:
-        case CommonEnums.ECON_1MP_MONOCHROME:
-        case CommonEnums.SEE3CAM_11CUG:
-        case CommonEnums.SEE3CAM_CU30:
-        case CommonEnums.SEE3CAM_CU40:
-        case CommonEnums.SEE3CAM_CU50:
-        case CommonEnums.SEE3CAM_CU51:
-        case CommonEnums.SEE3CAM_CU130:
-        case CommonEnums.SEE3CAM_12CUNIR:
-        case CommonEnums.ECON_8MP_CAMERA:
-        case CommonEnums.SEE3CAM_130:
-        case CommonEnums.SEE3CAM_30:
-        case CommonEnums.SEE3CAM_81:
-            // Added by Sankari : 22 Feb 2017
-        case CommonEnums.SEE3CAM_CU135:
-            camproperty.openHIDDevice(device_box.currentText);
+            case CommonEnums.ECON_1MP_BAYER_RGB:
+            case CommonEnums.ECON_1MP_MONOCHROME:
+            case CommonEnums.SEE3CAM_11CUG:
+            case CommonEnums.SEE3CAM_CU30:
+            case CommonEnums.SEE3CAM_CU40:
+            case CommonEnums.SEE3CAM_CU50:
+            case CommonEnums.SEE3CAM_CU51:
+            case CommonEnums.SEE3CAM_CU130:
+            case CommonEnums.SEE3CAM_12CUNIR:
+            case CommonEnums.ECON_8MP_CAMERA:
+            case CommonEnums.SEE3CAM_130:
+            case CommonEnums.SEE3CAM_30:
+			case CommonEnums.SEE3CAM_81:
+ 			// Added by Sankari : 22 Feb 2017
+            case CommonEnums.SEE3CAM_CU135:
+                camproperty.openHIDDevice(device_box.currentText);
             break;
         }
-    }
+    }    
 
     Component.onCompleted: {
         camproperty.createLogger()
@@ -1054,21 +1054,21 @@ Rectangle {
         }
         camproperty.closeLibUsbDeviceAscella()
         setMasterMode();
-    }
+    }    
 
     Keys.onReleased: {
         if(event.key === Qt.Key_I) {
             if((!keyEventFiltering)) {
                 mouseClickCapture()
             }
-        } else if(event.key === Qt.Key_WebCam){
+        } else if(event.key === Qt.Key_WebCam){            
             m_Snap = false
             if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_12CUNIR){
                 takeScreenShot(true);
                 event.accepted = true
             }
-            else{
-                if(webcamKeyAccept) {
+            else{                
+                if(webcamKeyAccept) {                    
                     //Take screen shot for camera in the corressponding qml
                     takeScreenShot(true);
                     webcamKeyAccept = false
@@ -1101,7 +1101,7 @@ Rectangle {
         sideBarItems.visible = true
         sidebarVisibleStatus(sideBarItems.visible)
         open_sideBar.visible = false
-    }
+   }
 
     function enableAllSettingsTab(){
         imageQualitySettingsEnable(true)
@@ -1144,74 +1144,74 @@ Rectangle {
         webcamKeyTriggerShot = true
     }
 
-    //Added below by Dhurka - 24th Oct 2016
+   //Added below by Dhurka - 24th Oct 2016
     function stillBurstLength(burstLen)
     {
         burstLength = burstLen
     }
-    //for taking snap shot
-    function imageCapture(shotType)
-    {
-        vidstreamproperty.setStillVideoSize(stillSettingsRootObject.stillOutputTextValue, stillSettingsRootObject.stillColorComboIndexValue)
-        switch(shotType)
-        {
-        case CommonEnums.SNAP_SHOT:
-            vidstreamproperty.makeShot(stillSettingsRootObject.stillStoragePath,stillSettingsRootObject.stillImageFormatComboText)
-            break;
-        case CommonEnums.TRIGGER_SHOT:
-            vidstreamproperty.triggerModeShot(stillSettingsRootObject.stillStoragePath,stillSettingsRootObject.stillImageFormatComboText)
-            break;
-        case CommonEnums.BURST_SHOT:
-            vidstreamproperty.makeBurstShot(stillSettingsRootObject.stillStoragePath,stillSettingsRootObject.stillImageFormatComboText, burstLength)
-            break;
-        case CommonEnums.CHANGE_FPS_SHOT:
-            //vidstreamproperty.setStillFPS(videoSettingsRootObject.videoFrameRate)
-            vidstreamproperty.changeFPSandTakeShot(stillSettingsRootObject.stillStoragePath,stillSettingsRootObject.stillImageFormatComboText, fpsIndexToChange)
-            break;
-        }
-    }
-    function enableCameraControls()
-    {
-        stillChildVisibleState(false)
-        videoChildMenuVisible(false)
-        vidstreamproperty.cameraFilterControls()
-    }
-    function logInfo(log)
-    {
-        camproperty.logDebugWriter(log)
-    }
-    function changeCameraSettings(controlId,value)
-    {
-        vidstreamproperty.changeSettings(controlId,value.toString())
-    }
-    function selectMenuIndex(controlId,index)
-    {
-        vidstreamproperty.selectMenuIndex(controlId,index)
-    }
-    function cameraFilterControls(value)
-    {
-        vidstreamproperty.cameraFilterControls(value)
-    }
-    function updateVideoResolution(colorComboText,frameRateIndex)
-    {
-        root.updateScenePreview(vidstreamproperty.width.toString() +"x"+vidstreamproperty.height.toString(),colorComboText,frameRateIndex)
-        vidstreamproperty.displayVideoResolution()
-    }
-    function imageSettingVisibleChanged()
-    {
-        if(videoCaptureChildVisible)
-        {
-            getStillPropertyPositionValues();
-        }
-        else
-        {
-            imageFormatYValue = defaultImageFormatYValue
-            stillPropertyYValue = defaultStillPropertyYValue
-        }
-        updateVideoMenuPosition();
-    }
-    function enableVideoPin(videoPinEnable)
-    {
-        videoSettingsRootObject.enableVideoPin(videoPinEnable)
-    }
+   //for taking snap shot
+   function imageCapture(shotType)
+   {       
+       vidstreamproperty.setStillVideoSize(stillSettingsRootObject.stillOutputTextValue, stillSettingsRootObject.stillColorComboIndexValue)
+       switch(shotType)
+       {
+       case CommonEnums.SNAP_SHOT:
+           vidstreamproperty.makeShot(stillSettingsRootObject.stillStoragePath,stillSettingsRootObject.stillImageFormatComboText)
+           break;
+       case CommonEnums.TRIGGER_SHOT:
+           vidstreamproperty.triggerModeShot(stillSettingsRootObject.stillStoragePath,stillSettingsRootObject.stillImageFormatComboText)
+           break;
+       case CommonEnums.BURST_SHOT:
+           vidstreamproperty.makeBurstShot(stillSettingsRootObject.stillStoragePath,stillSettingsRootObject.stillImageFormatComboText, burstLength)
+           break;
+       case CommonEnums.CHANGE_FPS_SHOT:
+           //vidstreamproperty.setStillFPS(videoSettingsRootObject.videoFrameRate)
+           vidstreamproperty.changeFPSandTakeShot(stillSettingsRootObject.stillStoragePath,stillSettingsRootObject.stillImageFormatComboText, fpsIndexToChange)
+           break;
+       }
+   }
+   function enableCameraControls()
+   {
+       stillChildVisibleState(false)
+       videoChildMenuVisible(false)
+       vidstreamproperty.cameraFilterControls()
+   }
+   function logInfo(log)
+   {
+       camproperty.logDebugWriter(log)
+   }
+   function changeCameraSettings(controlId,value)
+   {
+       vidstreamproperty.changeSettings(controlId,value.toString())
+   }
+   function selectMenuIndex(controlId,index)
+   {
+       vidstreamproperty.selectMenuIndex(controlId,index)
+   }
+   function cameraFilterControls(value)
+   {
+       vidstreamproperty.cameraFilterControls(value)
+   }
+   function updateVideoResolution(colorComboText,frameRateIndex)
+   {
+       root.updateScenePreview(vidstreamproperty.width.toString() +"x"+vidstreamproperty.height.toString(),colorComboText,frameRateIndex)
+       vidstreamproperty.displayVideoResolution()
+   }
+   function imageSettingVisibleChanged()
+   {
+       if(videoCaptureChildVisible)
+       {
+           getStillPropertyPositionValues();
+       }
+       else
+       {
+           imageFormatYValue = defaultImageFormatYValue
+           stillPropertyYValue = defaultStillPropertyYValue
+       }
+       updateVideoMenuPosition();
+   }
+   function enableVideoPin(videoPinEnable)
+   {
+       videoSettingsRootObject.enableVideoPin(videoPinEnable)
+   }
 }
