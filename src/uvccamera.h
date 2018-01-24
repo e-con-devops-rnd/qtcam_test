@@ -134,13 +134,6 @@
 #define PRODUCT_NAME_MAX			128		// Example: e-con's 1MP Monochrome Camera
 #define HID_LIST_MAX				32
 
-/* SEE3CAM_CU130 */
-
-#define CAMERA_CONTROL_CU130	0x69
-#define GET_SCENE_MODE		0x01
-#define SET_SCENE_MODE		0x02
-#define GET_SPECIAL_EFFECT	0x03
-#define SET_SPECIAL_EFFECT	0x04
 
 #define GET_FAIL		0x00
 #define GET_SUCCESS		0x01
@@ -535,6 +528,11 @@ signals:
     void logHandle(QtMsgType,QString);
     void stopPreview(QString);
     void titleTextChanged(QString _title,QString _text);
+
+    // Added by Sankari: To notify user about hid access
+    // 07 Dec 2017
+    void hidWarningReceived(QString _title,QString _text);
+
     void serialNumber(QString serialNumber);
     /**
      * @brief currentlySelectedCameraEnum - This signal is used to emit selected camera enum value to camera property.cpp
