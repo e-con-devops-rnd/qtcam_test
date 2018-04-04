@@ -76,6 +76,8 @@ Item {
     property bool usb3speed: false
 
     property bool powerLineComboEnable
+    // Skip doing things when exposure combo index changed calls when no selection of any camera
+    property bool exposureComboEnable
     property bool ledModeComboEnable
     property variant exposureOrigAscella: [10, 20, 39, 78, 156, 312, 625, 1250, 2500, 5000, 10000, 20000]
     property int expAscellaTxtFiledValue;
@@ -742,25 +744,29 @@ Item {
                             }
                         }
                         onCurrentIndexChanged: {
-                                root.selectMenuIndex(exposureAutoControlId,currentIndex)
-                                if(currentText.toString() != "Auto Mode") {
-                                    root.changeCameraSettings(exposurecontrolId,exposure_Slider.value.toString())
-                                    root.autoExposureSelected(false)
-                                    JS.autoExposureSelected = false
-                                    exposure_absolute.opacity = 1
-                                    exposure_Slider.opacity = 1
-                                    exposure_Slider.enabled = true
-                                    exposure_value.opacity = 1
-                                    exposure_value.enabled = true
-                                } else {
-                                    root.autoExposureSelected(true)
-                                    JS.autoExposureSelected = true
-                                    exposure_absolute.opacity = 0.1
-                                    exposure_Slider.opacity = 0.1
-                                    exposure_Slider.enabled = false
-                                    exposure_value.opacity = 0
-                                    exposure_value.enabled = false
-                                }
+    				// Skip doing things when exposure combo index changed calls when no selection of any camera
+				if(exposureComboEnable){
+					root.selectMenuIndex(exposureAutoControlId,currentIndex)
+	                                root.selectMenuIndex(exposureAutoControlId,currentIndex)
+		                        if(currentText.toString() != "Auto Mode") {
+		                            root.changeCameraSettings(exposurecontrolId,exposure_Slider.value.toString())
+		                            root.autoExposureSelected(false)
+		                            JS.autoExposureSelected = false
+		                            exposure_absolute.opacity = 1
+		                            exposure_Slider.opacity = 1
+		                            exposure_Slider.enabled = true
+		                            exposure_value.opacity = 1
+		                            exposure_value.enabled = true
+		                        } else {
+		                            root.autoExposureSelected(true)
+		                            JS.autoExposureSelected = true
+		                            exposure_absolute.opacity = 0.1
+		                            exposure_Slider.opacity = 0.1
+		                            exposure_Slider.enabled = false
+		                            exposure_value.opacity = 0
+		                            exposure_value.enabled = false
+		                        }
+			     }
                         }
                     }
                     Image {
@@ -816,6 +822,7 @@ Item {
                         onTextChanged: {
                              if(exposure_value.text.length > 0){
                                  if(root.selectedDeviceEnumValue == CommonEnums.CX3_UVC_CAM){
+                                 maximumLength = 5
                                  expLocalval1 = text.toString()
                                  expLocalVal = expLocalval1
                                  for(var i=0; i<exposureOrigAscella.length; i++){
@@ -825,11 +832,11 @@ Item {
                                          break
                                      }
                                  }
-                                 if(i == exposureOrigAscella.length){
+                                 /*if(i == exposureOrigAscella.length){
                                      messageDialog.title = qsTr("Failure")
                                      messageDialog.text = qsTr("Invalid exposure value")
                                      messageDialog.open()
-                                 }
+                                 }*/
                                  }
                                  else{
                                      exposure_Slider.value = exposure_value.text
@@ -1328,6 +1335,8 @@ Item {
             focusLogitechValueChangeProperty = false
             focusValueChangeProperty = false
             powerLineComboEnable = false
+	    // Skip doing things when exposure combo index changed calls when no selection of any camera
+	    exposureComboEnable = false
             ledModeComboEnable = false
         }
     }
@@ -1773,6 +1782,7 @@ Item {
                 exposure_value.opacity = 0
                 exposure_value.enabled = false
             }
+	    exposureComboEnable = true
         }
     }
 
