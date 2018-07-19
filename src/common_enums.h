@@ -37,7 +37,7 @@ public:
         ECON_8MP_CAMERA,
         SEE3CAM_130,
 		// Added by Sankari - 7 Feb 2017
-		SEE3CAM_30,
+	SEE3CAM_30,
 		// Added by Sankari - 17 Dec 2016
         SEE3CAM_81,
         // Added by Sankari - 22 Feb 2017
@@ -45,7 +45,8 @@ public:
 		// Added by Sankari - 28 Jul 2017
         SEE3CAM_CU20,
         // Added by Sankari - 13 June 2017
-        CX3_SNI_CAM
+        CX3_SNI_CAM,
+	NILECAM30_USB
 
     }ECameraNames;
     //Enum for capture shot type
