@@ -63,8 +63,10 @@ Item {
     property bool tiltValueChangeProperty
     property bool zoomValueChangeProperty
     property bool wbValueChangeProperty
+    property bool wbAutoChangeProperty
     property bool sharpValueChangeProperty
     property bool gainValueChangeProperty
+    property bool gammaValueChangeProperty
     property bool hueValueChangeProperty
     property bool ledModeChangeProperty
     property bool exposureValueChangeProperty
@@ -73,6 +75,7 @@ Item {
     property bool ledFreqValueChangeProperty
     property bool focusLogitechValueChangeProperty
     property bool focusValueChangeProperty
+    property bool focusAutoChangeProperty
     property bool usb3speed: false
 
     property bool powerLineComboEnable
@@ -205,16 +208,13 @@ Item {
                         font.pixelSize: 10
                         font.family: "Ubuntu"
                         smooth: true
+                        enabled: false
                         horizontalAlignment: TextInput.AlignHCenter
                         validator: IntValidator {bottom: brightness_Slider.minimumValue; top: brightness_Slider.maximumValue;}
                         opacity: 0
                         style: econTextFieldStyle
                         // Added by Sankari: 25 May 2017. To fix issue of accepting multiple number of digits[ex:00000000000000]
-                        maximumLength: (brightness_Slider.maximumValue.toString().length > brightness_Slider.minimumValue.toString().length) ? brightness_Slider.maximumValue.toString().length : brightness_Slider.minimumValue.toString().length
-                        onTextChanged: {
-                            if(text != "")
-                                brightness_Slider.value = brightness_value.text
-                        }
+                        maximumLength: (brightness_Slider.maximumValue.toString().length > brightness_Slider.minimumValue.toString().length) ? brightness_Slider.maximumValue.toString().length : brightness_Slider.minimumValue.toString().length                       
                     }
                     Text {
                         id: contrast
@@ -247,13 +247,10 @@ Item {
                         horizontalAlignment: TextInput.AlignHCenter
                         validator: IntValidator {bottom: contrast_Slider.minimumValue; top: contrast_Slider.maximumValue;}
                         opacity: 0
+                        enabled: false
                         style: econTextFieldStyle
                         // Added by Sankari: 25 May 2017. To fix issue of accepting multiple number of digits[ex:00000000000000]
-                        maximumLength: (contrast_Slider.maximumValue.toString().length > contrast_Slider.minimumValue.toString().length) ? contrast_Slider.maximumValue.toString().length : contrast_Slider.minimumValue.toString().length
-                        onTextChanged: {
-                            if(text != "")
-                                contrast_Slider.value = contrast_value.text
-                        }
+                        maximumLength: (contrast_Slider.maximumValue.toString().length > contrast_Slider.minimumValue.toString().length) ? contrast_Slider.maximumValue.toString().length : contrast_Slider.minimumValue.toString().length                        
                     }
                     Text {
                         id: saturation
@@ -287,13 +284,10 @@ Item {
                         horizontalAlignment: TextInput.AlignHCenter
                         validator: IntValidator {bottom: saturation_Slider.minimumValue; top: saturation_Slider.maximumValue;}
                         opacity: 0
+                        enabled: false
                         style: econTextFieldStyle
                         // Added by Sankari: 25 May 2017. To fix issue of accepting multiple number of digits[ex:00000000000000]
-                        maximumLength: (saturation_Slider.maximumValue.toString().length > saturation_Slider.minimumValue.toString().length) ? saturation_Slider.maximumValue.toString().length : saturation_Slider.minimumValue.toString().length
-                        onTextChanged: {
-                            if(text != "")
-                                saturation_Slider.value = saturation_value.text
-                        }
+                        maximumLength: (saturation_Slider.maximumValue.toString().length > saturation_Slider.minimumValue.toString().length) ? saturation_Slider.maximumValue.toString().length : saturation_Slider.minimumValue.toString().length                        
                     }
                     Text {
                         id: pan
@@ -327,13 +321,10 @@ Item {
                         horizontalAlignment: TextInput.AlignHCenter
                         validator: IntValidator {bottom: pan_Slider.minimumValue; top: pan_Slider.maximumValue;}
                         opacity: 0
+                        enabled: false
                         style: econTextFieldStyle
                         // Added by Sankari: 25 May 2017. To fix issue of accepting multiple number of digits[ex:00000000000000]
-                        maximumLength: (pan_Slider.maximumValue.toString().length > pan_Slider.minimumValue.toString().length) ? pan_Slider.maximumValue.toString().length : pan_Slider.minimumValue.toString().length
-                        onTextChanged: {
-                            if(text != "")
-                                pan_Slider.value = pan_value.text
-                        }
+                        maximumLength: (pan_Slider.maximumValue.toString().length > pan_Slider.minimumValue.toString().length) ? pan_Slider.maximumValue.toString().length : pan_Slider.minimumValue.toString().length                        
                     }
                     Text {
                         id: tilt
@@ -369,11 +360,7 @@ Item {
                         opacity: 0
                         style: econTextFieldStyle
                         // Added by Sankari: 25 May 2017. To fix issue of accepting multiple number of digits[ex:00000000000000]
-                        maximumLength: (tilt_Slider.maximumValue.toString().length > tilt_Slider.minimumValue.toString().length) ? tilt_Slider.maximumValue.toString().length : tilt_Slider.minimumValue.toString().length
-                        onTextChanged: {
-                            if(text != "")
-                                tilt_Slider.value = tilt_value.text
-                        }
+                        maximumLength: (tilt_Slider.maximumValue.toString().length > tilt_Slider.minimumValue.toString().length) ? tilt_Slider.maximumValue.toString().length : tilt_Slider.minimumValue.toString().length                      
                     }
                     Text {
                         id: zoom
@@ -409,11 +396,7 @@ Item {
                         opacity: 0
                         style: econTextFieldStyle
                         // Added by Sankari: 25 May 2017. To fix issue of accepting multiple number of digits[ex:00000000000000]
-                        maximumLength: (zoom_Slider.maximumValue.toString().length > zoom_Slider.minimumValue.toString().length) ? zoom_Slider.maximumValue.toString().length : zoom_Slider.minimumValue.toString().length
-                        onTextChanged: {
-                            if(text != "")
-                                zoom_Slider.value = zoom_value.text
-                        }
+                        maximumLength: (zoom_Slider.maximumValue.toString().length > zoom_Slider.minimumValue.toString().length) ? zoom_Slider.maximumValue.toString().length : zoom_Slider.minimumValue.toString().length                        
                     }
 
                     Column {
@@ -445,17 +428,22 @@ Item {
                             onCheckedChanged: {
                                 if(checked)
                                 {
-                                    root.logInfo("White Balance set to Auto Mode")
-                                    root.changeCameraSettings(whiteBalanceControl_auto_Id,1)
+                                    if(wbAutoChangeProperty){                                       
+                                        root.logInfo("White Balance set to Auto Mode")
+                                        root.changeCameraSettings(whiteBalanceControl_auto_Id,1)
+                                    }
                                     root.autoWhiteBalanceSelected(true)
                                     white_balance_Slider.opacity = 0.1
                                     white_balance_Slider.enabled = false
+                                    wbAutoChangeProperty = true
                                 }
                                 else
                                 {
                                     root.logInfo("White Balance set to Manual Mode")
                                     root.autoWhiteBalanceSelected(false)
-                                    root.changeCameraSettings(whiteBalanceControl_auto_Id,0)
+                                    if(wbAutoChangeProperty){
+                                        root.changeCameraSettings(whiteBalanceControl_auto_Id,0)
+                                    }
                                     if(root.selectedDeviceEnumValue != CommonEnums.CX3_UVC_CAM){
                                         white_balance_Slider.opacity = 1
                                         white_balance_Slider.enabled = true
@@ -480,8 +468,7 @@ Item {
                                 } else {
                                     white_balance_Slider.enabled = false
                                 }
-                            }
-                            wbValueChangeProperty = true
+                            }                            
                         }
                     }
                     TextField {
@@ -492,14 +479,10 @@ Item {
                         smooth: true
                         horizontalAlignment: TextInput.AlignHCenter
                         validator: IntValidator {bottom: white_balance_Slider.minimumValue; top: white_balance_Slider.maximumValue;}
-                        opacity: white_balance_Slider.enabled ? 1: 0
-                        enabled: autoSelect_wb.checked ? false : true
+                        opacity: autoSelect_wb.checked ? 0: 1
+                        enabled: false
                         style: econTextFieldStyle
-                        maximumLength: (white_balance_Slider.maximumValue.toString().length > white_balance_Slider.minimumValue.toString().length) ? white_balance_Slider.maximumValue.toString().length : white_balance_Slider.minimumValue.toString().length
-                        onTextChanged: {
-                            if(text != "")
-                                white_balance_Slider.value = wb_value.text
-                        }
+                        maximumLength: (white_balance_Slider.maximumValue.toString().length > white_balance_Slider.minimumValue.toString().length) ? white_balance_Slider.maximumValue.toString().length : white_balance_Slider.minimumValue.toString().length                        
                     }
                     Text {
                         id: gamma
@@ -518,7 +501,9 @@ Item {
                         opacity: enabled ? 1 : 0.1
                         style:econSliderStyle
                         onValueChanged: {
-                            root.changeCameraSettings(gammaControlId,value.toString())
+                            if(gammaValueChangeProperty){                                
+                                root.changeCameraSettings(gammaControlId,value.toString())
+                            }
                         }
                     }
                     TextField {
@@ -530,13 +515,10 @@ Item {
                         validator: IntValidator {bottom: gamma_Slider.minimumValue; top: gamma_Slider.maximumValue;}
                         smooth: true
                         opacity: 0
+                        enabled: false
                         style: econTextFieldStyle
                         // Added by Sankari: 25 May 2017. To fix issue of accepting multiple number of digits[ex:00000000000000]
-                        maximumLength: (gamma_Slider.maximumValue.toString().length > gamma_Slider.minimumValue.toString().length) ? gamma_Slider.maximumValue.toString().length : gamma_Slider.minimumValue.toString().length
-                        onTextChanged: {
-                            if(text != "")
-                                gamma_Slider.value = gamma_value.text
-                        }
+                        maximumLength: (gamma_Slider.maximumValue.toString().length > gamma_Slider.minimumValue.toString().length) ? gamma_Slider.maximumValue.toString().length : gamma_Slider.minimumValue.toString().length        
                     }
                     Text {
                         id: sharpness
@@ -570,13 +552,11 @@ Item {
                         horizontalAlignment: TextInput.AlignHCenter
                         validator: IntValidator {bottom: sharpness_Slider.minimumValue; top: sharpness_Slider.maximumValue;}
                         opacity: 0
+                        enabled: false
                         style: econTextFieldStyle
                         // Added by Sankari: 25 May 2017. To fix issue of accepting multiple number of digits[ex:00000000000000]
                         maximumLength: (sharpness_Slider.maximumValue.toString().length > sharpness_Slider.minimumValue.toString().length) ? sharpness_Slider.maximumValue.toString().length : sharpness_Slider.minimumValue.toString().length
-                        onTextChanged: {
-                            if(text != "")
-                                sharpness_Slider.value = sharpness_value.text
-                        }
+
                     }
                     Text {
                         id: gain
@@ -612,11 +592,7 @@ Item {
                         opacity: 0
                         style: econTextFieldStyle
                         // Added by Sankari: 25 May 2017. To fix issue of accepting multiple number of digits[ex:00000000000000]
-                        maximumLength: (gain_Slider.maximumValue.toString().length > gain_Slider.minimumValue.toString().length) ? gain_Slider.maximumValue.toString().length : gain_Slider.minimumValue.toString().length
-                        onTextChanged: {
-                            if(text != "")
-                                gain_Slider.value = gain_value.text
-                        }
+                        maximumLength: (gain_Slider.maximumValue.toString().length > gain_Slider.minimumValue.toString().length) ? gain_Slider.maximumValue.toString().length : gain_Slider.minimumValue.toString().length                        
                     }
                     Text {
                         id: hue
@@ -652,11 +628,7 @@ Item {
                         opacity: 0
                         style: econTextFieldStyle
                         // Added by Sankari: 25 May 2017. To fix issue of accepting multiple number of digits[ex:00000000000000]
-                        maximumLength: (hue_Slider.maximumValue.toString().length > hue_Slider.minimumValue.toString().length) ? hue_Slider.maximumValue.toString().length : hue_Slider.minimumValue.toString().length
-                        onTextChanged: {
-                            if(text != "")
-                                hue_Slider.value = hue_value.text
-                        }
+                        maximumLength: (hue_Slider.maximumValue.toString().length > hue_Slider.minimumValue.toString().length) ? hue_Slider.maximumValue.toString().length : hue_Slider.minimumValue.toString().length                        
                     }
                     Text {
                         id: powerLine
@@ -759,7 +731,6 @@ Item {
 		                            exposure_Slider.opacity = 1
 		                            exposure_Slider.enabled = true
 		                            exposure_value.opacity = 1
-		                            exposure_value.enabled = true
 		                        } else {
 		                            root.autoExposureSelected(true)
 		                            JS.autoExposureSelected = true
@@ -801,8 +772,8 @@ Item {
                                 exposure_value.text = exposureOrigAscella[value]
                                 root.changeCameraSettings(exposurecontrolId, exposureValueAscella)
                             }else{
-                                if((exposureCombo.currentText == "Shutter Priority Mode" || exposureCombo.currentText == "Manual Mode") || (root.selectedDeviceEnumValue == CommonEnums.ECON_CX3_RDX_V5680) || (root.selectedDeviceEnumValue == CommonEnums.ECON_CX3_RDX_T9P031) || (root.selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU40)) {
-                                    if(exposureSliderSetEnable){
+                                if((exposureCombo.currentText == "Shutter Priority Mode" || exposureCombo.currentText == "Manual Mode") || (root.selectedDeviceEnumValue == CommonEnums.ECON_CX3_RDX_V5680) || (root.selectedDeviceEnumValue == CommonEnums.ECON_CX3_RDX_T9P031) || (root.selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU40) || (root.selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU51)) {
+                                    if(exposureSliderSetEnable){                                        
                                          root.changeCameraSettings(exposurecontrolId,value.toString())
 					}
                                 }
@@ -825,26 +796,18 @@ Item {
                         maximumLength: (exposure_Slider.maximumValue.toString().length > exposure_Slider.minimumValue.toString().length) ? exposure_Slider.maximumValue.toString().length : exposure_Slider.minimumValue.toString().length
                         onTextChanged: {
                              if(exposure_value.text.length > 0){
-                                 if(root.selectedDeviceEnumValue == CommonEnums.CX3_UVC_CAM){
-                                 maximumLength = 5
-                                 expLocalval1 = text.toString()
-                                 expLocalVal = expLocalval1
-                                 for(var i=0; i<exposureOrigAscella.length; i++){
-                                     if(expLocalVal == exposureOrigAscella[i]){
-                                         expAscellaTxtFiledValue = text.toString()
-                                         exposure_Slider.value = exposureOrigAscella.indexOf(expAscellaTxtFiledValue)
-                                         break
+                                     if(root.selectedDeviceEnumValue == CommonEnums.CX3_UVC_CAM){
+                                     maximumLength = 5
+                                     expLocalval1 = text.toString()
+                                     expLocalVal = expLocalval1
+                                     for(var i=0; i<exposureOrigAscella.length; i++){
+                                         if(expLocalVal == exposureOrigAscella[i]){
+                                             expAscellaTxtFiledValue = text.toString()
+                                             exposure_Slider.value = exposureOrigAscella.indexOf(expAscellaTxtFiledValue)
+                                             break
+                                         }
                                      }
-                                 }
-                                 /*if(i == exposureOrigAscella.length){
-                                     messageDialog.title = qsTr("Failure")
-                                     messageDialog.text = qsTr("Invalid exposure value")
-                                     messageDialog.open()
-                                 }*/
-                                 }
-                                 else{
-                                     exposure_Slider.value = exposure_value.text
-                                 }
+                                 }                                 
                             }
                         }
                     }
@@ -916,11 +879,7 @@ Item {
                         opacity: 0
                         style: econTextFieldStyle
                         // Added by Sankari: 25 May 2017. To fix issue of accepting multiple number of digits[ex:00000000000000]
-                        maximumLength: (backLight_Slider.maximumValue.toString().length > backLight_Slider.minimumValue.toString().length) ? backLight_Slider.maximumValue.toString().length : backLight_Slider.minimumValue.toString().length
-                        onTextChanged: {
-                            if(text != "")
-                                backLight_Slider.value = backLight_value.text
-                        }
+                        maximumLength: (backLight_Slider.maximumValue.toString().length > backLight_Slider.minimumValue.toString().length) ? backLight_Slider.maximumValue.toString().length : backLight_Slider.minimumValue.toString().length                        
                     }
                     Text {
                         id: rawBits
@@ -956,11 +915,7 @@ Item {
                         opacity: 0
                         style: econTextFieldStyle
                         // Added by Sankari: 25 May 2017. To fix issue of accepting multiple number of digits[ex:00000000000000]
-                        maximumLength: (rawBitsSlider.maximumValue.toString().length > rawBitsSlider.minimumValue.toString().length) ? rawBitsSlider.maximumValue.toString().length : rawBitsSlider.minimumValue.toString().length
-                        onTextChanged: {
-                            if(text != "")
-                                rawBitsSlider.value = rawBits_value.text
-                        }
+                        maximumLength: (rawBitsSlider.maximumValue.toString().length > rawBitsSlider.minimumValue.toString().length) ? rawBitsSlider.maximumValue.toString().length : rawBitsSlider.minimumValue.toString().length                        
                     }
                     Text {
                         id: ledModeText
@@ -1052,11 +1007,7 @@ Item {
                         opacity: 0
                         style: econTextFieldStyle
                         // Added by Sankari: 25 May 2017. To fix issue of accepting multiple number of digits[ex:00000000000000]
-                        maximumLength: (ledFreqSlider.maximumValue.toString().length > ledFreqSlider.minimumValue.toString().length) ? ledFreqSlider.maximumValue.toString().length : ledFreqSlider.minimumValue.toString().length
-                        onTextChanged: {
-                            if(text != "")
-                                ledFreqSlider.value = ledFreq_value.text
-                        }
+                        maximumLength: (ledFreqSlider.maximumValue.toString().length > ledFreqSlider.minimumValue.toString().length) ? ledFreqSlider.maximumValue.toString().length : ledFreqSlider.minimumValue.toString().length                       
                     }
                     Text {
                         id: focusLogitech
@@ -1092,11 +1043,7 @@ Item {
                         opacity: 0
                         style: econTextFieldStyle
                         // Added by Sankari: 25 May 2017. To fix issue of accepting multiple number of digits[ex:00000000000000]
-                        maximumLength: (focusLogitechSlider.maximumValue.toString().length > focusLogitechSlider.minimumValue.toString().length) ? focusLogitechSlider.maximumValue.toString().length : focusLogitechSlider.minimumValue.toString().length
-                        onTextChanged: {
-                            if(text != "")
-                                focusLogitechSlider.value = focusLogitech_value.text
-                        }
+                        maximumLength: (focusLogitechSlider.maximumValue.toString().length > focusLogitechSlider.minimumValue.toString().length) ? focusLogitechSlider.maximumValue.toString().length : focusLogitechSlider.minimumValue.toString().length                       
                     }
                     Column {
                         spacing : 4
@@ -1158,25 +1105,28 @@ Item {
                                 }
                             }
                             onCheckedChanged: {
-                                if(checked) {
+                                if(checked) {                                    
                                     JS.autoFocusChecked = true
                                     root.autoFocusSelected(true)
                                     root.logInfo("Focus control set in Auto Mode")
-                                    root.changeCameraSettings(focusControlAutoId,1)
                                     focus_Slider.opacity = 0.1
                                     focus_Slider.enabled = false
                                     focus_value.opacity = 0
-                                    focus_value.enabled = false
-                                } else {
+                                    if(focusAutoChangeProperty){
+                                        root.changeCameraSettings(focusControlAutoId,1)
+                                    }
+                                } else {                                    
                                     JS.autoFocusChecked = false
                                     root.autoFocusSelected(false)
-                                    root.logInfo("Focus control set in Manual Mode")
-                                    root.changeCameraSettings(focusControlAutoId,0)
+                                    root.logInfo("Focus control set in Manual Mode")                                    
                                     focus_Slider.opacity = 1
                                     focus_Slider.enabled = true
-                                    focus_value.opacity = 1
-                                    focus_value.enabled = true
+                                    focus_value.opacity = 1                                    
+                                    if(focusAutoChangeProperty){
+                                        root.changeCameraSettings(focusControlAutoId,0)
+                                    }
                                 }
+				focusAutoChangeProperty = true
                             }
                         }
                     }
@@ -1193,8 +1143,7 @@ Item {
                                     root.changeCameraSettings(focusControlId,value.toString())
                                 } else {
                                     focus_Slider.enabled = false
-                                    focus_Slider.opacity = 0.1
-                                    focus_value.enabled = false
+                                    focus_Slider.opacity = 0.1                                    
                                     focus_value.opacity = 0
                                 }
                             }
@@ -1211,11 +1160,7 @@ Item {
                         validator: IntValidator {bottom: focus_Slider.minimumValue; top: focus_Slider.maximumValue;}
                         opacity: 0
                         style:econTextFieldStyle
-                        maximumLength: (focus_Slider.maximumValue.toString().length > focus_Slider.minimumValue.toString().length) ? focus_Slider.maximumValue.toString().length : focus_Slider.minimumValue.toString().length
-                        onTextChanged: {
-                            if(text != "")
-                                focus_Slider.value = focus_value.text
-                        }
+                        maximumLength: (focus_Slider.maximumValue.toString().length > focus_Slider.minimumValue.toString().length) ? focus_Slider.maximumValue.toString().length : focus_Slider.minimumValue.toString().length                       
                     }
 
                     Image {
@@ -1328,8 +1273,10 @@ Item {
             tiltValueChangeProperty = false
             zoomValueChangeProperty = false
             wbValueChangeProperty = false
+            wbAutoChangeProperty = false
             sharpValueChangeProperty = false
             gainValueChangeProperty = false
+            gammaValueChangeProperty = false
             hueValueChangeProperty = false
             ledModeChangeProperty = false
             exposureValueChangeProperty = false
@@ -1338,6 +1285,7 @@ Item {
             ledFreqValueChangeProperty = false
             focusLogitechValueChangeProperty = false
             focusValueChangeProperty = false
+	    focusAutoChangeProperty = false
             powerLineComboEnable = false
 	    // Skip doing things when exposure combo index changed calls when no selection of any camera
 	    exposureComboEnable = false
@@ -1467,8 +1415,7 @@ Item {
     {
         brightness.opacity = 1
         brightness_Slider.enabled = true
-        brightness_value.opacity = 1
-        brightness_value.enabled = true
+        brightness_value.opacity = 1        
         brightnessControlId = controlID
         brightness_Slider.minimumValue = controlMinValue
         brightness_Slider.maximumValue = controlMaxValue
@@ -1479,8 +1426,7 @@ Item {
     {
         contrast.opacity = 1
         contrast_Slider.enabled = true
-        contrast_value.opacity = 1
-        contrast_value.enabled = true
+        contrast_value.opacity = 1        
         contrastControlId = controlID
         contrast_Slider.minimumValue = controlMinValue
         contrast_Slider.maximumValue = controlMaxValue
@@ -1491,8 +1437,7 @@ Item {
     {
         saturation.opacity = 1
         saturation_Slider.enabled = true
-        saturation_value.opacity = 1
-        saturation_value.enabled = true
+        saturation_value.opacity = 1        
         saturationControlId = controlID
         saturation_Slider.minimumValue = controlMinValue
         saturation_Slider.maximumValue = controlMaxValue
@@ -1503,8 +1448,7 @@ Item {
     {
         pan.opacity = 1
         pan_Slider.enabled = true
-        pan_value.opacity = 1
-        pan_value.enabled = true
+        pan_value.opacity = 1        
         panControlId = controlID
         pan_Slider.minimumValue = controlMinValue
         pan_Slider.maximumValue = controlMaxValue
@@ -1515,8 +1459,7 @@ Item {
     {
         tilt.opacity = 1
         tilt_Slider.enabled = true
-        tilt_value.opacity = 1
-        tilt_value.enabled = true
+        tilt_value.opacity = 1        
         tiltControlId = controlID
         tilt_Slider.minimumValue = controlMinValue
         tilt_Slider.maximumValue = controlMaxValue
@@ -1527,20 +1470,23 @@ Item {
     {
         zoom.opacity = 1
         zoom_Slider.enabled = true
-        zoom_value.opacity = 1
-        zoom_value.enabled = true
+        zoom_value.opacity = 1        
         zoomControlId = controlID
         zoom_Slider.minimumValue = controlMinValue
         zoom_Slider.maximumValue = controlMaxValue
+	// Added by Sankari: Nov 23 2018
+	if(hardwareDef.enabled){ // if hardware default button is clicked, enable zoom changes
+	    zoomValueChangeProperty = false
+	}
         zoom_Slider.value = controlDefaultValue
+	zoomValueChangeProperty = true
         zoom_Slider.stepSize = controlStepSize
     }
     function hueUIUpdate(controlID,controlMinValue,controlMaxValue,controlStepSize,controlDefaultValue)
     {
         hue.opacity = 1
         hue_Slider.enabled = true
-        hue_value.opacity = 1
-        hue_value.enabled = true
+        hue_value.opacity = 1        
         hueControlId = controlID
         hue_Slider.minimumValue = controlMinValue
         hue_Slider.maximumValue = controlMaxValue
@@ -1569,8 +1515,7 @@ Item {
     {
         gamma.opacity = 1
         gamma_Slider.enabled = true
-        gamma_value.opacity = 1
-        gamma_value.enabled = true
+        gamma_value.opacity = 1        
         gammaControlId = controlID
         gamma_Slider.minimumValue = controlMinValue
         gamma_Slider.maximumValue = controlMaxValue
@@ -1582,8 +1527,7 @@ Item {
     {
         gain.opacity = 1
         gain_Slider.enabled = true
-        gain_value.opacity = 1
-        gain_value.enabled = true
+        gain_value.opacity = 1        
         gainControlId = controlID
         gain_Slider.minimumValue = controlMinValue
         gain_Slider.maximumValue = controlMaxValue
@@ -1595,8 +1539,7 @@ Item {
     {
         sharpness.opacity = 1
         sharpness_Slider.enabled = true
-        sharpness_value.opacity = 1
-        sharpness_value.enabled = true
+        sharpness_value.opacity = 1        
         sharpnessControlId = controlID
         sharpness_Slider.minimumValue = controlMinValue
         sharpness_Slider.maximumValue = controlMaxValue
@@ -1610,8 +1553,7 @@ Item {
         {
             exposure_Slider.opacity = 1
             exposure_Slider.enabled = true
-            exposure_value.opacity = 1
-            exposure_value.enabled = true
+            exposure_value.opacity = 1            
         }
         exposurecontrolId = controlID
         if(root.selectedDeviceEnumValue === CommonEnums.CX3_UVC_CAM)
@@ -1642,8 +1584,7 @@ Item {
         if(root.selectedDeviceEnumValue === CommonEnums.ECON_CX3_RDX_V5680) {
             focus_Slider.opacity = 1
             focus_Slider.enabled = true
-            focus_value.opacity = 1
-            focus_value.enabled = true
+            focus_value.opacity = 1            
         }
         focusControlId = controlID
         focus_Slider.minimumValue = controlMinValue
@@ -1655,8 +1596,7 @@ Item {
     {
         backLightCompensation.opacity = 1
         backLight_Slider.enabled = true
-        backLight_value.opacity = 1
-        backLight_value.enabled = true
+        backLight_value.opacity = 1        
         backLightCompensationId = controlID
         backLight_Slider.minimumValue = controlMinValue
         backLight_Slider.maximumValue = controlMaxValue
@@ -1667,8 +1607,7 @@ Item {
     {
         rawBits.opacity = 1
         rawBitsSlider.enabled = true
-        rawBits_value.opacity = 1
-        rawBits_value.enabled = true
+        rawBits_value.opacity = 1        
         rawBitsControlId = controlID
         rawBitsSlider.minimumValue = controlMinValue
         rawBitsSlider.maximumValue = controlMaxValue
@@ -1679,8 +1618,7 @@ Item {
     {
         ledFrequency.opacity = 1
         ledFreqSlider.enabled = true
-        ledFreq_value.opacity = 1
-        ledFreq_value.enabled = true
+        ledFreq_value.opacity = 1       
         ledFreqControlId = controlID
         ledFreqSlider.minimumValue = controlMinValue
         ledFreqSlider.maximumValue = controlMaxValue
@@ -1691,8 +1629,7 @@ Item {
     {
         focusLogitech.opacity = 1
         focusLogitechSlider.enabled = true
-        focusLogitech_value.opacity = 1
-        focusLogitech_value.enabled = true
+        focusLogitech_value.opacity = 1        
         focusLogitechSlider.minimumValue = controlMinValue
         focusLogitechSlider.maximumValue = controlMaxValue
         focusLogitechSlider.value = controlDefaultValue
@@ -1724,8 +1661,7 @@ Item {
             JS.autoFocusChecked = false
             focus_Slider.opacity = 1
             focus_Slider.enabled = true
-            focus_value.opacity = 1
-            focus_value.enabled = true
+            focus_value.opacity = 1            
         }
     }
     function exposureAutoPriorityUIUpdate(controlID,controlDefaultValue)
@@ -1753,7 +1689,7 @@ Item {
             menuitems.pop() //Control Name should be removed
             powerLine.opacity = 1
             powerLineCombo.opacity = 1
-	    powerLineComboEnable =  false	    // To avoid setting power line freq when get the control values 
+            powerLineComboEnable =  false	    // To avoid setting power line freq when get the control values
             powerLineCombo.model = menuitems
             powerLineCombo.currentIndex = controlDefaultValue
             while(menuitems.pop()){}
@@ -1778,14 +1714,12 @@ Item {
                 exposure_absolute.opacity = 1
                 exposure_Slider.enabled = true
                 exposure_Slider.opacity = 1
-                exposure_value.opacity = 1
-                exposure_value.enabled = true
+                exposure_value.opacity = 1                
             }else{
                 JS.autoExposureSelected = true
                 exposure_Slider.enabled = false
                 exposure_Slider.opacity = 0.1
-                exposure_value.opacity = 0
-                exposure_value.enabled = false
+                exposure_value.opacity = 0                
             }
         }
     }
@@ -1927,8 +1861,10 @@ Item {
             tiltValueChangeProperty = true
             zoomValueChangeProperty = true
             wbValueChangeProperty = true
+            wbAutoChangeProperty = true
             sharpValueChangeProperty = true
             gainValueChangeProperty = true
+            gammaValueChangeProperty = true
             hueValueChangeProperty = true
             ledModeChangeProperty = true
             exposureValueChangeProperty = true
@@ -1937,6 +1873,7 @@ Item {
             ledFreqValueChangeProperty = true
             focusLogitechValueChangeProperty = true
             focusValueChangeProperty = true
+	    focusAutoChangeProperty = true
             video_capture_filter_Child.visible = true
 	    // To avoid setting exposure when get the control values 
 	    exposureComboEnable = false
