@@ -112,7 +112,7 @@ typedef struct _audio_buff_t
     float level_meter[2]; /*average sample level*/
 }audio_buff_t;
 
-static int source_index;
+ static int source_index;
 
 
 class AudioInput : public QObject

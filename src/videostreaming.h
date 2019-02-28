@@ -71,6 +71,7 @@ public:
     // Draw RGBA buffer
     void drawRGBBUffer();
 
+
     // Convert YUYV  to RGB and draw
     void drawYUYVBUffer();
 
@@ -82,6 +83,7 @@ public:
     uint8_t *uBuffer;
     uint8_t *vBuffer;
     uint8_t *yuvBuffer;
+
 
     // rgba buffer
     unsigned char *rgbaDestBuffer;
@@ -158,6 +160,7 @@ public:
     static QStringListModel videoOutputFormat;
     static QStringListModel fpsList;    
     static QStringListModel encoderList;
+     QTimer m_timer;
 
     void displayFrame();
 
@@ -219,6 +222,7 @@ public:
 
 private:
     qreal m_t;
+    __u8 m_bufReqCount;
     FrameRenderer *m_renderer;
 
     uint8_t *yuyvBuffer;
@@ -252,7 +256,7 @@ private:
     bool openSuccess;
     bool updateOnce;
     bool m_snapShot;
-    bool updateStop;
+ //   bool updateStop;
     bool makeSnapShot;
     bool changeFpsAndShot; // To change fps and take shot
     bool fpsChangedForStill;
@@ -333,11 +337,16 @@ private:
     QString getFilePath();
     void setImageFormatType(QString imgFormatType);
     QString getImageFormatType();
+    bool retrieveframeStoreCam;
+    bool retrieveframeStoreCamInCross;
+
 
 private slots:
     void handleWindowChanged(QQuickWindow *win); 
 
 public slots:
+     void switchToStillPreviewSettings(bool stillSettings);
+     void retrieveFrameFromStoreCam();
 
     void sync();
     void cleanup();   
@@ -346,6 +355,8 @@ public slots:
     void setChannelCount(uint index);
     void setSampleRate(uint index);
     void stopUpdatePreview();
+    void doCaptureFrameTimeout();
+
 
 
      // Added by Sankari : 10 Dec 2016
@@ -575,6 +586,7 @@ signals:
     void videoRecord(QString fileName);
     void enableRfRectBackInPreview();
     void enableFactRectInPreview();
+    void capFrameTimeout();
 
     // Added by Sankari: 02 Dec 2017
     void stillSkipCount(QString stillResoln, QString videoResoln, QString stillOutFormat);
@@ -585,6 +597,7 @@ signals:
 
     // To get FPS list
     void sendFPSlist(QString fpsList);
+     void signalTograbPreviewFrame(bool retrieveframe);
 };
 
 #endif // VIDEOSTREAMING_H

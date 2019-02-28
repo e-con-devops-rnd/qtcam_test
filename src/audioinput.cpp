@@ -66,6 +66,7 @@ QStringList AudioInput::audioDeviceList;
 QMap<QString, QString> AudioInput::audioDeviceMap;
 QMap<QString, int> AudioInput::audioDeviceSampleRateMap;
 QMap<QString, int> AudioInput::audioDeviceChannelsMap;
+//int AudioInfo::source_index;
 
 static pthread_t my_read_thread;
 static pa_stream *recordstream = NULL;

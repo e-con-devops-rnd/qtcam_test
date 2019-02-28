@@ -10,6 +10,8 @@ var triggerMode_12cuinr=0;
 var masterMode_cu51=1;
 var triggerMode_cu51=0;
 var stillCaptureFormat
+var stillCaptureFormatIndex
+var stillCaptureResolutionIndex
 var stillCaptureResolution
 var videoCaptureFormat
 var videoCaptureResolution

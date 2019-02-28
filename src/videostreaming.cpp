@@ -29,6 +29,7 @@
 #include <QRectF>
 #include <fcntl.h>
 #include <QString>
+#include <QTimer>
 #include <QtQuick/qquickwindow.h>
 #include <QOpenGLShaderProgram>
 #include <QtGui/QOpenGLContext>
@@ -101,8 +102,10 @@ Videostreaming::Videostreaming() : m_t(0)
     changeFpsAndShot = false;
     triggerShot = false;
     m_displayCaptureDialog = false;
+    retrieveframeStoreCam=false;
     m_saveImage = false;
     m_VideoRecord = false;
+    retrieveframeStoreCamInCross = false;
     dotile = 0;
     // Modified by Sankari : Dec 5 2018, converted TJPF_RGB to TJPF_RGBA and use RGB[RGBA] shader
     pf = TJPF_RGBA;
@@ -135,6 +138,8 @@ Videostreaming::Videostreaming() : m_t(0)
     connect(this, &QQuickItem::windowChanged, this, &Videostreaming::handleWindowChanged);
     connect(&audioinput, SIGNAL(captureAudio()), this, SLOT(doEncodeAudio()));
     connect(this, SIGNAL(captureVideo()), this, SLOT(recordVideo()));
+    connect(&m_timer, SIGNAL(timeout()), this, SLOT(doCaptureFrameTimeout()));
+     m_timer.setSingleShot(true);
 
     videoEncoder=new VideoEncoder();
 }
@@ -394,7 +399,9 @@ void FrameRenderer::drawRGBBUffer(){
     glTexImage2D(GL_TEXTURE_2D, 0,  GL_RGBA, videoResolutionwidth, videoResolutionHeight, 0,GL_RGBA , GL_UNSIGNED_BYTE, rgbaDestBuffer);
 
     if(gotFrame && !updateStop){
+
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, mIndicesData);
+
     }
 
     m_programRGB->disableAttributeArray(0);
@@ -552,8 +559,11 @@ void FrameRenderer::drawYUYVBUffer(){
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);            
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, mIndicesData);
+
             }
         }
 
@@ -579,7 +589,10 @@ void FrameRenderer::paint()
     if(renderBufferFormat == CommonEnums::RGB_BUFFER_RENDER){ // RGBA
         drawRGBBUffer();
     }else if(renderBufferFormat == CommonEnums::YUYV_BUFFER_RENDER){ // YUYV
+
         drawYUYVBUffer();
+
+
     }
 }
 
@@ -598,6 +611,7 @@ void Videostreaming::setDevice(QString deviceName) {
         if (querycap(querycapability)) {
             QString bus(reinterpret_cast< char* >(querycapability.bus_info));
             emit pciDeviceBus(bus);
+
         }
     } else {
         emit logCriticalHandle("Device Opening Failed - "+deviceName);
@@ -687,6 +701,7 @@ void Videostreaming::setPreviewBgrndArea(int width, int height, bool sidebarAvai
 
 void Videostreaming::capFrame()
 {    
+
     __u32 buftype = m_buftype;
     v4l2_plane planes[VIDEO_MAX_PLANES];
     v4l2_buffer buf;
@@ -695,6 +710,7 @@ void Videostreaming::capFrame()
     memset(planes, 0, sizeof(planes));
     buf.length = VIDEO_MAX_PLANES;
     buf.m.planes = planes;
+
     if (!dqbuf_mmap(buf, buftype, again)) {
         closeDevice();
         // Added by Sankari:19 Dec 2017.
@@ -721,16 +737,20 @@ void Videostreaming::capFrame()
     }
 
     if (again) {
+
         return;
+
     }
 
     if (buf.flags & V4L2_BUF_FLAG_ERROR) {
         qbuf(buf);
+
+        emit signalTograbPreviewFrame(retrieveframeStoreCam);
         return;
     }
 
 
-   
+
     // prepare yuyv/rgba buffer and give to shader.
     if(!prepareBuffer(m_capSrcFormat.fmt.pix.pixelformat, m_buffers[buf.index].start[0], buf.bytesused)){
         qbuf(buf);
@@ -765,10 +785,20 @@ void Videostreaming::capFrame()
             }
             if(err == -1){
                 logCriticalHandle(v4lconvert_get_error_message(m_convertData));
-            }
+                if(retrieveframeStoreCam){
+                    for(int i=0; i<m_bufReqCount; i++){
+                        dqbuf_mmap(buf, buftype, again);
+                    }
+                }
+
+                   qbuf(buf);
+                emit signalTograbPreviewFrame(retrieveframeStoreCam);
+                retrieveframeStoreCam=false;
+          }
         }
 
     }
+
 
     // Taking single shot or burst shot - Skip frames if needed
     if(((m_frame > frameToSkip) && m_snapShot) || ((m_frame > frameToSkip) && m_burstShot)){
@@ -822,7 +852,13 @@ void Videostreaming::capFrame()
                     vidCapFormatChanged(lastFormat);
                     setResoultion(lastPreviewSize);
                     startAgain();
-                    //m_renderer->updateStop = false;
+                    //m_renderer->= false;
+                    switchToStillPreviewSettings(false);
+
+                    retrieveframeStoreCamInCross = false;
+
+                    emit signalTograbPreviewFrame(retrieveframeStoreCam);
+                    retrieveframeStoreCam = false;
                     return void();
                 }
                 else{
@@ -845,8 +881,16 @@ void Videostreaming::capFrame()
     if(bayerIRBuffer){
 	free(bayerIRBuffer);
 	bayerIRBuffer = NULL;
-    }   
+    }
+    if(retrieveframeStoreCam){
+        for(int i=0; i<m_bufReqCount; i++){
+            dqbuf_mmap(buf, buftype, again);
+        }
+    }
     qbuf(buf);
+    m_timer.start(5000);
+    emit signalTograbPreviewFrame(retrieveframeStoreCam);
+    retrieveframeStoreCam = false;
 }
 
 /**
@@ -1456,9 +1500,11 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
                 return false;
             }
             if(((uint8_t *) inputbuffer)[0] == 0xFF && ((uint8_t *) inputbuffer)[1] == 0xD8){               
-                if(!frameSkip){       		    
-		    getFrameRates();             
-                    frameSkip = true;
+                if(!frameSkip){
+
+
+            getFrameRates();
+            frameSkip = true;
                     memcpy(tempSrcBuffer, (unsigned char *)inputbuffer, bytesUsed);
                     QtConcurrent::run(jpegDecode, this, &m_renderer->rgbaDestBuffer, tempSrcBuffer, bytesUsed);
 
@@ -1506,7 +1552,9 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
                 case V4L2_PIX_FMT_YUYV:{
                     m_renderer->renderBufferFormat = CommonEnums::YUYV_BUFFER_RENDER;
                     m_renderer->yuvBuffer = (uint8_t *)inputbuffer; /* directly giving yuyv to render */
-                }
+
+
+            }
                 break;
 
                 case V4L2_PIX_FMT_SGRBG8:{  // BA8 to yuyv conversion
@@ -1551,7 +1599,9 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
                             ptmp += 4;
                             pfmb += 4;
                         }
+
                     }
+
                     m_renderer->yuvBuffer = yuyvBuffer;
                 }
                 break;
@@ -1577,6 +1627,7 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
                        *pfmb++ = 0x80;
                     }
                     m_renderer->yuvBuffer = yuyvBuffer;
+
                     freeBuffer(srcBuffer);
                 }
                 break;
@@ -1598,6 +1649,7 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
             }
         }
         m_renderer->renderyuyvMutex.unlock();
+
     }
     return true;
 }
@@ -2004,6 +2056,7 @@ void Videostreaming::displayFrame() {
     m_frame = m_lastFrame = m_fps = 0;
     emit averageFPS(m_fps);
 
+
     __u32 buftype = m_buftype;
     g_fmt_cap(buftype, m_capSrcFormat);
 
@@ -2065,8 +2118,10 @@ void Videostreaming::displayFrame() {
     }
 
     if (startCapture()) {
+
         sprintf(header,"P6\n%d %d 255\n",width,height);
         m_capNotifier = new QSocketNotifier(fd(), QSocketNotifier::Read);
+
         connect(m_capNotifier, SIGNAL(activated(int)), this, SLOT(capFrame()));
     }
 }
@@ -2242,6 +2297,7 @@ void Videostreaming::displayStillResolution() {
         } while (enum_framesizes(frmsize));
     }
     stillOutputFormat.setStringList(dispStillRes);
+
     emit logDebugHandle("Supported still Resolution: " +dispStillRes.join(", "));
 }
 
@@ -2262,6 +2318,7 @@ void Videostreaming::displayEncoderList(){
             ubuntuVersion = ">=15"; // version >=  15 [ Here ubuntu 15.10 and ubuntu 16.04 , Linux Mint 18, ubuntu 17.04 ]
         }
         encoderList.setStringList(encoders);
+
     }
 }
 
@@ -2294,6 +2351,7 @@ void Videostreaming::displayVideoResolution() {
     }
 
     videoOutputFormat.setStringList(dispVideoRes);
+
     emit logDebugHandle("Supported video Resolution: " +dispVideoRes.join(", "));
 }
 
@@ -2332,6 +2390,7 @@ void Videostreaming::updateVidOutFormat()
 }
 
 void Videostreaming::displayOutputFormat() {
+
     QStringList dispOutFormat;
     v4l2_fmtdesc fmt;
     pixFormat.clear();
@@ -2349,6 +2408,7 @@ void Videostreaming::displayOutputFormat() {
     }
     emit logDebugHandle("Output format supported: " +dispOutFormat.join(", "));
     resolution.setStringList(dispOutFormat);
+
     updateVidOutFormat();
 }
 
@@ -2754,4 +2814,44 @@ bool Videostreaming::setUvcExtControlValue(struct uvc_xu_control_query xquery){
         return true;
     }
     return false;
+}
+       /* Added by Navya 28-feb-19
+        This slots regarding storage cam
+    set flag to retrieve and switch to still settings if cross resoln or format */
+
+void Videostreaming::retrieveFrameFromStoreCam() {
+    if (!((stillSize == lastPreviewSize) && (stillOutFormat == lastFormat)))
+    {
+        switchToStillPreviewSettings(true);
+    }
+    retrieveframeStoreCam = true;
+}
+
+/**
+ * @brief Videostreaming::switchToStillPreviewSettings - switch camera to still or preview settings
+ * @param stillSettings - true - switch to still
+ *                        false - switch to preview
+ */
+void Videostreaming::switchToStillPreviewSettings(bool stillSettings){
+
+    if (!((stillSize == lastPreviewSize) && (stillOutFormat == lastFormat)))
+    {
+        stopCapture();
+        if(stillSettings){
+            vidCapFormatChanged(stillOutFormat);
+            setResoultion(stillSize);
+        }
+        else{
+            vidCapFormatChanged(lastFormat);
+            setResoultion(lastPreviewSize);
+        }
+        startAgain();
+    }
+}
+
+// To emit a signal that capture frame time out
+void Videostreaming::doCaptureFrameTimeout()
+{
+
+       emit capFrameTimeout();
 }
