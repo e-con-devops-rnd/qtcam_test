@@ -131,12 +131,10 @@ Item {
                 onCurrentIndexChanged: {
                     if(color_comp_box.count > 0){
                         JS.stillCaptureFormat = color_comp_box.currentIndex.toString()
-                        JS.stillCaptureFormatIndex = output_value.currentIndex
                         if(JS.triggerMode_11cug === 1 || JS.triggerMode_B === 1 || JS.triggerMode_M === 1 || JS.triggerMode_cu51 === 1 || JS.triggerMode_12cuinr === 1)
                             root.triggerModeCapture()
                         if(stillColorSpace) {
                               root.updateStillPreview(output_value.currentText.toString(), color_comp_box.currentIndex.toString())
-                            root.stillFormatChanged(color_comp_box.currentIndex, output_value.currentIndex)
                         }
                     }
                 }
@@ -197,7 +195,6 @@ Item {
                 }
                 onCurrentIndexChanged: {
                     JS.stillCaptureResolution = output_value.currentText.toString()
-                     JS.stillCaptureResolutionIndex = output_value.currentIndex
                     if(JS.triggerMode_11cug === 1 || JS.triggerMode_B === 1 || JS.triggerMode_M === 1 || JS.triggerMode_cu51 === 1 || JS.triggerMode_12cuinr == 1)
                         root.triggerModeCapture()
 

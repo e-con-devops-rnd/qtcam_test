@@ -87,8 +87,7 @@ void uvccamera::initCameraEnumMap()
     cameraEnumMap.insert("04b4,0035",CommonEnums::CX3_SNI_CAM); // Cypress Semiconductor Corp : CX3-SNI front and rear camera
     cameraEnumMap.insert(econVid + (",c132"),CommonEnums::NILECAM30_USB);
     cameraEnumMap.insert(econVid + (",c123"),CommonEnums::ECAM22_USB); // h264 camera
-    cameraEnumMap.insert(econVid + (",c154"),CommonEnums::SEE3CAM_CU55);
-    cameraEnumMap.insert(econVid + (",c1d4"),CommonEnums::STORECAM_1335);
+    cameraEnumMap.insert(econVid + (",c154"),CommonEnums::SEE3CAM_CU55);    
 }
 
 unsigned int uvccamera::getTickCount()
@@ -181,8 +180,7 @@ int uvccamera::findEconDevice(QString parameter)
             QString serialNumber = udev_device_get_sysattr_value(pdev,"serial");
             QString vidValue = udev_device_get_sysattr_value(pdev,"idVendor");
             QString pidValue = udev_device_get_sysattr_value(pdev,"idProduct");
-
-           if(parameter!="video4linux")
+            if(parameter!="video4linux")
             {
                 emit logHandle(QtDebugMsg, "HID Device found: "+productName + ": Available in: "+hid_device);
                 uvccamera::cameraMap.insertMulti(productName,hid_device);
@@ -218,7 +216,6 @@ void uvccamera::currentlySelectedDevice(QString deviceName)
 {
     deviceName.remove(QRegExp("[\n\t\r]"));
 
-
     bool deviceFound = false;
     QString originalDeviceName;
     // Added by Sankari: To fix string name and hid initialization issue: Check the camera name selected is having substring
@@ -252,7 +249,6 @@ void uvccamera::currentlySelectedDevice(QString deviceName)
     {
         selectedDeviceEnum = CommonEnums::NONE;
     }
-
     emit currentlySelectedCameraEnum(selectedDeviceEnum);
 }
 
@@ -392,7 +388,6 @@ bool uvccamera::readFirmwareVersion(quint8 *pMajorVersion, quint8 *pMinorVersion
 }
 
 bool uvccamera::initExtensionUnit(QString cameraName) {
-
     if(cameraName.isEmpty())
     {
         emit logHandle(QtCriticalMsg,"cameraName not passed as parameter\n");
@@ -448,7 +443,7 @@ bool uvccamera::initExtensionUnit(QString cameraName) {
         if(tempBuf.contains(hidNode)) {
             openNode = ii.value();
             close(hid_fd);
-         //  break;
+            break;
         }
         close(hid_fd);
         ++ii;
@@ -469,7 +464,6 @@ bool uvccamera::initExtensionUnit(QString cameraName) {
 
     /* Get Report Descriptor Size */
     ret = ioctl(hid_fd, HIDIOCGRDESCSIZE, &desc_size);
-
     if (ret < 0) {
         perror("HIDIOCGRDESCSIZE");
         return false;
@@ -478,7 +472,6 @@ bool uvccamera::initExtensionUnit(QString cameraName) {
     /* Get Report Descriptor */
     rpt_desc.size = desc_size;
     ret = ioctl(hid_fd, HIDIOCGRDESC, &rpt_desc);
-
     if (ret < 0) {
         perror("HIDIOCGRDESC");
         return false;
@@ -502,19 +495,20 @@ bool uvccamera::initExtensionUnit(QString cameraName) {
     ret = ioctl(hid_fd, HIDIOCGRAWINFO, &info);
     if (ret < 0) {
         perror("HIDIOCGRAWINFO");
-
         return false;
     }
-
     //Modified by Dhurka - 14th Oct 2016
     /*
      * Added camera enum comparision
      * Before its like camera name comparision
      */
-    if(selectedDeviceEnum != CommonEnums::SEE3CAM_CU130 && selectedDeviceEnum != CommonEnums::SEE3CAM_CU40)//this condition is put temporary until cu130 and cu40 hardware
-    {                                // does not support sendOSCode implementation
+    //Modified by Sankari - 14th Oct 2018
+    /*
+     * Correcting OS code supported cameras
+     */
+    if(selectedDeviceEnum == CommonEnums::SEE3CAM_11CUG || selectedDeviceEnum == CommonEnums::SEE3CAM_12CUNIR || selectedDeviceEnum == CommonEnums::ECON_1MP_BAYER_RGB  || selectedDeviceEnum == CommonEnums::ECON_1MP_MONOCHROME || selectedDeviceEnum == CommonEnums::SEE3CAM_CU51)
+    {                                
         ret = sendOSCode();
-
         if (ret == false) {
             emit logHandle(QtCriticalMsg,"OS Identification failed\n");
         }

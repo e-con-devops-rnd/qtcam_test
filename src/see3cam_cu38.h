@@ -1,5 +1,5 @@
 /*
- * seecam_cu30.h -- Handling special feature of seecamcu130 camera
+ * see3cam_cu38.h -- Handling special feature of seecamcu130 camera
  * Copyright © 2015  e-con Systems India Pvt. Limited
  *
  * This file is part of Qtcam.
@@ -17,13 +17,13 @@
  * You should have received a copy of the GNU General Public License
  * along with Qtcam. If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef SEECAMPLUS_CU30_H
-#define SEECAMPLUS_CU30_H
+#ifndef SEE3CAM_CU38_H
+#define SEE3CAM_CU38_H
 
 #include <QObject>
 #include "uvccamera.h"
 
-#define CAMERA_CONTROL_CU30PLUS     0x9A
+#define CAMERA_CONTROL_CU38     0x9A
 
 #define EXPOSURECOMP_MIN 8000
 #define EXPOSURECOMP_MAX 1000000
@@ -32,15 +32,15 @@
 #define SMILE_THRESHOLD_MAX 75
 #define DEFAULT_SMILE_THRESHOLD 40
 
-#define GET_SPECIAL_EFFECT_CU30PLUS 0x03
-#define SET_SPECIAL_EFFECT_CU30PLUS 0x04
+#define GET_SPECIAL_EFFECT_CU38 0x03
+#define SET_SPECIAL_EFFECT_CU38 0x04
 
-#define SET_ORIENTATION_CU30PLUS    0x0E
-#define GET_ORIENTATION_CU30PLUS    0x0D
-#define SET_ORIENTATION_BOTHFLIP_ENABLE_CU30PLUS    0x03
-#define SET_ORIENTATION_HORZFLIP_CU30PLUS           0x01
-#define SET_ORIENTATION_VERTFLIP_CU30PLUS           0x02
-#define SET_ORIENTATION_BOTHFLIP_DISABLE_CU30PLUS   0x00
+#define SET_ORIENTATION_CU38    0x0E
+#define GET_ORIENTATION_CU38    0x0D
+#define SET_ORIENTATION_BOTHFLIP_ENABLE_CU38    0x03
+#define SET_ORIENTATION_HORZFLIP_CU38           0x01
+#define SET_ORIENTATION_VERTFLIP_CU38           0x02
+#define SET_ORIENTATION_BOTHFLIP_DISABLE_CU38   0x00
 
 #define SPECIAL_EFFECT_NORMAL       0x01
 #define SPECIAL_EFFECT_BW           0x04
@@ -48,53 +48,53 @@
 #define SPECIAL_EFFECT_NEGATIVE     0x08
 #define SPECIAL_EFFECT_SKETCH       0x10
 
-#define SET_BURST_LENGTH_CU30PLUS       0x0A
-#define GET_BURST_LENGTH_CU30PLUS      0x09
+#define SET_BURST_LENGTH_CU38       0x0A
+#define GET_BURST_LENGTH_CU38      0x09
 
-#define GET_SCENEMODE_CU30PLUS          0x01
-#define SET_SCENEMODE_CU30PLUS          0x02
+#define GET_SCENEMODE_CU38          0x01
+#define SET_SCENEMODE_CU38          0x02
 
-#define GET_Q_FACTOR_CU30PLUS           0x0B
-#define SET_Q_FACTOR_CU30PLUS          0x0C
+#define GET_Q_FACTOR_CU38           0x0B
+#define SET_Q_FACTOR_CU38          0x0C
 
-#define SET_FRAME_RATE_CU30PLUS         0x16
-#define GET_FRAME_RATE_CU30PLUS         0x15
+#define SET_FRAME_RATE_CU38         0x16
+#define GET_FRAME_RATE_CU38         0x15
 
-#define SET_EXPOSURE_COMPENSATION_CU30PLUS  0x14
-#define GET_EXPOSURE_COMPENSATION_CU30PLUS  0x13
+#define SET_EXPOSURE_COMPENSATION_CU38  0x14
+#define GET_EXPOSURE_COMPENSATION_CU38  0x13
 
-#define SET_DENOISE_CONTROL_CU30PLUS  0x06
-#define GET_DENOISE_CONTROL_CU30PLUS  0x05
+#define SET_DENOISE_CONTROL_CU38  0x06
+#define GET_DENOISE_CONTROL_CU38  0x05
 
-#define SET_EXP_ROI_MODE_CU30PLUS       0x08
-#define GET_EXP_ROI_MODE_CU30PLUS       0x07
+#define SET_EXP_ROI_MODE_CU38       0x08
+#define GET_EXP_ROI_MODE_CU38       0x07
 
-#define SET_FACE_DETECT_RECT_CU30PLUS            0x10
-#define GET_FACE_DETECT_RECT_CU30PLUS           0x0F
-#define ENABLE_FACE_RECT_CU30PLUS                0x01
-#define DISABLE_FACE_RECT_CU30PLUS              0x00
-#define ENABLE_EMBED_DATA_CU30PLUS               0x01
-#define DISABLE_EMBED_DATA_CU30PLUS              0x00
-#define ENABLE_OVERLAY_RECT_CU30PLUS             0x01
-#define DISABLE_OVERLAY_RECT_CU30PLUS            0x00
+#define SET_FACE_DETECT_RECT_CU38            0x10
+#define GET_FACE_DETECT_RECT_CU38           0x0F
+#define ENABLE_FACE_RECT_CU38                0x01
+#define DISABLE_FACE_RECT_CU38              0x00
+#define ENABLE_EMBED_DATA_CU38               0x01
+#define DISABLE_EMBED_DATA_CU38              0x00
+#define ENABLE_OVERLAY_RECT_CU38             0x01
+#define DISABLE_OVERLAY_RECT_CU38            0x00
 
-#define SET_SMILE_DETECTION_CU30PLUS             0x12
-#define GET_SMILE_DETECTION_CU30PLUS             0x11
-#define ENABLE_SMILE_DETECT_CU30PLUS             0x01
-#define DISABLE_SMILE_DETECT_CU30PLUS            0x00
-
-
-#define SET_TO_DEFAULT_CU30PLUS                  0xFF
-
-#define ENABLE_DISABLE_MODE_FACE_RECTANGLE_CU30PLUS 0x17
-#define ENABLE_FACE_RECTANGLE_CU30PLUS             0x01
-#define DISABLE_FACE_RECTANGLE_CU30PLUS             0x00
-
-#define SETFLASH_STATUS_CU30PLUS 0x19
-#define GETFLASH_STATUS_CU30PLUS 0x18
+#define SET_SMILE_DETECTION_CU38             0x12
+#define GET_SMILE_DETECTION_CU38             0x11
+#define ENABLE_SMILE_DETECT_CU38             0x01
+#define DISABLE_SMILE_DETECT_CU38            0x00
 
 
-class See3CAMPLUS_CU30 : public QObject
+#define SET_TO_DEFAULT_CU38                  0xFF
+
+#define ENABLE_DISABLE_MODE_FACE_RECTANGLE_CU38 0x17
+#define ENABLE_FACE_RECTANGLE_CU38             0x01
+#define DISABLE_FACE_RECTANGLE_CU38             0x00
+
+#define SETFLASH_STATUS_CU38 0x19
+#define GETFLASH_STATUS_CU38 0x18
+
+
+class See3CAM_CU38 : public QObject
 {
     Q_OBJECT
 
@@ -106,7 +106,7 @@ private:
     void initializeBuffers();
 
 public:
-    explicit See3CAMPLUS_CU30(QObject *parent = 0);
+    explicit See3CAM_CU38(QObject *parent = 0);
 
     enum specialEffects {
         EFFECT_NORMAL = 0x01,

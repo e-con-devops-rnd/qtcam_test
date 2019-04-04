@@ -22,7 +22,7 @@ import QtQuick.Controls 1.1
 import QtQuick.Controls.Styles 1.0
 import QtQuick.Dialogs 1.1
 import econ.camera.uvcsettings 1.0
-import econ.camera.see3campluscu30 1.0
+import econ.camera.see3camcu38 1.0
 import QtQuick.Layouts 1.1
 import cameraenum 1.0
 
@@ -49,7 +49,7 @@ Item {
         target: root
         onTakeScreenShot:
         {
-             if(see3camcu30Plus.enableDisableFaceRectangle(false)) {
+             if(see3camcu38.enableDisableFaceRectangle(false)) {
                 root.imageCapture(CommonEnums.BURST_SHOT);
             }
         }
@@ -82,7 +82,7 @@ Item {
         id: getAutoExpsoureControlValues
         interval: 500
         onTriggered: {
-            see3camcu30Plus.getAutoExpROIModeAndWindowSize()
+            see3camcu38.getAutoExpROIModeAndWindowSize()
             stop()
         }
     }
@@ -91,8 +91,8 @@ Item {
         id: getexposureCompFrameRateCtrlTimer
         interval: 500
         onTriggered: {
-            see3camcu30Plus.getExposureCompensation()
-            see3camcu30Plus.getFrameRateCtrlValue()
+            see3camcu38.getExposureCompensation()
+            see3camcu38.getFrameRateCtrlValue()
             stop()
         }
     }
@@ -147,10 +147,10 @@ Item {
                     exclusiveGroup: sceneInputGroup
                     activeFocusOnPress: true
                     onClicked: {
-                        see3camcu30Plus.setSceneMode(See3CamPluscu30.SCENE_NORMAL)
+                        see3camcu38.setSceneMode(See3Camcu38.SCENE_NORMAL)
                     }
                     Keys.onReturnPressed: {
-                        see3camcu30Plus.setSceneMode(See3CamPluscu30.SCENE_NORMAL)
+                        see3camcu38.setSceneMode(See3Camcu38.SCENE_NORMAL)
                     }
                 }
                 RadioButton {
@@ -160,10 +160,10 @@ Item {
                     exclusiveGroup: sceneInputGroup
                     activeFocusOnPress: true
                     onClicked: {                        
-                        see3camcu30Plus.setSceneMode(See3CamPluscu30.SCENE_DOCUMENT)
+                        see3camcu38.setSceneMode(See3Camcu38.SCENE_DOCUMENT)
                     }
                     Keys.onReturnPressed: {                        
-                        see3camcu30Plus.setSceneMode(See3CamPluscu30.SCENE_DOCUMENT)
+                        see3camcu38.setSceneMode(See3Camcu38.SCENE_DOCUMENT)
                     }
 
                 }
@@ -196,10 +196,10 @@ Item {
                     exclusiveGroup: effectInputGroup
                     activeFocusOnPress: true
                     onClicked: {
-                        see3camcu30Plus.setEffectMode(See3CamPluscu30.EFFECT_NORMAL)
+                        see3camcu38.setEffectMode(See3Camcu38.EFFECT_NORMAL)
                     }
                     Keys.onReturnPressed:  {
-                        see3camcu30Plus.setEffectMode(See3CamPluscu30.EFFECT_NORMAL)
+                        see3camcu38.setEffectMode(See3Camcu38.EFFECT_NORMAL)
                     }
                 }
                 RadioButton {
@@ -209,10 +209,10 @@ Item {
                     exclusiveGroup: effectInputGroup
                     activeFocusOnPress: true
                     onClicked: {                        
-                        see3camcu30Plus.setEffectMode(See3CamPluscu30.EFFECT_BLACK_WHITE)
+                        see3camcu38.setEffectMode(See3Camcu38.EFFECT_BLACK_WHITE)
                     }
                     Keys.onReturnPressed: {                        
-                        see3camcu30Plus.setEffectMode(See3CamPluscu30.EFFECT_BLACK_WHITE)
+                        see3camcu38.setEffectMode(See3Camcu38.EFFECT_BLACK_WHITE)
                     }
                 }
                 RadioButton {
@@ -222,10 +222,10 @@ Item {
                     exclusiveGroup: effectInputGroup
                     activeFocusOnPress: true
                     onClicked: {                        
-                        see3camcu30Plus.setEffectMode(See3CamPluscu30.EFFECT_GREYSCALE)
+                        see3camcu38.setEffectMode(See3Camcu38.EFFECT_GREYSCALE)
                     }
                     Keys.onReturnPressed: {                        
-                        see3camcu30Plus.setEffectMode(See3CamPluscu30.EFFECT_GREYSCALE)
+                        see3camcu38.setEffectMode(See3Camcu38.EFFECT_GREYSCALE)
                     }
                 }
                 RadioButton {
@@ -235,10 +235,10 @@ Item {
                     exclusiveGroup: effectInputGroup
                     activeFocusOnPress: true
                     onClicked: {                        
-                        see3camcu30Plus.setEffectMode(See3CamPluscu30.EFFECT_SKETCH)
+                        see3camcu38.setEffectMode(See3Camcu38.EFFECT_SKETCH)
                     }
                     Keys.onReturnPressed: {                        
-                        see3camcu30Plus.setEffectMode(See3CamPluscu30.EFFECT_SKETCH)
+                        see3camcu38.setEffectMode(See3Camcu38.EFFECT_SKETCH)
                     }
                 }
                 RadioButton {
@@ -248,10 +248,10 @@ Item {
                     exclusiveGroup: effectInputGroup
                     activeFocusOnPress: true
                     onClicked: {                        
-                        see3camcu30Plus.setEffectMode(See3CamPluscu30.EFFECT_NEGATIVE)
+                        see3camcu38.setEffectMode(See3Camcu38.EFFECT_NEGATIVE)
                     }
                     Keys.onReturnPressed: {                        
-                        see3camcu30Plus.setEffectMode(See3CamPluscu30.EFFECT_NEGATIVE)
+                        see3camcu38.setEffectMode(See3Camcu38.EFFECT_NEGATIVE)
                     }
                 }
             }
@@ -284,11 +284,11 @@ Item {
                       // videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord - these parameters are required only when click in preview]
                       // winSize is required only for manual mode
                       onClicked: {
-                          see3camcu30Plus.setROIAutoExposure(See3CamPluscu30.AutoExpFull, 0, 0, 0, 0, 0);
+                          see3camcu38.setROIAutoExposure(See3Camcu38.AutoExpFull, 0, 0, 0, 0, 0);
                           autoExpoWinSizeCombo.enabled = false
                       }
                       Keys.onReturnPressed: {
-                          see3camcu30Plus.setROIAutoExposure(See3CamPluscu30.AutoExpFull, 0, 0, 0, 0, 0);
+                          see3camcu38.setROIAutoExposure(See3Camcu38.AutoExpFull, 0, 0, 0, 0, 0);
                           autoExpoWinSizeCombo.enabled = false
                       }
                   }
@@ -300,11 +300,11 @@ Item {
                       style: econRadioButtonStyle
                       opacity: enabled ? 1 : 0.1
                       onClicked: {                          
-                          see3camcu30Plus.setROIAutoExposure(See3CamPluscu30.AutoExpManual, 0, 0, 0, 0, 0);
+                          see3camcu38.setROIAutoExposure(See3Camcu38.AutoExpManual, 0, 0, 0, 0, 0);
                           autoExpoWinSizeCombo.enabled = true
                       }
                       Keys.onReturnPressed: {                          
-                          see3camcu30Plus.setROIAutoExposure(See3CamPluscu30.AutoExpManual, 0, 0, 0, 0, 0);
+                          see3camcu38.setROIAutoExposure(See3Camcu38.AutoExpManual, 0, 0, 0, 0, 0);
                           autoExpoWinSizeCombo.enabled = true
                       }
                   }
@@ -329,7 +329,7 @@ Item {
                 style: econComboBoxStyle
                 onCurrentIndexChanged: {                    
                     if(skipUpdateUIOnExpWindowSize){
-                        see3camcu30Plus.setROIAutoExposure(See3CamPluscu30.AutoExpManual, 0, 0, 0, 0, autoExpoWinSizeCombo.currentText)
+                        see3camcu38.setROIAutoExposure(See3Camcu38.AutoExpManual, 0, 0, 0, 0, autoExpoWinSizeCombo.currentText)
                     }
                     skipUpdateUIOnExpWindowSize = true
                 }
@@ -413,7 +413,7 @@ Item {
                     maximumValue: denoiseMax
                     onValueChanged:  {
                         deNoiseTextField.text = deNoiseSlider.value
-                        see3camcu30Plus.setDenoiseValue(deNoiseSlider.value)
+                        see3camcu38.setDenoiseValue(deNoiseSlider.value)
                     }
                 }
                 TextField {
@@ -471,7 +471,7 @@ Item {
                 onCurrentIndexChanged: {
                     root.stillBurstLength(burstLengthCombo.currentIndex + 1) // combobox index starts from 0
                     if(skipUpdateUIOnBurstLength){
-                        see3camcu30Plus.setBurstLength(burstLengthCombo.currentText)
+                        see3camcu38.setBurstLength(burstLengthCombo.currentText)
                     }
                     skipUpdateUIOnBurstLength = true                    
                 }
@@ -504,7 +504,7 @@ Item {
                     onValueChanged:  {
                         qFactorTextField.text = qFactorSlider.value                        
                         if(skipUpdateUIQFactor){
-                            see3camcu30Plus.setQFactor(qFactorSlider.value)
+                            see3camcu38.setQFactor(qFactorSlider.value)
                         }
                         skipUpdateUIQFactor = true
                     }
@@ -552,7 +552,7 @@ Item {
                     onValueChanged:  {
                         frameRateTextField.text = frameRateSlider.value
                         if(skipUpdateUIFrameRate){
-                            see3camcu30Plus.setFrameRateCtrlValue(frameRateSlider.value)
+                            see3camcu38.setFrameRateCtrlValue(frameRateSlider.value)
                         }
                         skipUpdateUIFrameRate = true                        
                     }
@@ -594,10 +594,10 @@ Item {
                     text: "Horizontal"
                     style: econCheckBoxStyle
                     onClicked:{
-                        see3camcu30Plus.setOrientation(flipCtrlHorizotal.checked, flipCtrlVertical.checked)
+                        see3camcu38.setOrientation(flipCtrlHorizotal.checked, flipCtrlVertical.checked)
                     }
                     Keys.onReturnPressed: {
-                        see3camcu30Plus.setOrientation(flipCtrlHorizotal.checked, flipCtrlVertical.checked)
+                        see3camcu38.setOrientation(flipCtrlHorizotal.checked, flipCtrlVertical.checked)
                     }
                 }
                 CheckBox {
@@ -606,10 +606,10 @@ Item {
                     text: "Vertical"
                     style: econCheckBoxStyle
                     onClicked:{
-                        see3camcu30Plus.setOrientation(flipCtrlHorizotal.checked, flipCtrlVertical.checked)
+                        see3camcu38.setOrientation(flipCtrlHorizotal.checked, flipCtrlVertical.checked)
                     }
                     Keys.onReturnPressed: {
-                        see3camcu30Plus.setOrientation(flipCtrlHorizotal.checked, flipCtrlVertical.checked)
+                        see3camcu38.setOrientation(flipCtrlHorizotal.checked, flipCtrlVertical.checked)
                     }
                 }
             }
@@ -634,10 +634,10 @@ Item {
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked:{
-                        see3camcu30Plus.setFaceDetectionRect(true, faceDetectEmbedData.checked, overlayRect.checked)
+                        see3camcu38.setFaceDetectionRect(true, faceDetectEmbedData.checked, overlayRect.checked)
                     }
                     Keys.onReturnPressed: {
-                        see3camcu30Plus.setFaceDetectionRect(true, faceDetectEmbedData.checked, overlayRect.checked)
+                        see3camcu38.setFaceDetectionRect(true, faceDetectEmbedData.checked, overlayRect.checked)
                     }
                 }
                 RadioButton {
@@ -647,10 +647,10 @@ Item {
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked: {
-                        see3camcu30Plus.setFaceDetectionRect(false, faceDetectEmbedData.checked, overlayRect.checked)
+                        see3camcu38.setFaceDetectionRect(false, faceDetectEmbedData.checked, overlayRect.checked)
                     }
                     Keys.onReturnPressed: {
-                        see3camcu30Plus.setFaceDetectionRect(false, faceDetectEmbedData.checked, overlayRect.checked)
+                        see3camcu38.setFaceDetectionRect(false, faceDetectEmbedData.checked, overlayRect.checked)
                     }
                 }
             }
@@ -678,10 +678,10 @@ Item {
                     enabled: faceRectEnable.checked ? true : false
                     opacity: enabled ? 1 : 0.1
                     onClicked:{
-                        see3camcu30Plus.setFaceDetectionRect(faceRectEnable.checked, faceDetectEmbedData.checked, checked)
+                        see3camcu38.setFaceDetectionRect(faceRectEnable.checked, faceDetectEmbedData.checked, checked)
                     }
                     Keys.onReturnPressed: {
-                        see3camcu30Plus.setFaceDetectionRect(faceRectEnable.checked, faceDetectEmbedData.checked, checked)
+                        see3camcu38.setFaceDetectionRect(faceRectEnable.checked, faceDetectEmbedData.checked, checked)
                     }
                 }
             }
@@ -705,10 +705,10 @@ Item {
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked:{
-                        see3camcu30Plus.setSmileDetection(true, smileDetectEmbedData.checked)
+                        see3camcu38.setSmileDetection(true, smileDetectEmbedData.checked)
                     }
                     Keys.onReturnPressed: {
-                        see3camcu30Plus.setSmileDetection(true, smileDetectEmbedData.checked)
+                        see3camcu38.setSmileDetection(true, smileDetectEmbedData.checked)
                     }
                 }
                 RadioButton {
@@ -718,10 +718,10 @@ Item {
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked: {
-                        see3camcu30Plus.setSmileDetection(false, smileDetectEmbedData.checked)
+                        see3camcu38.setSmileDetection(false, smileDetectEmbedData.checked)
                     }
                     Keys.onReturnPressed: {
-                        see3camcu30Plus.setSmileDetection(false, smileDetectEmbedData.checked)
+                        see3camcu38.setSmileDetection(false, smileDetectEmbedData.checked)
                     }
                 }
             }
@@ -769,10 +769,10 @@ Item {
                         activeFocusOnPress: true
                         style: econRadioButtonStyle
                         onClicked: {
-                            see3camcu30Plus.setFlashState(See3CamPluscu30.FLASHMODE_STROBE)
+                            see3camcu38.setFlashState(See3Camcu38.FLASHMODE_STROBE)
                         }
                         Keys.onReturnPressed: {
-                            see3camcu30Plus.setFlashState(See3CamPluscu30.FLASHMODE_STROBE)
+                            see3camcu38.setFlashState(See3Camcu38.FLASHMODE_STROBE)
                         }
                     }
                 }
@@ -785,10 +785,10 @@ Item {
                         activeFocusOnPress: true
                         style: econRadioButtonStyle
                         onClicked: {
-                            see3camcu30Plus.setFlashState(See3CamPluscu30.FLASHMODE_TORCH)
+                            see3camcu38.setFlashState(See3Camcu38.FLASHMODE_TORCH)
                         }
                         Keys.onReturnPressed: {
-                            see3camcu30Plus.setFlashState(See3CamPluscu30.FLASHMODE_TORCH)
+                            see3camcu38.setFlashState(See3Camcu38.FLASHMODE_TORCH)
                         }
                     }
                 }
@@ -801,10 +801,10 @@ Item {
                         activeFocusOnPress: true
                         style: econRadioButtonStyle
                         onClicked: {
-                            see3camcu30Plus.setFlashState(See3CamPluscu30.FLASHMODE_OFF)
+                            see3camcu38.setFlashState(See3Camcu38.FLASHMODE_OFF)
                         }
                         Keys.onReturnPressed: {
-                            see3camcu30Plus.setFlashState(See3CamPluscu30.FLASHMODE_OFF)
+                            see3camcu38.setFlashState(See3Camcu38.FLASHMODE_OFF)
                         }
                     }
                 }
@@ -1038,26 +1038,26 @@ Item {
     }
 
 
-    See3CamPluscu30 {
-        id: see3camcu30Plus
+    See3Camcu38 {
+        id: see3camcu38
         onFlashModeValue:{
             currentFlashMode(flashMode)
         }
         onSendEffectMode:{
             switch(effectMode){
-            case See3CamPluscu30.EFFECT_NORMAL:
+            case See3Camcu38.EFFECT_NORMAL:
                 rdoEffectNormal.checked = true
                 break;
-            case See3CamPluscu30.EFFECT_BLACK_WHITE:
+            case See3Camcu38.EFFECT_BLACK_WHITE:
                 rdoEffectBW.checked = true
                 break;
-            case See3CamPluscu30.EFFECT_GREYSCALE:
+            case See3Camcu38.EFFECT_GREYSCALE:
                 rdoEffectGreyScale.checked = true
                 break;
-            case See3CamPluscu30.EFFECT_SKETCH:
+            case See3Camcu38.EFFECT_SKETCH:
                 rdoEffectSketch.checked = true
                 break;
-            case See3CamPluscu30.EFFECT_NEGATIVE:
+            case See3Camcu38.EFFECT_NEGATIVE:
                 rdoEffectNegative.checked = true
                 break;
             }
@@ -1111,7 +1111,7 @@ Item {
             if(setButtonClicked){
                 displayMessageBox(title, text)
                 setButtonClicked = false
-                see3camcu30Plus.getExposureCompensation()
+                see3camcu38.getExposureCompensation()
             }
         }      
     }
@@ -1129,11 +1129,11 @@ Item {
     // current ROI auto exposure mode
     function currentROIAutoExposureMode(roiMode, winSize){       
         switch(roiMode){
-            case See3CamPluscu30.AutoExpFull:
+            case See3Camcu38.AutoExpFull:
                 autoexpFull.checked = true
                 autoExpoWinSizeCombo.enabled = false
                 break
-            case See3CamPluscu30.AutoExpManual:
+            case See3Camcu38.AutoExpManual:
                 skipUpdateUIOnExpWindowSize = false
                 autoexpManual.checked = true
                 // If window size is got from camera is 0 then set window size to 1 in UI
@@ -1142,7 +1142,7 @@ Item {
                 }else
                     autoExpoWinSizeCombo.currentIndex = winSize-1
                 break
-            case See3CamPluscu30.AutoExpDisabled:               
+            case See3Camcu38.AutoExpDisabled:
                 autoexpFull.enabled = false
                 autoexpManual.enabled = false
                 autoExpoWinSizeCombo.enabled = false
@@ -1152,13 +1152,13 @@ Item {
 
     function currentFlashMode(mode){
         switch(mode){
-        case See3CamPluscu30.FLASHMODE_TORCH:
+        case See3Camcu38.FLASHMODE_TORCH:
             flashModeTorch.checked = true
             break;
-        case See3CamPluscu30.FLASHMODE_STROBE:
+        case See3Camcu38.FLASHMODE_STROBE:
             flashModeStrobe.checked = true
             break;
-        case See3CamPluscu30.FLASHMODE_OFF:
+        case See3Camcu38.FLASHMODE_OFF:
             flashModeOff.checked = true
             break;
         }
@@ -1168,19 +1168,19 @@ Item {
     {
         switch(mode)
         {
-            case See3CamPluscu30.FLIP_ON_MIRROR_ON:
+            case See3Camcu38.FLIP_ON_MIRROR_ON:
                  flipCtrlVertical.checked = true
                  flipCtrlHorizotal.checked = true
                 break;
-            case See3CamPluscu30.FLIP_OFF_MIRROR_ON:
+            case See3Camcu38.FLIP_OFF_MIRROR_ON:
                 flipCtrlVertical.checked = true
                 flipCtrlHorizotal.checked = false
                 break;
-            case See3CamPluscu30.FLIP_ON_MIRROR_OFF:
+            case See3Camcu38.FLIP_ON_MIRROR_OFF:
                  flipCtrlVertical.checked = false
                  flipCtrlHorizotal.checked = true
                 break;
-            case See3CamPluscu30.FLIP_OFF_MIRROR_OFF:
+            case See3Camcu38.FLIP_OFF_MIRROR_OFF:
                 flipCtrlVertical.checked = false
                 flipCtrlHorizotal.checked = false
                 break;
@@ -1189,22 +1189,22 @@ Item {
 
 
     function updateFaceDetectModeUI(faceDetectMode, faceDetectEmbedDataValue, faceDetectOverlayRect){        
-        if(faceDetectMode == See3CamPluscu30.FaceRectEnable){
+        if(faceDetectMode == See3Camcu38.FaceRectEnable){
             faceRectEnable.checked = true
-            if(faceDetectEmbedDataValue == See3CamPluscu30.FaceDetectEmbedDataEnable){
+            if(faceDetectEmbedDataValue == See3Camcu38.FaceDetectEmbedDataEnable){
                 faceDetectEmbedData.checked = true
             }
-            if(faceDetectOverlayRect == See3CamPluscu30.FaceDetectOverlayRectEnable){
+            if(faceDetectOverlayRect == See3Camcu38.FaceDetectOverlayRectEnable){
                 overlayRect.checked = true
             }
-        }else if(faceDetectMode == See3CamPluscu30.FaceRectDisable){
+        }else if(faceDetectMode == See3Camcu38.FaceRectDisable){
             faceRectDisable.checked = true
-            if(faceDetectEmbedDataValue == See3CamPluscu30.FaceDetectEmbedDataEnable){
+            if(faceDetectEmbedDataValue == See3Camcu38.FaceDetectEmbedDataEnable){
                 faceDetectEmbedData.checked = true
             }else{
                 faceDetectEmbedData.checked = false
             }
-            if(faceDetectOverlayRect == See3CamPluscu30.FaceDetectOverlayRectEnable){
+            if(faceDetectOverlayRect == See3Camcu38.FaceDetectOverlayRectEnable){
                 overlayRect.checked = true
             }else{
                 overlayRect.checked = false
@@ -1213,16 +1213,16 @@ Item {
     }
 
     function updateSmileDetectModeUI(smileDetectMode, smileDetectEmbedDataValue){
-        if(smileDetectMode == See3CamPluscu30.SmileDetectEnable){
+        if(smileDetectMode == See3Camcu38.SmileDetectEnable){
             smileDetectEnable.checked = true
-            if(smileDetectEmbedDataValue == See3CamPluscu30.SmileDetectEmbedDataEnable){
+            if(smileDetectEmbedDataValue == See3Camcu38.SmileDetectEmbedDataEnable){
                 smileDetectEmbedData.checked = true
             }else{
                 smileDetectEmbedData.checked = false
             }
-        }else if(smileDetectMode == See3CamPluscu30.SmileDetectDisable){
+        }else if(smileDetectMode == See3Camcu38.SmileDetectDisable){
             smileDetectDisable.checked = true
-            if(smileDetectEmbedDataValue == See3CamPluscu30.SmileDetectEmbedDataEnable){
+            if(smileDetectEmbedDataValue == See3Camcu38.SmileDetectEmbedDataEnable){
                 smileDetectEmbedData.checked = true
             }else{
                 smileDetectEmbedData.checked = false
@@ -1231,9 +1231,9 @@ Item {
     }
 
     function enableFaceDetectEmbedData(){
-        if(see3camcu30Plus.setFaceDetectionRect(faceRectEnable.checked, faceDetectEmbedData.checked, overlayRect.checked)){
+        if(see3camcu38.setFaceDetectionRect(faceRectEnable.checked, faceDetectEmbedData.checked, overlayRect.checked)){
             if(faceDetectEmbedData.checked){
-                displayMessageBox(qsTr("Status"),qsTr("The last part of the frame will be replaced by face data.Refer document See3CAM+_CU30_FaceDetection for more details"))
+                displayMessageBox(qsTr("Status"),qsTr("The last part of the frame will be replaced by face data.Refer document See3CAM_CU38_Conversa_FaceDetection for more details"))
             }
         }        
     }
@@ -1241,16 +1241,16 @@ Item {
     function exposureCompSetButtonClicked(){
         exposureCompSet.enabled = false
         setButtonClicked = true
-        see3camcu30Plus.setExposureCompensation(exposureCompValue.text)
+        see3camcu38.setExposureCompensation(exposureCompValue.text)
         exposureCompSet.enabled = true        
     }
 
     function enableSmileDetectEmbedData(){
         setButtonClicked = false
-        if(see3camcu30Plus.setSmileDetection(true, smileDetectEmbedData.checked)){
+        if(see3camcu38.setSmileDetection(true, smileDetectEmbedData.checked)){
             if(smileDetectEmbedData.checked){
                 messageDialog.title = qsTr("Status")
-                messageDialog.text = qsTr("The last part of the frame will be replaced by smile data.Refer document See3CAM+_CU30_Face_and_Smile_Detection for more details")
+                messageDialog.text = qsTr("The last part of the frame will be replaced by smile data.Refer document See3CAM_CU38_Conversa_Face_and_Smile_Detection for more details")
                 messageDialog.open()
             }
         }
@@ -1290,10 +1290,10 @@ Item {
     {
         switch(mode)
         {
-            case See3CamPluscu30.SCENE_NORMAL:
+            case See3Camcu38.SCENE_NORMAL:
                 sceneNormal.checked = true
                 break;
-            case See3CamPluscu30.SCENE_DOCUMENT:
+            case See3Camcu38.SCENE_DOCUMENT:
                 sceneDoc.checked = true
                 break;
         }
@@ -1310,44 +1310,44 @@ Item {
 
     function setDefaultValues(){
         defaultValue.enabled = false //To avoid multiple clicks over Default button
-        see3camcu30Plus.setToDefault()
+        see3camcu38.setToDefault()
         getCameraValues()
         defaultValue.enabled = true
     }
 
     function getCameraValues(){
-        see3camcu30Plus.getEffectMode()
-        see3camcu30Plus.getDenoiseValue()
-        see3camcu30Plus.getSceneMode()
-        see3camcu30Plus.getAutoExpROIModeAndWindowSize()
-        see3camcu30Plus.getBurstLength()
-        see3camcu30Plus.getQFactor()
-        see3camcu30Plus.getOrientation()
-        see3camcu30Plus.getFrameRateCtrlValue()
-        see3camcu30Plus.getExposureCompensation()
-        see3camcu30Plus.getFaceDetectMode()
-        see3camcu30Plus.getSmileDetectMode()
-        see3camcu30Plus.getFlashState()
+        see3camcu38.getEffectMode()
+        see3camcu38.getDenoiseValue()
+        see3camcu38.getSceneMode()
+        see3camcu38.getAutoExpROIModeAndWindowSize()
+        see3camcu38.getBurstLength()
+        see3camcu38.getQFactor()
+        see3camcu38.getOrientation()
+        see3camcu38.getFrameRateCtrlValue()
+        see3camcu38.getExposureCompensation()
+        see3camcu38.getFaceDetectMode()
+        see3camcu38.getSmileDetectMode()
+        see3camcu38.getFlashState()
     }
 
     Connections{
          target: root
          onMouseRightClicked:{
              if(autoexpManual.enabled && autoexpManual.checked){
-                see3camcu30Plus.setROIAutoExposure(See3CamPluscu30.AutoExpManual, width, height, x, y, autoExpoWinSizeCombo.currentText)
+                see3camcu38.setROIAutoExposure(See3Camcu38.AutoExpManual, width, height, x, y, autoExpoWinSizeCombo.currentText)
              }
          }
          onAutoExposureSelected:{
              enableDisableAutoExposureControls(autoExposureSelect)
          }
          onEnableFaceRectafterBurst:{
-           see3camcu30Plus.enableDisableFaceRectangle(true)
+           see3camcu38.enableDisableFaceRectangle(true)
          }
          onBeforeRecordVideo:{
-            see3camcu30Plus.enableDisableFaceRectangle(false)
+            see3camcu38.enableDisableFaceRectangle(false)
          }
          onAfterRecordVideo:{
-            see3camcu30Plus.enableDisableFaceRectangle(true)
+            see3camcu38.enableDisableFaceRectangle(true)
          }
          onVideoResolutionChanged:{
              getexposureCompFrameRateCtrlTimer.start()

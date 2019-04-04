@@ -1294,15 +1294,12 @@ Item {
             ledModeComboEnable = false
         }
     }
-
-
     Connections
     {
         target:root
         onAddAutoModeMenuItem:
         {
             if(root.selectedDeviceEnumValue == CommonEnums.CX3_UVC_CAM){
-           //     console.log("add"+root.selectedDeviceEnumValue)
                 root.cameraFilterControls(true)
                 if(!usb3speed){
                     menuitems.push("Auto Mode")
@@ -1310,7 +1307,6 @@ Item {
                     menuitems.pop()
                 }
             }
-           // console.log("end")
         }
         onQueryUvcControls:{
             queryctrlTimer.start()
@@ -1890,5 +1886,4 @@ Item {
             video_capture_filter_Child.focus = false
         }
     }
-
 }

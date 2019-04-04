@@ -27,7 +27,6 @@ import QtQuick.Dialogs 1.1
 import econ.camera.property 1.0
 import econ.camera.stream 1.0
 import econ.camera.keyEvent 1.0
-import econ.camera.storagecamcu135 1.0
 import "../JavaScriptFiles/tempValue.js" as JS
 import cameraenum 1.0
 
@@ -42,6 +41,9 @@ Rectangle {
     signal enableFaceRectafterBurst()
     signal autoFocusSelected(bool autoFocusSelect)
     signal autoExposureSelected(bool autoExposureSelect)
+
+    // Added by Sankari : Mar 7 - disable audio settings
+    signal disableAudioSettings(bool disableSettings)
 
     //Added by Sankari: 07 Mar 2017
     // signal to notify auto white balance selected
@@ -94,7 +96,6 @@ Rectangle {
     signal setControlValues(string controlName,int controlType,int controlMinValue,int controlMaxValue,int controlStepSize, int controlDefaultValue,int controlID);
     //Disable image settings camera controls
     signal disableImageSettings();
-    signal stillFormatChanged(int stillFormatcurrentIndex, int stillResolncurrentIndex);
     //Visible state for image settings
     signal videoCaptureFilterChildVisible(bool visibleStatus)
     //Property value for camera controls
@@ -104,11 +105,11 @@ Rectangle {
     property bool audioCaptureChildVisible: false
     property bool videoSettingsChildVisible: false    
 
+    property bool ubuntuversionLessThan16: false
+    property bool disableAudio: false
 
     //video scrollview visible height
     property int videoPropHeight
-
-    signal captureFrameTimeout();
 
     property int audioPropertyYValue
 
@@ -186,8 +187,6 @@ Rectangle {
     signal getStillImageFormats();
     signal cameraDeviceUnplugged();
     signal setMasterMode();
-    //To grab preview Frames
-    signal queryFrame(bool retriveframe)
 
     // Added by Sankari: 16 Dec 2016 - To init trigger shot for 12CUNIR camera
     signal initTriggershot();    
@@ -228,7 +227,12 @@ Rectangle {
         id: recordStartDelayTimer // Record after disabling Auto Focus Rectangle or face rect overlay rectangle
         interval: 1000
         onTriggered: {
-            vidstreamproperty.recordBegin(JS.videoEncoder,JS.videoExtension, videoSettingsRootObject.videoStoragePath, audioDeviceIndex, audioChannel)
+	    if(disableAudio){
+	    	vidstreamproperty.recordBegin(JS.videoEncoder,JS.videoExtension, videoSettingsRootObject.videoStoragePath, 0, audioChannel)
+	    }
+	    else{
+            	vidstreamproperty.recordBegin(JS.videoEncoder,JS.videoExtension, videoSettingsRootObject.videoStoragePath, audioDeviceIndex, audioChannel)
+	    }
             stop()
         }
     }
@@ -323,7 +327,7 @@ Rectangle {
             id: vidstreamproperty
             focus: true
 
-        SequentialAnimation on t {
+	    SequentialAnimation on t {
                     id:seqAni
                     NumberAnimation { to: 1; duration: 16; easing.type: Easing.InQuad }
                     NumberAnimation { to: 0; duration: 16; easing.type: Easing.OutQuad }
@@ -333,6 +337,13 @@ Rectangle {
             // Added by Sankari:12 Feb 2018 - Get the Pci bus info for selected camera
             onPciDeviceBus:{
                 pciBusCamDetails = businfo
+            }
+
+            onUbuntuVersionSelectedLessThan16:{
+                ubuntuversionLessThan16 = true
+                disableAudioSettings(true) // In ubuntu 12.04 and 14.04 (Video capture settings), video encoder index is 0,(YUY - raw format).
+                                           // so disable audio settings
+				disableAudio = true
             }
 
             onTitleTextChanged:{
@@ -484,14 +495,6 @@ Rectangle {
             onSendFPSlist:{
                 availableFpslist = fpsList;
             }
-            // Added by Navya -slot to grabpreview frame
-            onSignalTograbPreviewFrame:{
-                queryFrame(retrieveframe);
-             }
-
-            onCapFrameTimeout:{
-                captureFrameTimeout();
-            }
 
             MouseArea {
                 anchors.fill: parent
@@ -608,7 +611,7 @@ Rectangle {
             onCurrentIndexChanged: {
                 if(currentIndex.toString() != "-1" && currentIndex.toString() != "0") {                    
                     if(oldIndex!=currentIndex) {
-                        seqAni.running = true
+			seqAni.running = true
                         seqAni.start()
                         vidstreamproperty.setPreviewBgrndArea(previewBgrndArea.width, previewBgrndArea.height, true)
 
@@ -620,7 +623,6 @@ Rectangle {
                         enumerateAudioSettings();
 
                         cameraSelected()
-
                         //Added by Dhurka - 20th Oct 2016
                         cameraControlPropertyChange();
                         // Added by Sankari: 20 Apr 2017 - If we unplug and plug the camera, the video color space is not updated properly
@@ -635,7 +637,6 @@ Rectangle {
                         vidstreamproperty.closeDevice()
                         selectCameraSettings()
                         camproperty.setCurrentDevice(currentIndex.toString(),currentText.toString())
-
                         vidstreamproperty.setDevice("/dev/video")
                         vidstreamproperty.displayOutputFormat()
                         vidstreamproperty.displayStillResolution()
@@ -647,7 +648,6 @@ Rectangle {
                         queryUvcControls();
                         //Added by Dhurka - 20th Oct 2016
                         disableImageSettings()
-
                         //Added by Dhurka - Here commonly open HID device instead of open every QML file - 17th Oct 2016
                         openHIDDevice(selectedDeviceEnumValue);
 
@@ -659,10 +659,7 @@ Rectangle {
                         vidstreamproperty.height = stillSettingsRootObject.stillOutputTextValue.split("x")[1].toString()
                         vidstreamproperty.lastPreviewResolution(stillSettingsRootObject.stillOutputTextValue,stillSettingsRootObject.stillColorComboIndexValue)
                         JS.stillCaptureFormat = stillSettingsRootObject.stillColorComboIndexValue
-                        JS.stillCaptureFormatIndex = stillSettingsRootObject.stillColorComboIndexValue*1
-                        //Added by Navya :28 Feb 2019 -setting resoln
                         JS.stillCaptureResolution = stillSettingsRootObject.stillOutputTextValue.toString()
-                        JS.stillCaptureResolutionIndex = stillSettingsRootObject.stillResolutionIndex
                         JS.videoCaptureFormat = JS.stillCaptureFormat
                         JS.videoCaptureResolution = JS.stillCaptureResolution
                         JS.videocaptureFps = videoSettingsRootObject.videoFrameRate
@@ -895,16 +892,27 @@ Rectangle {
         vidstreamproperty.updateFrameToSkip(stillSkip)
     }
 
-    function retrieveFrameFromStorageCamera(){
-        setStillSettings()
-        vidstreamproperty.retrieveFrameFromStoreCam()
+
+    function videoEncoderSelected(encoderIndex){
+        // Added by Sankari : Mar 7 2019
+        // ubuntu 14.04 and ubuntu 12.04
+            // index 0 - YUY
+            // index 1 - MJPG
+            // index 2 - H264
+
+        // ubuntu 14.04 and ubuntu 12.04
+            // index 0 - MJPG
+            // index 1 - H264
+         if(encoderIndex == 0 && ubuntuversionLessThan16){ // If ubuntu version is less than 16.04(i.e, 12.04 and 14.04),
+                                                           // If index is 0 (YUY), disable audio capture settings
+             disableAudioSettings(true)
+	     disableAudio = true
+         }else{
+             disableAudioSettings(false)
+	     disableAudio = false
+         }
     }
 
-    function switchToCamFrameSettings(stillSettings){
-        // True if swithcing to still settings
-        // false if swithcing to preview settings
-        vidstreamproperty.switchToStillPreviewSettings(stillSettings)
-    }
     function mouseClickCapture() {
         m_Snap = false
         captureBtnEnable(false)
@@ -1052,7 +1060,12 @@ Rectangle {
         if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_130  || selectedDeviceEnumValue == CommonEnums.SEE3CAM_30){
             recordStartDelayTimer.start() // some delay is required to disable focus rect / face overlay rect. After that delay need to start record.
         }else{
-            vidstreamproperty.recordBegin(JS.videoEncoder,JS.videoExtension, videoSettingsRootObject.videoStoragePath, audioDeviceIndex, audioChannel)
+	    if(disableAudio){
+	    	vidstreamproperty.recordBegin(JS.videoEncoder,JS.videoExtension, videoSettingsRootObject.videoStoragePath, 0, audioChannel)
+	    }
+	    else{
+            	vidstreamproperty.recordBegin(JS.videoEncoder,JS.videoExtension, videoSettingsRootObject.videoStoragePath, audioDeviceIndex, audioChannel)
+	    }
         }
         videoPropertyItemEnable(false)
         stillPropertyItemEnable(false)
@@ -1157,7 +1170,7 @@ Rectangle {
         } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU30) {
             see3cam = Qt.createComponent("../UVCSettings/see3camcu30/uvc_cu30.qml").createObject(root)
         }else if(selectedDeviceEnumValue == CommonEnums.SEE3CAMPLUS_CU30) {
-            see3cam = Qt.createComponent("../UVCSettings/see3campluscu30/uvc_pluscu30.qml").createObject(root)
+            see3cam = Qt.createComponent("../UVCSettings/see3camcu38/uvc_cu38.qml").createObject(root)
         } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU20) { // Added By Sankari : 28 Jul 2017
             see3cam = Qt.createComponent("../UVCSettings/see3camcu20/see3camcu20.qml").createObject(root)
         } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_30) {
@@ -1172,8 +1185,6 @@ Rectangle {
             see3cam = Qt.createComponent("../UVCSettings/h264cam/h264camExt.qml").createObject(root)
         }else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU55) {
             see3cam = Qt.createComponent("../UVCSettings/see3camcu55/see3camcu55.qml").createObject(root)
-        }else if(selectedDeviceEnumValue == CommonEnums.STORECAM_1335) { // Added By Sankari
-            see3cam = Qt.createComponent("../UVCSettings/storagecamcu135/storagecamCu135.qml").createObject(root)
         }else {
             see3cam = Qt.createComponent("../UVCSettings/others/others.qml").createObject(root)
         }
@@ -1215,10 +1226,7 @@ Rectangle {
             case CommonEnums.SEE3CAM_CU135:
             case CommonEnums.NILECAM30_USB:
             case CommonEnums.SEE3CAM_CU55:
-            case CommonEnums.STORECAM_1335:
-
                 camproperty.openHIDDevice(device_box.currentText);
-
             break;
         }
     }    
@@ -1264,11 +1272,11 @@ Rectangle {
         {
             videoSettingsRootObject = videoViewComponent.createObject(root,{"imageFormatY" : imageFormatYValue,"stillPropertyY" : stillPropertyYValue});
         }
-        /*var AudioViewComponent = Qt.createComponent("audiocapturesettings.qml")
+        var AudioViewComponent = Qt.createComponent("audiocapturesettings.qml")
         if (AudioViewComponent.status === Component.Ready)
         {
             audioSettingsRootObject = AudioViewComponent.createObject(root,{"imageFormatY" : imageFormatYValue,"stillPropertyY" : stillPropertyYValue});
-        }*/
+        }
         //Capture and Video recording
         var captureVideoRecordComponent = Qt.createComponent("captureandvideorecord.qml")
         if (captureVideoRecordComponent.status === Component.Ready)
@@ -1323,12 +1331,15 @@ Rectangle {
         open_sideBar.visible = false
    }
 
-
     function enableAllSettingsTab(){
         imageQualitySettingsEnable(true)
         videoPropertyItemEnable(true)
         stillPropertyItemEnable(true)
-        audioPropertyItemEnable(true)
+        if(disableAudio){
+            audioPropertyItemEnable(false)
+        }else{
+            audioPropertyItemEnable(true)
+        }
         uvc_settings.enabled = true
         uvc_settings.opacity = 1
         captureBtnEnable(true)
@@ -1381,9 +1392,6 @@ Rectangle {
        case CommonEnums.SNAP_SHOT:
            vidstreamproperty.makeShot(stillSettingsRootObject.stillStoragePath,stillSettingsRootObject.stillImageFormatComboText)
            break;
-       case CommonEnums.STORECAM_RETRIEVE_SHOT:
-           vidstreamproperty.retrieveShotFromStoreCam(stillSettingsRootObject.stillStoragePath,stillSettingsRootObject.stillImageFormatComboText)
-           break;
        case CommonEnums.TRIGGER_SHOT:
            vidstreamproperty.triggerModeShot(stillSettingsRootObject.stillStoragePath,stillSettingsRootObject.stillImageFormatComboText)
            break;
@@ -1394,20 +1402,6 @@ Rectangle {
            vidstreamproperty.changeFPSandTakeShot(stillSettingsRootObject.stillStoragePath,stillSettingsRootObject.stillImageFormatComboText, fpsIndexToChange)
            break;
        }
-   }
-   //get still settings from camera[used in storagecam] and Update in UI
-   function changeStillSettings(stillFormat, stillResolution){ // still capture settings in UI
-       setColorComboOutputIndex(true, stillFormat-1) // setting still format in UI
-       setColorComboOutputIndex(false, stillResolution-1) // setting still resolution in UI
-       JS.stillCaptureFormat = stillSettingsRootObject.stillColorComboIndexValue
-       JS.stillCaptureFormatIndex = stillSettingsRootObject.stillColorComboIndexValue*1
-       JS.stillCaptureResolution = stillSettingsRootObject.stillOutputTextValue.toString()
-       JS.stillCaptureResolutionIndex = stillSettingsRootObject.stillResolutionIndex
-   }
-
-   function setStillSettings()
-   {
-       vidstreamproperty.setStillVideoSize(stillSettingsRootObject.stillOutputTextValue, stillSettingsRootObject.stillColorComboIndexValue)
    }
    function enableCameraControls()
    {

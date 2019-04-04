@@ -164,7 +164,6 @@ void Cameraproperty::checkforDevice() {
                     if(cameraName.length()>22){
                         cameraName.insert(22,"\n");
                     }
-
                     //Removed the commented code by Dhurka - 13th Oct 2016
                     cameraMap.insert(qDevCount,QString::number(deviceIndex,10));
                     deviceNodeMap.insert(deviceIndex,(char*)m_querycap.bus_info);
@@ -203,7 +202,6 @@ void Cameraproperty::checkforDevice() {
 
 void Cameraproperty::setCurrentDevice(QString deviceIndex,QString deviceName) {
 
-
     if(deviceIndex.isEmpty() || deviceName.isEmpty())
     {
         emit setFirstCamDevice(-1);
@@ -215,15 +213,12 @@ void Cameraproperty::setCurrentDevice(QString deviceIndex,QString deviceName) {
     if(deviceName == "----Select camera----")
     {
         emit setFirstCamDevice(-1);
-
-
     }
     else
     {
         emit setFirstCamDevice(cameraMap.key(deviceIndex));
         emit setCamName(deviceName);
         uvccam.getDeviceNodeName(deviceNodeMap.value(deviceIndex.toInt()));
-
     }
 }
 
@@ -248,7 +243,6 @@ void Cameraproperty::logCriticalWriter(QString tmpStr) {
 //Added by Dhurka - 17th Oct 2016
 void Cameraproperty::openHIDDevice(QString deviceName)
 {
-
     uvccam.exitExtensionUnit();
     deviceName.remove(QRegExp("[\n\t\r]"));
     bool hidInit = uvccam.initExtensionUnit(deviceName);    
@@ -256,7 +250,6 @@ void Cameraproperty::openHIDDevice(QString deviceName)
     {
         emit initExtensionUnitSuccess();
     }
-
 }
 
 void Cameraproperty::closeLibUsbDeviceAscella(){
