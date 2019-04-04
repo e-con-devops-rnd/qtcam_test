@@ -329,8 +329,8 @@ Item {
                             minimumValue: 1
                             maximumValue: 100
                             onValueChanged: {
-                                if(audioDevicesList.currentText.length != 0){                                    
-                                    if(!skipSettingVolume){
+                                if(audioDevicesList.currentText.length != 0){                                 
+                                    if(!skipSettingVolume){                                    
                                         audioSettings.setVolume(volume_Slider.value)
                                         skipSettingVolume = false
                                     }

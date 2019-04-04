@@ -27,6 +27,7 @@ import QtQuick.Dialogs 1.1
 import econ.camera.property 1.0
 import econ.camera.stream 1.0
 import econ.camera.keyEvent 1.0
+import econ.camera.see3camcu1317 1.0
 import "../JavaScriptFiles/tempValue.js" as JS
 import cameraenum 1.0
 
@@ -39,6 +40,7 @@ Rectangle {
     signal beforeRecordVideo()
     signal afterRecordVideo()
     signal enableFaceRectafterBurst()
+    signal captureFrameTimeout();
     signal autoFocusSelected(bool autoFocusSelect)
     signal autoExposureSelected(bool autoExposureSelect)
 
@@ -52,6 +54,8 @@ Rectangle {
     //Added by Sankari: 07 Mar 2017
     // signal to notify whitebalance slider value changed
     signal manualWbSliderValueChanged()
+    //To grab preview Frames
+    signal queryFrame(bool retriveframe,bool InFailureCase);
 
     property int burstLength;
     property bool vidFormatChanged: false
@@ -100,6 +104,7 @@ Rectangle {
     signal videoCaptureFilterChildVisible(bool visibleStatus)
     //Property value for camera controls
     signal cameraControlPropertyChange();
+    signal stillFormatChanged(int stillFormatcurrentIndex, int stillResolncurrentIndex);
     property bool videoCaptureChildVisible : false;
     property bool stillCaptureChildVisible: false
     property bool audioCaptureChildVisible: false
@@ -201,7 +206,8 @@ Rectangle {
     signal previewFPSChanged();
 
     //Added by Sankari: 04 Jan 2017
-    signal stillResolutionChanged(var stillResolution, var stillFormat);
+    signal stillResolutionChanged(var stillResolution, int stillresolutionIndex, var stillFormat, int stillFormatIndex);
+
 
     // Added by Sankari: 3 Jan 2016
     signal frameSkipCount(var stillResolution, var videoResolution, var stillOutFormat);
@@ -236,6 +242,7 @@ Rectangle {
             stop()
         }
     }
+
     MessageDialog {
         id: messageDialog
         icon: StandardIcon.Information
@@ -496,6 +503,14 @@ Rectangle {
                 availableFpslist = fpsList;
             }
 
+            onSignalTograbPreviewFrame:{
+                queryFrame(retrieveframe,InFailureCase);
+             }
+
+            onCapFrameTimeout:{
+                captureFrameTimeout();
+            }
+
             MouseArea {
                 anchors.fill: parent
                 acceptedButtons: Qt.LeftButton | Qt.RightButton
@@ -613,6 +628,7 @@ Rectangle {
                     if(oldIndex!=currentIndex) {
 			seqAni.running = true
                         seqAni.start()
+                        vidstreamproperty.stopFrameTimeoutTimer()
                         vidstreamproperty.setPreviewBgrndArea(previewBgrndArea.width, previewBgrndArea.height, true)
 
                         oldIndex = currentIndex
@@ -654,19 +670,23 @@ Rectangle {
                         // Added by Sankari: 12 Feb 2018 - open camera key event file node using pci bus info.
                         camproperty.openEventNode(pciBusCamDetails)
                         updateFPS(stillSettingsRootObject.stillClorComboValue, stillSettingsRootObject.stillOutputTextValue)
-                        vidstreamproperty.startAgain()                        
+//                        vidstreamproperty.startAgain()
                         vidstreamproperty.width = stillSettingsRootObject.stillOutputTextValue.split("x")[0].toString()
                         vidstreamproperty.height = stillSettingsRootObject.stillOutputTextValue.split("x")[1].toString()
                         vidstreamproperty.lastPreviewResolution(stillSettingsRootObject.stillOutputTextValue,stillSettingsRootObject.stillColorComboIndexValue)
                         JS.stillCaptureFormat = stillSettingsRootObject.stillColorComboIndexValue
+                        JS.stillCaptureFormatIndex = stillSettingsRootObject.stillColorComboIndexValue*1
                         JS.stillCaptureResolution = stillSettingsRootObject.stillOutputTextValue.toString()
+                          JS.stillCaptureResolutionIndex = stillSettingsRootObject.stillResolutionIndex
                         JS.videoCaptureFormat = JS.stillCaptureFormat
                         JS.videoCaptureResolution = JS.stillCaptureResolution
                         JS.videocaptureFps = videoSettingsRootObject.videoFrameRate
 						// retain lastly set fps index
                         vidstreamproperty.lastFPS(videoSettingsRootObject.videoFrameRateIndex)
                         vidstreamproperty.masterModeEnabled()
-                        createExtensionUnitQml(selectedDeviceEnumValue)
+                        // Moved by Sankari: Mar 20, 2019. For storage camera, before start preview, we need to set ondemand mode.
+                        createExtensionUnitQml(selectedDeviceEnumValue) //setting ondemand mode in see3camcu1317 qml oncompleted.
+                        vidstreamproperty.startAgain() // Then start preview
                         getStillImageFormats();
 
                         // Added by Sankari: 12 Feb 2018 - initialize a socket notifier to get key from camera.
@@ -892,6 +912,10 @@ Rectangle {
         vidstreamproperty.updateFrameToSkip(stillSkip)
     }
 
+    // Added by Sankari: Mar 21, 2019. To set number of frames to skip in preview[ex: in see3cam_cu1317]
+    function updatePreviewFrameskip(previewSkip){        
+        vidstreamproperty.updatePreviewFrameSkip(previewSkip)
+    }
 
     function videoEncoderSelected(encoderIndex){
         // Added by Sankari : Mar 7 2019
@@ -911,6 +935,16 @@ Rectangle {
              disableAudioSettings(false)
 	     disableAudio = false
          }
+    }
+    function retrieveFrameFromStorageCamera(){
+        setStillSettings()
+        vidstreamproperty.retrieveFrameFromStoreCam()
+    }
+
+    function switchToCamFrameSettings(stillSettings){
+        // True if swithcing to still settings
+        // false if swithcing to preview settings
+        vidstreamproperty.switchToStillPreviewSettings(stillSettings)
     }
 
     function mouseClickCapture() {
@@ -1169,7 +1203,7 @@ Rectangle {
             see3cam = Qt.createComponent("../UVCSettings/see3cam40/uvc40.qml").createObject(root)
         } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU30) {
             see3cam = Qt.createComponent("../UVCSettings/see3camcu30/uvc_cu30.qml").createObject(root)
-        }else if(selectedDeviceEnumValue == CommonEnums.SEE3CAMPLUS_CU30) {
+        }else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU38) {
             see3cam = Qt.createComponent("../UVCSettings/see3camcu38/uvc_cu38.qml").createObject(root)
         } else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU20) { // Added By Sankari : 28 Jul 2017
             see3cam = Qt.createComponent("../UVCSettings/see3camcu20/see3camcu20.qml").createObject(root)
@@ -1185,6 +1219,9 @@ Rectangle {
             see3cam = Qt.createComponent("../UVCSettings/h264cam/h264camExt.qml").createObject(root)
         }else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU55) {
             see3cam = Qt.createComponent("../UVCSettings/see3camcu55/see3camcu55.qml").createObject(root)
+        }
+        else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU1317) { // Added By Sankari
+                    see3cam = Qt.createComponent("../UVCSettings/see3cam_Cu1317/see3camcu1317.qml").createObject(root)
         }else {
             see3cam = Qt.createComponent("../UVCSettings/others/others.qml").createObject(root)
         }
@@ -1226,6 +1263,9 @@ Rectangle {
             case CommonEnums.SEE3CAM_CU135:
             case CommonEnums.NILECAM30_USB:
             case CommonEnums.SEE3CAM_CU55:
+            case CommonEnums.SEE3CAM_CU1317:
+            case CommonEnums.SEE3CAM_CU38:
+
                 camproperty.openHIDDevice(device_box.currentText);
             break;
         }
@@ -1285,10 +1325,13 @@ Rectangle {
         }
     }
     Component.onDestruction: {
+        // Stop the timer when quitting application
+        vidstreamproperty.stopFrameTimeoutTimer();
         if(captureVideoRecordRootObject.recordStopBtnVisible) {
             vidstreamproperty.recordStop()
             captureVideoRecordRootObject.videoTimerUpdate(false)
         }
+        vidstreamproperty.stopCapture()
         camproperty.closeLibUsbDeviceAscella()
         setMasterMode();
         // Added by Sankari: 12 Feb 2018 - stop Getting key from camera.
@@ -1355,15 +1398,19 @@ Rectangle {
     function informPreviewFPSChanged(){
         previewFPSChanged()
     }
+    function skipFrameInPreview(skipFrame){
+        vidstreamproperty.setSkipPreviewFrame(skipFrame)
+    }
+
 
     // Added by Sankari: 25 Dec 2016 - emit the signal to inform video color space is changed in video capture settings
     function informVideoColorSpaceChanged(){
         videoColorSpaceChanged()
     }
 
-    function informStillResolutionIndexChanged(resoln, format){
-        stillResolutionChanged(resoln, format)
-    }
+    function informStillResolutionIndexChanged(resoln, resolutionIndex,format,stillFormatIndex){
+         stillResolutionChanged(resoln, resolutionIndex, format, stillFormatIndex)
+       }
 
     // Added by Sankari - 9 Dec 2016
     function takeTriggershot(){
@@ -1392,6 +1439,9 @@ Rectangle {
        case CommonEnums.SNAP_SHOT:
            vidstreamproperty.makeShot(stillSettingsRootObject.stillStoragePath,stillSettingsRootObject.stillImageFormatComboText)
            break;
+       case CommonEnums.STORECAM_RETRIEVE_SHOT:
+           vidstreamproperty.retrieveShotFromStoreCam(stillSettingsRootObject.stillStoragePath,stillSettingsRootObject.stillImageFormatComboText)
+           break;
        case CommonEnums.TRIGGER_SHOT:
            vidstreamproperty.triggerModeShot(stillSettingsRootObject.stillStoragePath,stillSettingsRootObject.stillImageFormatComboText)
            break;
@@ -1408,6 +1458,19 @@ Rectangle {
        stillChildVisibleState(false)
        videoChildMenuVisible(false)
        vidstreamproperty.cameraFilterControls()
+   }
+   //get still settings from camera[used in storagecam] and Update in UI
+   function changeStillSettings(stillFormat, stillResolution){ // still capture settings in UI
+       setColorComboOutputIndex(true, stillFormat-1) // setting still format in UI
+       setColorComboOutputIndex(false, stillResolution-1) // setting still resolution in UI
+       JS.stillCaptureFormat = stillSettingsRootObject.stillColorComboIndexValue
+       JS.stillCaptureFormatIndex = stillSettingsRootObject.stillColorComboIndexValue*1
+       JS.stillCaptureResolution = stillSettingsRootObject.stillOutputTextValue.toString()
+       JS.stillCaptureResolutionIndex = stillSettingsRootObject.stillResolutionIndex
+   }
+   function setStillSettings()
+   {
+       vidstreamproperty.setStillVideoSize(stillSettingsRootObject.stillOutputTextValue, stillSettingsRootObject.stillColorComboIndexValue)
    }
    function logInfo(log)
    {
@@ -1447,5 +1510,9 @@ Rectangle {
    function enableVideoPin(videoPinEnable)
    {
        videoSettingsRootObject.enableVideoPin(videoPinEnable)
+   }
+   function enableTimerforGrabPreviewFrame(timerstatus)
+   {
+       vidstreamproperty.enableTimer(timerstatus);
    }
 }

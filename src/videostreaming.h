@@ -158,6 +158,7 @@ public:
     static QStringListModel videoOutputFormat;
     static QStringListModel fpsList;    
     static QStringListModel encoderList;
+     QTimer m_timer;
 
     void displayFrame();
 
@@ -183,6 +184,7 @@ public:
 
     bool findNativeFormat(__u32 format, QImage::Format &dstFmt);
     bool startCapture();
+    bool retrieveFrame;
 
     // get current resoution set in v4l2
     QString getResoultion();
@@ -195,6 +197,7 @@ public:
     QString _text;
     QString lastPreviewSize;
     QString lastFormat;
+    bool OnMouseClick;
     // Added by Sankari - To maintain last set framerate
     QString lastFPSValue;
 
@@ -204,6 +207,7 @@ public:
     AudioInput audioinput;
     audio_buff_t *audio_buffer_data;
     bool audiorecordStart;
+    bool SkipIfPreviewFrame;
     QMutex recordMutex;
 
     /* Jpeg decode */
@@ -217,8 +221,13 @@ public:
 
     uint frameToSkip;
 
+    uint previewFrameSkipCount;
+    uint previewFrameToSkip;
+    bool skippingPreviewFrame;
+
 private:
     qreal m_t;
+    __u8 m_bufReqCount;
     FrameRenderer *m_renderer;
 
     uint8_t *yuyvBuffer;
@@ -333,12 +342,16 @@ private:
     QString getFilePath();
     void setImageFormatType(QString imgFormatType);
     QString getImageFormatType();
+    bool retrieveframeStoreCam;
+    bool retrieveframeStoreCamInCross;
+
 
 private slots:
     void handleWindowChanged(QQuickWindow *win); 
 
 public slots:
-
+     void switchToStillPreviewSettings(bool stillSettings);
+     void retrieveFrameFromStoreCam();
     void sync();
     void cleanup();   
     void setPreviewBgrndArea(int width, int height, bool sidebarAvailable);
@@ -346,7 +359,10 @@ public slots:
     void setChannelCount(uint index);
     void setSampleRate(uint index);
     void stopUpdatePreview();
-
+    void doCaptureFrameTimeout();
+    void stopFrameTimeoutTimer();
+    void enableTimer(bool timerstatus);
+    void retrieveShotFromStoreCam(QString filePath,QString imgFormatType);
 
      // Added by Sankari : 10 Dec 2016
     // To Disable image capture dialog when taking trigger shot in trigger mode for 12cunir camera
@@ -539,6 +555,10 @@ public slots:
 
     void updateFrameToSkip(uint stillSkip);
 
+    void updatePreviewFrameSkip(uint previewSkip);
+    void setSkipPreviewFrame(bool skipFrame);
+
+
     void enumerateFPSList();
 
     // Set the uvc extension control value
@@ -578,6 +598,7 @@ signals:
     void videoRecord(QString fileName);
     void enableRfRectBackInPreview();
     void enableFactRectInPreview();
+    void capFrameTimeout();
 
     // Added by Sankari: 02 Dec 2017
     void stillSkipCount(QString stillResoln, QString videoResoln, QString stillOutFormat);
@@ -588,6 +609,7 @@ signals:
 
     // To get FPS list
     void sendFPSlist(QString fpsList);
+     void signalTograbPreviewFrame(bool retrieveframe,bool InFailureCase);
 };
 
 #endif // VIDEOSTREAMING_H

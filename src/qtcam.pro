@@ -45,7 +45,8 @@ SOURCES += main.cpp \
     see3cam_130A.cpp \
     audioinput.cpp \
     see3cam_cu38.cpp \
-    alsamaster.cpp
+    alsamaster.cpp\
+    see3cam_cu1317.cpp
 
 # Installation path
 # target.path =
@@ -91,7 +92,8 @@ HEADERS += \
     see3cam_130A.h \
     audioinput.h \
     see3cam_cu38.h \
-    alsamaster.h
+    alsamaster.h\
+    see3cam_cu1317.h
 
 
 INCLUDEPATH +=  $$PWD/v4l2headers/include \

@@ -292,7 +292,7 @@ void AudioInput::pa_sourcelist_cb(pa_context *c, const pa_source_info *l, int eo
     double my_latency = 0.0;
 
 
-    printf("AUDIO: =======[ Input Device #%d ]=======\n", source_index);
+/*    printf("AUDIO: =======[ Input Device #%d ]=======\n", source_index);
     printf("       Description: %s\n", l->description);
     printf("       Name: %s\n", l->name);
     printf("       Index: %d\n", l->index);
@@ -304,8 +304,7 @@ void AudioInput::pa_sourcelist_cb(pa_context *c, const pa_source_info *l, int eo
 
     printf("\n");
 
-
-
+*/
     if(my_latency <= 0.0)
         my_latency = (double) latency_ms / 1000;
 
@@ -934,6 +933,7 @@ bool AudioInput::updateSupportedInfo(uint currentIndex)
         volume=((volume*100)/65536);
         emit volumeChanged(volume);
     }else{
+        qDebug()<<"ubuntu version is not 12.04";
 
         //Using Qt
         devices = QAudioDeviceInfo::availableDevices(QAudio::AudioInput);
