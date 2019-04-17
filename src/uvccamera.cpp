@@ -95,8 +95,7 @@ unsigned int uvccamera::getTickCount()
 {
     struct timeval tv;
     if(gettimeofday(&tv, NULL) != 0)
-        return 0;
-
+        return 0;   
     return (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
 }
 
@@ -507,8 +506,12 @@ bool uvccamera::initExtensionUnit(QString cameraName) {
      * Added camera enum comparision
      * Before its like camera name comparision
      */
-    if(selectedDeviceEnum != CommonEnums::SEE3CAM_CU130 && selectedDeviceEnum != CommonEnums::SEE3CAM_CU40)//this condition is put temporary until cu130 and cu40 hardware
-    {                                // does not support sendOSCode implementation
+    //Modified by Sankari - 14th Oct 2018
+    /*
+     * Correcting OS code supported cameras
+     */
+    if(selectedDeviceEnum == CommonEnums::SEE3CAM_11CUG || selectedDeviceEnum == CommonEnums::SEE3CAM_12CUNIR || selectedDeviceEnum == CommonEnums::ECON_1MP_BAYER_RGB  || selectedDeviceEnum == CommonEnums::ECON_1MP_MONOCHROME || selectedDeviceEnum == CommonEnums::SEE3CAM_CU51)
+    {                                
         ret = sendOSCode();
         if (ret == false) {
             emit logHandle(QtCriticalMsg,"OS Identification failed\n");
@@ -1098,7 +1101,6 @@ bool uvccamera::sendHidCmd(unsigned char *outBuf, unsigned char *inBuf, int len)
 {
     // Write data into camera
     int ret = write(hid_fd, outBuf, len);
-
     if (ret < 0) {        
         perror("write");
         return false;
@@ -1114,14 +1116,15 @@ bool uvccamera::sendHidCmd(unsigned char *outBuf, unsigned char *inBuf, int len)
     tv.tv_usec = 0;
 
     // Monitor read file descriptor for 5 secs
+
     if(0 > select(1, &rfds, NULL, NULL, &tv)){
+
       perror("select");
         return false;
     }
 
     // Read data from camera
     int retval = read(hid_fd, inBuf, len);
-
     if (retval < 0) {
         perror("read");
         return false;

@@ -37,7 +37,9 @@
 #include "videoencoder.h"
 #include "h264decoder.h"
 #include "audioinput.h"
+#include "uvccamera.h"
 #include "common_enums.h"
+#include"see3cam_cu1317.h"
 #include <linux/uvcvideo.h>
 
 #include <QtQuick/QQuickItem>
@@ -172,6 +174,7 @@ public:
     bool saveRawFile(void *inputBuffer, int buffersize);    
     bool saveIRImage();
 
+
     static int jpegDecode(Videostreaming *obj, unsigned char **pic, unsigned char *buf, unsigned long bytesUsed);
     static int decomp(Videostreaming *obj, unsigned char **jpegbuf,
                                    unsigned long *jpegsize, unsigned char *dstbuf, int w, int h,
@@ -209,6 +212,9 @@ public:
     bool audiorecordStart;
     bool SkipIfPreviewFrame;
     QMutex recordMutex;
+
+    See3CAM_CU1317 See3camcu1317;
+
 
     /* Jpeg decode */
     int doyuv;
@@ -252,6 +258,7 @@ private:
 
     unsigned m_frame;
     unsigned m_lastFrame;
+
     unsigned m_fps;
     struct timeval m_tv;
 
@@ -364,6 +371,7 @@ public slots:
     void enableTimer(bool timerstatus);
     void retrieveShotFromStoreCam(QString filePath,QString imgFormatType);
 
+
      // Added by Sankari : 10 Dec 2016
     // To Disable image capture dialog when taking trigger shot in trigger mode for 12cunir camera
     void disableImageCaptureDialog();
@@ -425,6 +433,7 @@ public slots:
      * @brief To stop the camera preview
      */
     void stopCapture();
+    void resolnSwitch();
 
     /**
      * @brief To start the camera preview
@@ -527,7 +536,7 @@ public slots:
      * @param fileLocation - Location where the recorded file is saved
      * @param - audioDeviceIndex  - audio device index
      */
-    void recordBegin(int videoEncoderType, QString videoFormatType, QString fileLocation, int audioDeviceIndex, int channels);
+    void recordBegin(int videoEncoderType, QString videoFormatType, QString fileLocation, int audioDeviceIndex, unsigned sampleRate, int channels);
 
     /**
      * @brief This function should be called to stop the video recording

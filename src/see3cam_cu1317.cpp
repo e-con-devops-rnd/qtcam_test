@@ -902,8 +902,7 @@ bool See3CAM_CU1317::storePreviewFrame()
     // send request and get reply from camera
     if(uvc.sendHidCmd(g_out_packet_buf, g_in_packet_buf, BUFFER_LENGTH)){
         if (g_in_packet_buf[6]== GET_SUCCESS) {
-
-            return true;
+           return true;
         }
     }
     return false;
@@ -1023,7 +1022,6 @@ bool See3CAM_CU1317::grabStillFrame(uint frameIndex, uint stillformatId, uint st
 
 bool See3CAM_CU1317::grabPreviewFrame()
 {
-
     if(uvccamera::hid_fd < 0)
     {
         return false;
@@ -1042,7 +1040,6 @@ bool See3CAM_CU1317::grabPreviewFrame()
             return true;
         }
     }
-
     return false;
 }
 
@@ -1174,4 +1171,108 @@ bool See3CAM_CU1317::readFirmwareVersion(uint *pMajorVersion, uint *pMinorVersio
     }
     return false;
 
+}
+
+/* Added by Navya -08 Apr 2019
+ * Inorder to control Led's  */
+
+bool See3CAM_CU1317::getLedControl()
+{
+   bool ledstatus,blueledstatus,greenledstatus,redledstatus;
+
+   // hid validation
+   if(uvccamera::hid_fd < 0)
+   {
+       return false;
+   }
+
+   //Initialize buffers
+   initializeBuffers();
+
+   // fill buffer values
+   g_out_packet_buf[1] = CAMERA_CONTROL_See3CAM_CU1317;  /* set camera control code */
+   g_out_packet_buf[2] = GET_LED_CONTROL_See3CAM_CU1317; /* get LED control code */
+
+   // send request and get reply from camera
+   if(uvc.sendHidCmd(g_out_packet_buf, g_in_packet_buf, BUFFER_LENGTH)){
+       if (g_in_packet_buf[6]==GET_FAIL) {
+           return false;
+       } else if(g_in_packet_buf[0] == CAMERA_CONTROL_See3CAM_CU1317 &&
+           g_in_packet_buf[1]==GET_LED_CONTROL_See3CAM_CU1317 &&
+           g_in_packet_buf[6]==GET_SUCCESS) {
+           ledstatus = g_in_packet_buf[3];
+           blueledstatus=g_in_packet_buf[4];
+           greenledstatus=g_in_packet_buf[5];
+           redledstatus=g_in_packet_buf[6];
+
+           emit ledControlStatus(ledstatus,blueledstatus,greenledstatus,redledstatus);
+
+           return true;
+       }
+   }
+   return false;
+
+}
+
+/** breif description for setLedControl
+ * ledstatus     -  whether ON/OFF
+ * blueledstatus -  status of blue led
+ * greenledstatus-  status of green led
+ * redledstatus  -  status of red led     **/
+
+bool See3CAM_CU1317::setLedControl(bool ledstatus,bool blueledstatus,bool greenledstatus,bool redledstatus)
+{
+    // hid validation
+    if(uvccamera::hid_fd < 0)
+    {
+
+        return false;
+    }
+    //Initialize buffers
+    initializeBuffers();
+
+    // fill buffer values
+    g_out_packet_buf[1] = CAMERA_CONTROL_See3CAM_CU1317; /* set camera control code */
+    g_out_packet_buf[2] = SET_LED_CONTROL_See3CAM_CU1317; /* set led control code */
+    g_out_packet_buf[3] = ledstatus; /* actual led status */
+    g_out_packet_buf[4] = blueledstatus;
+    g_out_packet_buf[5] = greenledstatus;
+    g_out_packet_buf[6] = redledstatus;
+
+    // send request and get reply from camera
+    if(uvc.sendHidCmd(g_out_packet_buf, g_in_packet_buf, BUFFER_LENGTH)){
+        if (g_in_packet_buf[6]==SET_FAIL) {
+
+            return false;
+        } else if(g_in_packet_buf[0] == CAMERA_CONTROL_See3CAM_CU1317 &&
+            g_in_packet_buf[1]==SET_LED_CONTROL_See3CAM_CU1317 &&
+            g_in_packet_buf[6]==SET_SUCCESS) {
+
+            return true;
+        }
+    }
+    return false;
+}
+bool See3CAM_CU1317::resetTimeStamp()
+{
+
+    if(uvccamera::hid_fd < 0)
+    {
+        return false;
+    }
+    //Initialize buffers
+    initializeBuffers();
+
+    //Set the Report Number
+    g_out_packet_buf[1] = CAMERA_CONTROL_See3CAM_CU1317; // camera control id
+    g_out_packet_buf[2] = RESET_TIME_STAMP; // reset time stamp
+
+    // send request and get reply from camera
+    if(uvc.sendHidCmd(g_out_packet_buf, g_in_packet_buf, BUFFER_LENGTH)){
+        if (g_in_packet_buf[6]== GET_SUCCESS) {
+            return true;
+        }
+    }
+
+    return false;
 }

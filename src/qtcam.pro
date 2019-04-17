@@ -45,7 +45,7 @@ SOURCES += main.cpp \
     see3cam_130A.cpp \
     audioinput.cpp \
     see3cam_cu38.cpp \
-    alsamaster.cpp\
+    alsa.cpp\
     see3cam_cu1317.cpp
 
 # Installation path
@@ -92,7 +92,7 @@ HEADERS += \
     see3cam_130A.h \
     audioinput.h \
     see3cam_cu38.h \
-    alsamaster.h\
+    alsa.h\
     see3cam_cu1317.h
 
 

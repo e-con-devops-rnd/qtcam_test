@@ -234,10 +234,10 @@ Rectangle {
         interval: 1000
         onTriggered: {
 	    if(disableAudio){
-	    	vidstreamproperty.recordBegin(JS.videoEncoder,JS.videoExtension, videoSettingsRootObject.videoStoragePath, 0, audioChannel)
+            vidstreamproperty.recordBegin(JS.videoEncoder,JS.videoExtension, videoSettingsRootObject.videoStoragePath, 0, audioSampleRate, audioChannel)
 	    }
 	    else{
-            	vidstreamproperty.recordBegin(JS.videoEncoder,JS.videoExtension, videoSettingsRootObject.videoStoragePath, audioDeviceIndex, audioChannel)
+                vidstreamproperty.recordBegin(JS.videoEncoder,JS.videoExtension, videoSettingsRootObject.videoStoragePath, audioDeviceIndex, audioSampleRate, audioChannel)
 	    }
             stop()
         }
@@ -349,8 +349,7 @@ Rectangle {
             onUbuntuVersionSelectedLessThan16:{
                 ubuntuversionLessThan16 = true
                 disableAudioSettings(true) // In ubuntu 12.04 and 14.04 (Video capture settings), video encoder index is 0,(YUY - raw format).
-                                           // so disable audio settings
-				disableAudio = true
+                disableAudio = true          // so disable audio settings
             }
 
             onTitleTextChanged:{
@@ -503,7 +502,7 @@ Rectangle {
                 availableFpslist = fpsList;
             }
 
-            onSignalTograbPreviewFrame:{
+          onSignalTograbPreviewFrame:{
                 queryFrame(retrieveframe,InFailureCase);
              }
 
@@ -974,8 +973,9 @@ Rectangle {
         if (!vidFormatChanged){            
             vidstreamproperty.width = str.toString().split("x")[0].toString()
             vidstreamproperty.height = str.toString().split("x")[1].toString()
-        }      
-        vidstreamproperty.stopCapture()        
+        }
+        vidstreamproperty.resolnSwitch()
+    //    vidstreamproperty.stopCapture()
         if(vidFormatChanged){
             vidstreamproperty.lastPreviewResolution(vidstreamproperty.width.toString() +"x"+vidstreamproperty.height.toString(),format)         
             JS.videoCaptureResolution = vidstreamproperty.width.toString() +"x"+vidstreamproperty.height.toString()
@@ -995,7 +995,7 @@ Rectangle {
 
     function updateStillPreview(str, format) {
 		m_Snap = false
-        stillPreview = true        
+        stillPreview = true
         vidstreamproperty.stopCapture()
         vidstreamproperty.vidCapFormatChanged(format)
         vidstreamproperty.displayStillResolution()
@@ -1095,11 +1095,11 @@ Rectangle {
             recordStartDelayTimer.start() // some delay is required to disable focus rect / face overlay rect. After that delay need to start record.
         }else{
 	    if(disableAudio){
-	    	vidstreamproperty.recordBegin(JS.videoEncoder,JS.videoExtension, videoSettingsRootObject.videoStoragePath, 0, audioChannel)
+            vidstreamproperty.recordBegin(JS.videoEncoder,JS.videoExtension, videoSettingsRootObject.videoStoragePath, 0, audioSampleRate, audioChannel)
 	    }
 	    else{
-            	vidstreamproperty.recordBegin(JS.videoEncoder,JS.videoExtension, videoSettingsRootObject.videoStoragePath, audioDeviceIndex, audioChannel)
-	    }
+                vidstreamproperty.recordBegin(JS.videoEncoder,JS.videoExtension, videoSettingsRootObject.videoStoragePath, audioDeviceIndex, audioSampleRate, audioChannel)
+            }
         }
         videoPropertyItemEnable(false)
         stillPropertyItemEnable(false)
@@ -1131,7 +1131,10 @@ Rectangle {
         messageDialog.open()
         videoPropertyItemEnable(true)
         stillPropertyItemEnable(true)
-        audioPropertyItemEnable(true)
+        // Added by Sankari : Apr 5 2018. Once recording is finished, Do not enable audio settings when "YUY" encoder is selected
+        if(!disableAudio){
+            audioPropertyItemEnable(true)
+        }
         device_box.enabled = true
         vidstreamproperty.enabled = true
         device_box.opacity = 1
@@ -1361,6 +1364,10 @@ Rectangle {
         sideBarItems.visible = false
         sidebarVisibleStatus(sideBarItems.visible)
         open_sideBar.visible = true
+
+        // Added by Sankari: 05 Apr 2019
+        // set preview background area. param1:width, param2: height, param3: sidebar visibility true/false
+        vidstreamproperty.setPreviewBgrndArea(previewBgrndArea.width, previewBgrndArea.height, false)
     }
 
     Keys.onRightPressed: {
@@ -1372,6 +1379,10 @@ Rectangle {
         sideBarItems.visible = true
         sidebarVisibleStatus(sideBarItems.visible)
         open_sideBar.visible = false
+
+        // Added by Sankari: 05 Apr 2019 - To prevent overlapping preview with side bar.
+        // set preview background area. param1:width, param2: height, param3: sidebar visibility true/false
+        vidstreamproperty.setPreviewBgrndArea(previewBgrndArea.width, previewBgrndArea.height, true)
    }
 
     function enableAllSettingsTab(){
@@ -1439,13 +1450,13 @@ Rectangle {
        case CommonEnums.SNAP_SHOT:
            vidstreamproperty.makeShot(stillSettingsRootObject.stillStoragePath,stillSettingsRootObject.stillImageFormatComboText)
            break;
-       case CommonEnums.STORECAM_RETRIEVE_SHOT:
+       case CommonEnums.STORECAM_RETRIEVE_SHOT:            
            vidstreamproperty.retrieveShotFromStoreCam(stillSettingsRootObject.stillStoragePath,stillSettingsRootObject.stillImageFormatComboText)
            break;
-       case CommonEnums.TRIGGER_SHOT:
+       case CommonEnums.TRIGGER_SHOT:            
            vidstreamproperty.triggerModeShot(stillSettingsRootObject.stillStoragePath,stillSettingsRootObject.stillImageFormatComboText)
            break;
-       case CommonEnums.BURST_SHOT:
+       case CommonEnums.BURST_SHOT:          
            vidstreamproperty.makeBurstShot(stillSettingsRootObject.stillStoragePath,stillSettingsRootObject.stillImageFormatComboText, burstLength)
            break;
        case CommonEnums.CHANGE_FPS_SHOT:
