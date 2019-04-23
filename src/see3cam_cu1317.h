@@ -23,7 +23,7 @@
 #include <QObject>
 #include "uvccamera.h"
 #include <QtConcurrentRun>
-#include "videostreaming.h"
+
 
 #define EXPOSURECOMP_MIN 8000
 #define EXPOSURECOMP_MAX 1000000
@@ -50,6 +50,9 @@
 
 #define SET_STREAM_MODE_See3CAM_CU1317            0x0E
 #define GET_STREAM_MODE_See3CAM_CU1317            0x0D
+
+#define GET_LED_CONTROL_See3CAM_CU1317            0x26
+#define SET_LED_CONTROL_See3CAM_CU1317            0x27
 
 #define SET_ORIENTATION_See3CAM_CU1317            0x11
 #define GET_ORIENTATION_See3CAM_CU1317            0x10
@@ -90,6 +93,7 @@
 #define ENABLE_FACE_RECTANGLE_See3CAM_CU1317        0x01
 #define DISABLE_FACE_RECTANGLE_See3CAM_CU1317       0x00
 #define SET_FACE_RECT_STATE                        0x20
+#define RESET_TIME_STAMP                            0x21
 
 #define SET_TO_DEFAULT_See3CAM_CU1317               0x0F
 
@@ -107,7 +111,6 @@ class See3CAM_CU1317 : public QObject
 
 private:
     uvccamera uvc;
-    Videostreaming videostreaming;
 
     unsigned char g_out_packet_buf[BUFFER_LENGTH];
     unsigned char g_in_packet_buf[BUFFER_LENGTH];
@@ -222,6 +225,7 @@ signals:
      // Added by Sankari: Mar 21, 2019
      //To set number of frames to skip in preview - signal to qml
      void updatePreviewFrameToSkip(uint previewSkip);
+     void ledControlStatus(bool ledstatus,bool blueledstatus,bool greenledstatus,bool redledstatus);
 
 
 public slots:
@@ -256,6 +260,9 @@ public slots:
     bool setExposureCompensation(unsigned int exposureCompValue);
     bool getExposureCompensation();
 
+    bool setLedControl(bool ledstatus,bool blueledstatus,bool greenledstatus,bool redledstatus);
+    bool getLedControl();
+
     bool setFrameRateCtrlValue(uint frameRate);
     bool getFrameRateCtrlValue();
 
@@ -280,6 +287,7 @@ public slots:
     bool initStoreCAM1335(char *hidDeviceName);
     void deinitStoreCAM1335();
     bool readFirmwareVersion(uint *pMajorVersion, uint *pMinorVersion1, uint *sdkVersion, uint *svnVersion);
+    bool resetTimeStamp();
 
 };
 

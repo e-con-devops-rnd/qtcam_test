@@ -55,7 +55,6 @@
 #include "about.h"
 #include "common.h"
 #include "common_enums.h"
-#include "alsamaster.h"
 #include "see3cam_cu1317.h"
 
 //*! \mainpage Qtcam - A econ's camera product
@@ -139,8 +138,7 @@ int main(int argc, char *argv[])
 
     viewer.rootContext()->setContextProperty("camModels", &camProperty.modelCam);
 
-    Videostreaming vs;
-    AlsaMaster alsa;
+    Videostreaming vs;   
     AudioInput audio;
     viewer.rootContext()->setContextProperty("resolutionModel", &vs.resolution);
     viewer.rootContext()->setContextProperty("stillOutputFormatModel", &vs.stillOutputFormat);

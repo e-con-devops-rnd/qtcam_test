@@ -80,6 +80,15 @@ Item {
     }
 
     Timer {
+        id:scenemodeTimer
+        interval:1000
+        repeat:false
+        onTriggered:{
+            see3camcu1317.getSceneMode()
+        }
+    }
+
+    Timer {
         id: snapShotTimer
         interval: 1000
         onTriggered: {
@@ -96,16 +105,22 @@ Item {
             setMasterOnDemandMode()
         }
     }
+    Videostreaming{
+        id:videostream
+    }
 
     Connections
     {
         target: root
         onTakeScreenShot:
-        {
-           // if(see3camcu1317.setFaceRectState(false)){ // true - enable/ false - disable
-            //    snapShotTimer.start()
-            root.imageCapture(CommonEnums.SNAP_SHOT);
-           // }
+        {              
+            if(streamSwTrigger.checked || streamHwTrigger.checked){
+                root.disableSaveImage()
+                enableSettings.start()
+            }
+            else
+                root.imageCapture(CommonEnums.SNAP_SHOT);
+
         }
         onGetVideoPinStatus:
         {
@@ -141,25 +156,22 @@ Item {
         onEnableFaceRectafterBurst:{
 
         }
-
         onBeforeRecordVideo:{
 
         }
         onAfterRecordVideo:{
 
         }
-        onQueryFrame:{                
+        onQueryFrame:{
             if((streamMasterOnDemand.checked || streamHwTrigger.checked)){
                 if(retriveframe){
                     if(!see3camcu1317.grabStillFrame(frameIndexCombo.currentIndex, stillFormatCurrentIndex+1, stillResolutionCurrentIndex+1)){
                         if(!InFailureCase)
                         displayMessageBox("Failure", "Image is not available in given index")
-
                     }
                 }else{
 
-                    see3camcu1317.grabPreviewFrame();
-
+                    see3camcu1317.grabPreviewFrame()
                 }
             }
         }
@@ -187,7 +199,7 @@ Item {
             }
         }
         onExtensionTabVisible:{
-            if(visible){
+            if(visible){               
                 frameIndexCombo.currentIndex = 0
             }
         }
@@ -220,7 +232,6 @@ Item {
                 Grid {
                     columns: 2
                     spacing: 20
-
                     ExclusiveGroup { id: effectInputGroup }
                     RadioButton {
                         id: effectNormal
@@ -307,6 +318,7 @@ Item {
                         id: sceneNormal
                         style:  econRadioButtonStyle
                         text:   qsTr("Normal")
+                      //  checked :true
                         exclusiveGroup: sceneInputGroup
                         activeFocusOnPress: true
                         onClicked: {
@@ -359,7 +371,6 @@ Item {
                             if(skipUpdateUIDenoise){
                                 see3camcu1317.setDenoiseValue(deNoiseSlider.value)
                             }
-                            skipUpdateUIDenoise = true
                         }
                     }
                     TextField {
@@ -405,9 +416,8 @@ Item {
                             if(skipUpdateUIQFactor){
                                 see3camcu1317.setQFactor(qFactorSlider.value)
                             }
-                            skipUpdateUIQFactor = true
                         }
-                    }
+                     }
                     TextField {
                         id: qFactorTextField
                         text: qFactorSlider.value
@@ -498,8 +508,6 @@ Item {
                             if(skipUpdateUIiHDR){
                                 see3camcu1317.setiHDRMode(See3camcu1317.HdrManual, iHDRSlider.value)
                             }
-                            skipUpdateUIiHDR = true
-
                         }
                     }
                     TextField {
@@ -576,7 +584,6 @@ Item {
                                 activeFocusOnPress: true
                                 style: econRadioButtonStyle
                                 onClicked: {
-                                   // setMaster.stop()    // Added by Navya  //Need to stop the setMaster timer ,so that we cannot see the livepreview
                                     root.captureBtnEnable(false)
                                     root.videoRecordBtnEnable(false)
                                     see3camcu1317.setStreamMode(See3camcu1317.STREAM_SOFTWARE_TRIGGER)
@@ -597,16 +604,16 @@ Item {
                                 text: "Grab"
                                 style: econButtonStyle
                                 opacity: streamSwTrigger.checked ? 1 : 0.1
-
                                 implicitHeight: 20
                                 implicitWidth: 60
                                 onClicked: {
                                     see3camcu1317.storePreviewFrame()
                                     see3camcu1317.grabPreviewFrame()
+
                                 }
                                 Keys.onReturnPressed: {
                                     see3camcu1317.storePreviewFrame()
-                                   see3camcu1317.grabPreviewFrame()
+                                    see3camcu1317.grabPreviewFrame()
                                 }
                             }
                         }
@@ -617,7 +624,6 @@ Item {
                                 activeFocusOnPress: true
                                 style: econRadioButtonStyle
                                 onClicked: {
-                                    //setMaster.stop()    //Added by Navya //Need to stop the setMaster timer ,so that we cannot see the livepreview
                                     root.captureBtnEnable(false)
                                     root.videoRecordBtnEnable(false)
                                     see3camcu1317.setStreamMode(See3camcu1317.STREAM_HARDWARE_TRIGGER)
@@ -808,6 +814,7 @@ Item {
                             exclusiveGroup: roiExpogroup
                             id: autoexpFull
                             text: "Full"
+                            checked:true
                             activeFocusOnPress: true
                             style: econRadioButtonStyle
                             opacity: enabled ? 1 : 0.1
@@ -815,11 +822,11 @@ Item {
                             // videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord - these parameters are required only when click in preview]
                             // winSize is required only for manual mode
                             onClicked: {
-                                see3camcu1317.setROIAutoExposure(see3camcu1317.AutoExpFull, 0, 0, 0, 0, 0);
+                                see3camcu1317.setROIAutoExposure(See3camcu1317.AutoExpFull, 0, 0, 0, 0, 0);
                                 autoExpoWinSizeCombo.enabled = false
                             }
                             Keys.onReturnPressed: {
-                                see3camcu1317.setROIAutoExposure(see3camcu1317.AutoExpFull, 0, 0, 0, 0, 0);
+                                see3camcu1317.setROIAutoExposure(See3camcu1317.AutoExpFull, 0, 0, 0, 0, 0);
                                 autoExpoWinSizeCombo.enabled = false
                             }
                         }
@@ -831,11 +838,11 @@ Item {
                             style: econRadioButtonStyle
                             opacity: enabled ? 1 : 0.1
                             onClicked: {
-                                see3camcu1317.setROIAutoExposure(see3camcu1317.AutoExpManual, 0, 0, 0, 0, 0);
+                                see3camcu1317.setROIAutoExposure(See3camcu1317.AutoExpManual, 0, 0, 0, 0, 0);
                                 autoExpoWinSizeCombo.enabled = true
                             }
                             Keys.onReturnPressed: {
-                                see3camcu1317.setROIAutoExposure(see3camcu1317.AutoExpManual, 0, 0, 0, 0, 0);
+                                see3camcu1317.setROIAutoExposure(See3camcu1317.AutoExpManual, 0, 0, 0, 0, 0);
                                 autoExpoWinSizeCombo.enabled = true
                             }
                         }
@@ -860,7 +867,7 @@ Item {
                         onCurrentIndexChanged: {
 
                             if(skipUpdateUIOnExpWindowSize){
-                                see3camcu1317.setROIAutoExposure(see3camcu1317.AutoExpManual, 0, 0, 0, 0, autoExpoWinSizeCombo.currentText)
+                                see3camcu1317.setROIAutoExposure(See3camcu1317.AutoExpManual, 0, 0, 0, 0, autoExpoWinSizeCombo.currentText)
                             }
                             skipUpdateUIOnExpWindowSize = true
                         }
@@ -953,7 +960,6 @@ Item {
                                 if(skipUpdateUIFrameRate){
                                     see3camcu1317.setFrameRateCtrlValue(frameRateSlider.value)
                                 }
-                                skipUpdateUIFrameRate = true
                             }
                         }
                         TextField {
@@ -1171,6 +1177,7 @@ Item {
             root.captureBtnEnable(true)
             root.videoRecordBtnEnable(true)
             see3camcu1317.setStreamMode(See3camcu1317.STREAM_MASTER_ONDEMAND)
+
             see3camcu1317.grabPreviewFrame()
 
         }
@@ -1199,7 +1206,7 @@ Item {
             if(see3camcu1317.setFaceDetectionRect(faceRectEnable.checked, faceDetectEmbedData.checked, overlayRect.checked)){
                 if(faceDetectEmbedData.checked){
                     messageDialog.title = qsTr("Status")
-                    messageDialog.text = qsTr("The last part of the frame will be replaced by face data.Refer document See3CAM_CU1317_Face_and_Smile_Detection for more details")
+                    messageDialog.text = qsTr("The last part of the frame will be replaced by face data.Refer document See3CAM_CU1317_Face_and_Smile_Detection_Application_Note for more details")
                     messageDialog.open()
                 }
             }
@@ -1210,7 +1217,7 @@ Item {
             if(see3camcu1317.setSmileDetection(true, smileDetectEmbedData.checked)){
                 if(smileDetectEmbedData.checked){
                     messageDialog.title = qsTr("Status")
-                    messageDialog.text = qsTr("The last part of the frame will be replaced by smile data.Refer document See3CAM_CU1317_Face_and_Smile_Detection for more details")
+                    messageDialog.text = qsTr("The last part of the frame will be replaced by smile data.Refer document See3CAM_CU1317_Face_and_Smile_Detection_Application_Note for more details")
                     messageDialog.open()
                 }
             }
@@ -1251,6 +1258,7 @@ Item {
         // Effect mode
         function currentEffectModeValue(mode)
         {
+
             switch(mode)
             {
             case See3camcu1317.EFFECT_NORMAL:
@@ -1274,6 +1282,7 @@ Item {
         // scene mode
         function currentSceneModeValue(mode)
         {
+
             switch(mode)
             {
             case See3camcu1317.SCENE_NORMAL:
@@ -1311,6 +1320,7 @@ Item {
 
         // Get the control values in extension settings
         function getValuesFromCamera(){
+            scenemodeTimer.start()
             see3camcu1317.getEffectMode()
             see3camcu1317.getSceneMode()
             see3camcu1317.getDenoiseValue()
@@ -1418,6 +1428,7 @@ Item {
         See3camcu1317 {
             id: see3camcu1317
             onSceneModeValue:{
+
                 currentSceneModeValue(sceneMode)
             }
             onEffectModeValue:{
@@ -1426,21 +1437,24 @@ Item {
             onDenoiseValue:{
                 skipUpdateUIDenoise = false
                 deNoiseSlider.value = denoiseVal
+                skipUpdateUIDenoise = true
             }
             onQFactorValue:{
                 skipUpdateUIQFactor = false
                 qFactorSlider.value = qFactor
+                skipUpdateUIQFactor = true
             }
             onHdrModeValue:{
                 currentHDRMode(hdrMode)
                 if(hdrMode == See3camcu1317.HdrManual){
                     iHDRSlider.value = hdrValue
                 }
+                 skipUpdateUIiHDR = true
             }
             onStreamModeValue:{
                 if(streamMode == See3camcu1317.STREAM_MASTER_ONDEMAND){
                     streamMasterOnDemand.checked = true                  
-                    root.enableTimerforGrabPreviewFrame(true)
+                 //   root.enableTimerforGrabPreviewFrame(true)
                 }else if(streamMode == See3camcu1317.STREAM_SOFTWARE_TRIGGER){
                     streamSwTrigger.checked = true
                 }else if(streamMode == See3camcu1317.STREAM_HARDWARE_TRIGGER){
@@ -1459,6 +1473,7 @@ Item {
             onFrameRateCtrlValue:{
                 skipUpdateUIFrameRate = false
                 frameRateSlider.value = frameRateVal
+                 skipUpdateUIFrameRate = true
             }
             onFaceDetectModeValue:{
                 if(faceDetectMode == See3camcu1317.FaceRectEnable){
@@ -1523,12 +1538,14 @@ Item {
                     root.imageCapture(CommonEnums.STORECAM_RETRIEVE_SHOT)
                 }else{ // If grab still frame command is failure, then ignore
                     switchToCamFrameSettings(false)
+
                     see3camcu1317.grabPreviewFrame()
                 }
             }
 
             onStoreStillFrameSucceess:{
                 storeFrame.enabled = true
+
                 see3camcu1317.grabPreviewFrame()
             }
 
