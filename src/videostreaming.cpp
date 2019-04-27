@@ -99,7 +99,7 @@ Videostreaming::Videostreaming() : m_t(0)
     openSuccess = false;
     updateOnce = true;
     m_snapShot = false;
-    retrieveShot=false;
+    retrieveShot = false;
     m_burstShot = false;
     makeSnapShot = false;
     changeFpsAndShot = false;
@@ -322,6 +322,11 @@ void FrameRenderer::calculateViewport(int vidResolutionWidth, int vidResolutionH
     *destWindowHeight  = new_height;
     *x = (((windowWidth - new_width)/2));
     *y = (((windowHeight - new_height)/2));
+    width = *destWindowWidth;
+    height = *destWindowHeight;
+    x1=*x;
+    y1=*y;
+    getPreviewFrameWindow = true;
 }
 
 
@@ -403,7 +408,7 @@ void FrameRenderer::drawRGBBUffer(){
 		calculateViewport(videoResolutionwidth, videoResolutionHeight, previewBgrdAreaWidth-xMargin, previewBgrdAreaHeight, &x, &y, &destWindowWidth, &destWindowHeight);
     }
     glViewport(sidebarwidth+x+(xMargin/2), y+(m_viewportSize.height()-previewBgrdAreaHeight), destWindowWidth, destWindowHeight);
-
+      xcord =sidebarwidth+x+(xMargin/2);
     QMutexLocker locker(&renderMutex);
 
     if(rgbaDestBuffer){
@@ -543,7 +548,9 @@ void FrameRenderer::drawYUYVBUffer(){
         // set view port
 	glViewport(sidebarwidth+x+(xMargin/2), y+(m_viewportSize.height()-previewBgrdAreaHeight), destWindowWidth, destWindowHeight);
 
-        if (yBuffer != NULL && uBuffer != NULL && vBuffer != NULL){
+    xcord =sidebarwidth+x+(xMargin/2);
+
+    if (yBuffer != NULL && uBuffer != NULL && vBuffer != NULL){
             if(gotFrame && !updateStop){
 	     // set active texture and give input y buffer
             glActiveTexture(GL_TEXTURE1);
@@ -791,13 +798,11 @@ void Videostreaming::capFrame()
     // prepare yuyv/rgba buffer and give to shader.
     if(!prepareBuffer(m_capSrcFormat.fmt.pix.pixelformat, m_buffers[buf.index].start[0], buf.bytesused)){
         qbuf(buf);
-
-       emit signalTograbPreviewFrame(retrieveframeStoreCam,true);  //Added by Navya  ---Querying the buffer again
+        emit signalTograbPreviewFrame(retrieveframeStoreCam,true);  //Added by Navya  ---Querying the buffer again
         return;
     }
 
-    if(!m_snapShot && !retrieveShot){
-
+    if(!m_snapShot && !retrieveShot){  // Checking for retrieveshot flag inorder to avoid, updating still frame to UI
         m_renderer->gotFrame = true;
         retrieveShot=false;
     }
@@ -883,11 +888,15 @@ void Videostreaming::capFrame()
             }
             QImage qImage3(bufferToSave, width, height, QImage::Format_RGB888);
             QImageWriter writer(filename);
-           if((OnMouseClick || !SkipIfPreviewFrame)&& m_saveImage){   //Saving Image after Checking for Preview or Still
-                if(!writer.write(qImage3)) {
-                    emit logCriticalHandle("Error while saving an image:"+writer.errorString());
-                }else{
-                    imgSaveSuccessCount++;
+            if(m_saveImage){
+                if((OnMouseClick || !SkipIfPreviewFrame)){   //Saving Image after Checking for Preview or Still
+                    if(!writer.write(qImage3)) {
+                        emit logCriticalHandle("Error while saving an image:"+writer.errorString());
+                    }else{
+
+                        imgSaveSuccessCount++;
+                    }
+
                 }
             }
          SkipIfPreviewFrame=false;
@@ -922,6 +931,9 @@ void Videostreaming::capFrame()
                     retrieveframeStoreCam = false;
 
                     emit signalTograbPreviewFrame(retrieveframeStoreCam,false);
+                    return void();
+
+
                 }
                 else{
                     retrieveframeStoreCam=false;
@@ -955,15 +967,23 @@ void Videostreaming::capFrame()
 
     if(m_frame >frameToSkip)
     {
-
-        emit signalTograbPreviewFrame(retrieveframeStoreCam,false);
+      emit signalTograbPreviewFrame(retrieveframeStoreCam,false);
       retrieveframeStoreCam=false;
     }
-    else{
-
-    emit signalTograbPreviewFrame(retrieveframeStoreCamInCross,false);
+     else{
+      emit signalTograbPreviewFrame(retrieveframeStoreCamInCross,false);
     }
     freeBuffer(temp_Buffer);
+
+    // Added by Navya :23 Apr 2019
+    // Call for previewwindow inorder to set mousearea in qml.
+     getPreviewWindow = m_renderer -> getPreviewFrameWindow;
+     if(getPreviewWindow){
+         previewWindow();
+         m_renderer->getPreviewFrameWindow =false;
+     }
+     m_timer.start(2000);
+
 
 }
 
@@ -1930,6 +1950,8 @@ void Videostreaming::makeShot(QString filePath,QString imgFormatType) {
     // Added by Sankari : to set still skip
     emit stillSkipCount(stillSize, lastPreviewSize, stillOutFormat);
     m_snapShot = true;
+
+    retrieveShot =true;
     m_burstShot = false;
     m_burstNumber = 1;
     m_burstLength = 1; // for single shot
@@ -1968,6 +1990,7 @@ void Videostreaming::makeShot(QString filePath,QString imgFormatType) {
 void  Videostreaming::changeFPSandTakeShot(QString filePath,QString imgFormatType, uint fpsIndex){
     captureTime.start();
     m_snapShot = true;
+   retrieveShot = true;
     m_burstShot = false;
     m_burstNumber = 1;
     m_burstLength = 1; // for single shot
@@ -2002,6 +2025,7 @@ void Videostreaming::triggerModeShot(QString filePath,QString imgFormatType) {
 
     captureTime.restart();
     m_snapShot = true;
+    retrieveShot = true;
     m_burstShot = false;
     m_burstLength = 1;
     m_burstNumber = 1;
@@ -2952,16 +2976,18 @@ void Videostreaming::switchToStillPreviewSettings(bool stillSettings){
     {
         stopCapture();
         if(stillSettings){
+             makeSnapShot = true;
+             retrieveShot =true;
              m_renderer->updateStop = true;
              vidCapFormatChanged(stillOutFormat);
              setResoultion(stillSize);
         }
-        else{
+        else{          
+            retrieveShot = false;         
             vidCapFormatChanged(lastFormat);
             setResoultion(lastPreviewSize);
         }
-
-        startAgain();
+         startAgain();
     }
 }
 
@@ -2977,7 +3003,7 @@ void Videostreaming::doCaptureFrameTimeout()
  */
 void Videostreaming::retrieveShotFromStoreCam(QString filePath,QString imgFormatType) {
     m_snapShot = true;
-    retrieveShot=true;
+    retrieveShot = true;
     m_burstShot = false;
     m_burstNumber = 1;
     m_burstLength = 1; // for single shot
@@ -3020,11 +3046,22 @@ void Videostreaming::enableTimer(bool timerstatus)
 }
 
  //Added by Navya :15 Apr 2019
- //In order to Stop preview only after frame comes ,when grabPreviewFrame call happens
+ //In order to Stop preview, only after frame comes ,when grabPreviewFrame call happens
 
 void Videostreaming::resolnSwitch()
 {
     usleep(1000000);    //wait until frame comes
     stopCapture();
+}
+
+// Added by Navya :23 Apr 2019
+// Getting values from calculateviewport and updating to UI by emiting a signal.
+void Videostreaming :: previewWindow()
+{
+    resWidth = m_renderer->width;
+    resHeight = m_renderer->height;
+    x = m_renderer->xcord;
+    y= m_renderer->y1;
+     emit signalForPreviewWindow(resWidth,resHeight,x,y);
 
 }

@@ -84,6 +84,7 @@ public:
     uint8_t *uBuffer;
     uint8_t *vBuffer;
     uint8_t *yuvBuffer;
+      __u32 xcord;
 
     // rgba buffer
     unsigned char *rgbaDestBuffer;
@@ -91,7 +92,8 @@ public:
 
     __u32 videoResolutionwidth;
     __u32 videoResolutionHeight;
-
+    __u32 width,height;
+     __u32 x1,y1;
     bool gotFrame;
 
     QMutex renderMutex; // mutex to use in rendering - rgba
@@ -114,6 +116,7 @@ public:
     bool sidebarAvailable; // left sidebar items [settings] availability in UI
     int sidebarWidth;      // left side bar width
     bool updateStop;
+    bool getPreviewFrameWindow;
 
     // shader programs
     QOpenGLShaderProgram *m_programRGB; // RGBA shader
@@ -189,6 +192,9 @@ public:
     bool startCapture();
     bool retrieveFrame;
 
+    bool getPreviewWindow;
+
+
     // get current resoution set in v4l2
     QString getResoultion();
 
@@ -244,7 +250,8 @@ private:
     __u32 m_width, m_height;
     __u32 m_buftype;
     __u32 width, height, pixfmt;
-
+    __u32 resWidth,resHeight;
+     __u32 x,y;
     QString m_filePath;
     QString m_imgFormatType;
 
@@ -268,7 +275,7 @@ private:
     bool openSuccess;
     bool updateOnce;
     bool m_snapShot;
-    bool retrieveShot;
+   
     bool updateStop;
     bool makeSnapShot;
     bool changeFpsAndShot; // To change fps and take shot
@@ -352,6 +359,7 @@ private:
     QString getImageFormatType();
     bool retrieveframeStoreCam;
     bool retrieveframeStoreCamInCross;
+    bool retrieveShot;
 
 
 private slots:
@@ -371,7 +379,7 @@ public slots:
     void stopFrameTimeoutTimer();
     void enableTimer(bool timerstatus);
     void retrieveShotFromStoreCam(QString filePath,QString imgFormatType);
-
+    void previewWindow();
 
      // Added by Sankari : 10 Dec 2016
     // To Disable image capture dialog when taking trigger shot in trigger mode for 12cunir camera
@@ -609,6 +617,7 @@ signals:
     void enableRfRectBackInPreview();
     void enableFactRectInPreview();
     void capFrameTimeout();
+    void signalForPreviewWindow(int resWidth,int resHeight,int x,int y);
 
     // Added by Sankari: 02 Dec 2017
     void stillSkipCount(QString stillResoln, QString videoResoln, QString stillOutFormat);
