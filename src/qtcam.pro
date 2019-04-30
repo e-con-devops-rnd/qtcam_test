@@ -150,7 +150,7 @@ contains(BOARD_ARM64, arm64):{
         -L/usr/lib/aarch64-linux-gnu/ -levdev
 }
 
-#QMAKE_CXX += -ggdb
+QMAKE_CXX += -ggdb
 QMAKE_CFLAGS_THREAD = -D__STDC_CONSTANT_MACROS      #For Ubuntu 12.04 compilation
 QMAKE_CXXFLAGS_THREAD = -D__STDC_CONSTANT_MACROS    #For Ubuntu 12.04 compilation
 

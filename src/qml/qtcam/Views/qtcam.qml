@@ -28,6 +28,7 @@ import econ.camera.property 1.0
 import econ.camera.stream 1.0
 import econ.camera.keyEvent 1.0
 import econ.camera.see3camcu1317 1.0
+import econ.camera.see3cam50 1.0
 import "../JavaScriptFiles/tempValue.js" as JS
 import cameraenum 1.0
 
@@ -57,6 +58,7 @@ Rectangle {
     //To grab preview Frames
     signal queryFrame(bool retriveframe,bool InFailureCase);
 
+    signal usbSpeed(var usbPort);
     property int burstLength;
     property bool vidFormatChanged: false
     property bool keyEventFiltering
@@ -491,7 +493,8 @@ Rectangle {
                 videofileName = fileName
             }
 
-            onStillSkipCount:{                
+            onStillSkipCount:{
+                console.log("setstillskipcnt")
                 frameSkipCount(stillResoln, videoResoln, stillOutFormat);
             }
 
@@ -640,7 +643,7 @@ Rectangle {
             onCurrentIndexChanged: {
                 if(currentIndex.toString() != "-1" && currentIndex.toString() != "0") {                    
                     if(oldIndex!=currentIndex) {
-			seqAni.running = true
+                        seqAni.running = true
                         seqAni.start()
                         vidstreamproperty.stopFrameTimeoutTimer()
                         vidstreamproperty.setPreviewBgrndArea(previewBgrndArea.width, previewBgrndArea.height, true)
@@ -663,6 +666,8 @@ Rectangle {
                         keyEventFiltering = false
                         vidstreamproperty.enabled = true                                                
                         webcamKeyAccept = true
+                        camproperty.getUsbSpeed(pciBusCamDetails)
+
                         vidstreamproperty.stopCapture()
                         vidstreamproperty.closeDevice()
                         selectCameraSettings()
@@ -683,6 +688,7 @@ Rectangle {
 
                         // Added by Sankari: 12 Feb 2018 - open camera key event file node using pci bus info.
                         camproperty.openEventNode(pciBusCamDetails)
+
                         updateFPS(stillSettingsRootObject.stillClorComboValue, stillSettingsRootObject.stillOutputTextValue)
 //                        vidstreamproperty.startAgain()
                         vidstreamproperty.width = stillSettingsRootObject.stillOutputTextValue.split("x")[0].toString()
@@ -697,9 +703,10 @@ Rectangle {
                         JS.videocaptureFps = videoSettingsRootObject.videoFrameRate
 						// retain lastly set fps index
                         vidstreamproperty.lastFPS(videoSettingsRootObject.videoFrameRateIndex)
+                        createExtensionUnitQml(selectedDeviceEnumValue) //setting ondemand mode in see3camcu1317 qml oncompleted.
                         vidstreamproperty.masterModeEnabled()
                         // Moved by Sankari: Mar 20, 2019. For storage camera, before start preview, we need to set ondemand mode.
-                        createExtensionUnitQml(selectedDeviceEnumValue) //setting ondemand mode in see3camcu1317 qml oncompleted.
+
                         vidstreamproperty.startAgain() // Then start preview
                         getStillImageFormats();
 
@@ -708,6 +715,10 @@ Rectangle {
 
                         // Initially enable capture image when external keyevent is occured.
                         disableCaptureImage =  false
+
+                        //Added by Navya :30 Apr 2019 -To getusbspeed
+                        camproperty.getPort()
+
                     }
                 }
                 else {
@@ -878,6 +889,10 @@ Rectangle {
             }
         }
     }
+    See3Cam50{
+        id:see3camcu50
+    }
+
     Camproperty {
         id: camproperty
         //Added by Dhurka - 13th Oct 2016
@@ -886,6 +901,11 @@ Rectangle {
         {
             selectedDeviceEnumValue = selectedDevice;
         }
+        onSignalForUsbSpeed:{
+            console.log("bcdusb:"+ bcdusb)
+           usbSpeed(bcdusb);
+        }
+
         // Added by Sankari: To notify user about warning
         // 07 Dec 2017
         onNotifyUserInfo:{
@@ -1463,6 +1483,7 @@ Rectangle {
        switch(shotType)
        {
        case CommonEnums.SNAP_SHOT:
+           console.log("snap_shot")
            vidstreamproperty.makeShot(stillSettingsRootObject.stillStoragePath,stillSettingsRootObject.stillImageFormatComboText)
            break;
        case CommonEnums.STORECAM_RETRIEVE_SHOT:            

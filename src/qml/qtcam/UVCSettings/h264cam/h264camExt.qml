@@ -225,7 +225,7 @@ Item {
                         ListElement { text: "OFF" }
                         ListElement { text: "HDR 1X" }
                         ListElement { text: "HDR 2X" }
-			ListElement { text: "Night Mode" }
+                        ListElement { text: "Night Mode" }
                     }
                     activeFocusOnPress: true
                     style: econComboBoxStyle
@@ -267,6 +267,85 @@ Item {
                     }
                 }
 
+                Text {
+                    id: roiAutoExpMode
+                    text: "--- ROI - Auto Exposure ---"
+                    font.pixelSize: 14
+                    font.family: "Ubuntu"
+                    color: "#ffffff"
+                    smooth: true
+                    Layout.alignment: Qt.AlignCenter
+                    opacity: 0.50196078431373
+                }
+
+                Row{
+                    spacing:38
+                    ExclusiveGroup { id: roiExpogroup }
+                    RadioButton {
+                        exclusiveGroup: roiExpogroup
+                        id: autoexpFull
+                        text: "Full"
+                        checked:true
+                        activeFocusOnPress: true
+                        style: econRadioButtonStyle
+                        opacity: enabled ? 1 : 0.1
+
+                        onClicked: {
+
+                        }
+                        Keys.onReturnPressed: {
+
+                        }
+                    }
+                    RadioButton {
+                        exclusiveGroup: roiExpogroup
+                        id: autoexpManual
+                        text: "Manual"
+                        activeFocusOnPress: true
+                        style: econRadioButtonStyle
+                        opacity: enabled ? 1 : 0.1
+                        onClicked: {
+
+                        }
+                        Keys.onReturnPressed: {
+
+                        }
+                    }
+                }
+
+                Text {
+                            id: windowsize
+                            text: "--- ROI Window Size ---"
+                            font.pixelSize: 14
+                            font.family: "Ubuntu"
+                            color: "#ffffff"
+                            smooth: true
+                            Layout.alignment: Qt.AlignCenter
+                            opacity: 0.50196078431373
+                        }
+
+                ComboBox
+                {
+                    id:roiwindowsize
+                    enabled: (autoexpManual.enabled && autoexpManual.checked) ? true : false
+                    opacity: (autoexpManual.enabled && autoexpManual.checked) ? 1 : 0.1
+                    model: ListModel{
+                        ListElement {text : "1"}
+                        ListElement {text : "2"}
+                        ListElement {text : "3"}
+                        ListElement {text : "4"}
+                        ListElement {text : "5"}
+                        ListElement {text : "6"}
+                        ListElement {text : "7"}
+                        ListElement {text : "8"}
+                    }
+                    activeFocusOnPress: true
+                    style: econComboBoxStyle
+                    onCurrentIndexChanged: {
+
+                    }
+
+                }
 
                 Row{
                     Layout.alignment: Qt.AlignCenter
