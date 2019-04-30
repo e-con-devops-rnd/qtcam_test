@@ -1771,7 +1771,7 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
         #endif
                             videoEncoder->writeH264Image(inputbuffer, bytesUsed);
                         }else{
-                            captureVideo();
+                             QtConcurrent::run(captureVideoInThread, this);
                         }
                 }
             }
@@ -1779,6 +1779,14 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
         m_renderer->renderyuyvMutex.unlock();
     }
     return true;
+}
+
+/**
+ * @brief Videostreaming::captureVideoInThread - Record video in separate thread (YUYV buffer)
+ * @param obj - passing Videostreaming class object
+ */
+void Videostreaming::captureVideoInThread(Videostreaming *obj){
+    emit obj->captureVideo();
 }
 
 // Added by Sankari - 04 Jan 2017
