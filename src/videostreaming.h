@@ -182,6 +182,8 @@ public:
     static int decomp(Videostreaming *obj, unsigned char **jpegbuf,
                                    unsigned long *jpegsize, unsigned char *dstbuf, int w, int h,
                                    int jpegqual, int tilew, int tileh,unsigned char **pic);
+
+  
     double getTimeInSecs(void);
     void freeBuffer(unsigned char *ptr);
 
@@ -275,7 +277,7 @@ private:
     bool openSuccess;
     bool updateOnce;
     bool m_snapShot;
-   
+
     bool updateStop;
     bool makeSnapShot;
     bool changeFpsAndShot; // To change fps and take shot

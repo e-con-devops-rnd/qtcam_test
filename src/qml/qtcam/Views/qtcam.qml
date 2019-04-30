@@ -549,9 +549,8 @@ Rectangle {
                     }
                 }
             }
+          }
         }
-
-    }
 
     Image {
         id: open_sideBar

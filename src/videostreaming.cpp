@@ -804,7 +804,7 @@ void Videostreaming::capFrame()
 
     if(!m_snapShot && !retrieveShot){  // Checking for retrieveshot flag inorder to avoid, updating still frame to UI
         m_renderer->gotFrame = true;
-        retrieveShot=false;
+       
     }
    
 
@@ -845,6 +845,7 @@ void Videostreaming::capFrame()
         }
 
     // Taking single shot or burst shot - Skip frames if needed
+
        if(((m_frame > frameToSkip) && m_snapShot) || ((m_frame > frameToSkip) && m_burstShot)){
          getFileName(getFilePath(),getImageFormatType());
 
@@ -929,7 +930,6 @@ void Videostreaming::capFrame()
                     switchToStillPreviewSettings(false);
                     retrieveframeStoreCamInCross = false;
                     retrieveframeStoreCam = false;
-
                     emit signalTograbPreviewFrame(retrieveframeStoreCam,false);
                     return void();
 
@@ -970,7 +970,8 @@ void Videostreaming::capFrame()
       emit signalTograbPreviewFrame(retrieveframeStoreCam,false);
       retrieveframeStoreCam=false;
     }
-     else{
+
+    else{
       emit signalTograbPreviewFrame(retrieveframeStoreCamInCross,false);
     }
     freeBuffer(temp_Buffer);
@@ -2959,7 +2960,6 @@ bool Videostreaming::setUvcExtControlValue(struct uvc_xu_control_query xquery){
 void Videostreaming::retrieveFrameFromStoreCam() {
     if (!((stillSize == lastPreviewSize) && (stillOutFormat == lastFormat)))
     {
-	retrieveShot = true;
         switchToStillPreviewSettings(true);
     }
     retrieveframeStoreCam = true;

@@ -168,7 +168,7 @@ Item {
                     if(!see3camcu1317.grabStillFrame(frameIndexCombo.currentIndex, stillFormatCurrentIndex+1, stillResolutionCurrentIndex+1)){
                         if(!InFailureCase){
                             displayMessageBox("Failure", "Image is not available in given index")
-                            root.switchToCamFrameSettings(false)   // To get the preview back after failure case
+                            root.switchToCamFrameSettings(false)
                         }
                     }
                 }else{
@@ -1539,7 +1539,7 @@ Item {
                 if(grabStatus){ // If grab still frame command is success, the save the frame in PC
                     root.imageCapture(CommonEnums.STORECAM_RETRIEVE_SHOT)
                 }else{ // If grab still frame command is failure, then ignore
-                   
+                    
 
                     root.switchToCamFrameSettings(false)
                     see3camcu1317.grabPreviewFrame()
