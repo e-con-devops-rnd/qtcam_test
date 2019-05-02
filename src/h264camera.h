@@ -77,8 +77,7 @@ public:
     enum hdrModes{
         HDR_OFF = 0x00,
         HDR_1X = 0x01,
-        HDR_2X = 0x02,
-	HDR_NIGHTMODE = 0x03
+        HDR_2X = 0x02
     };
     Q_ENUMS(hdrModes) 
 
@@ -86,14 +85,20 @@ public:
         DEWARP_OFF = 0x00,
         DEWARP_ON = 0x01,
     };
-    Q_ENUMS(dewarpModes)  
+    Q_ENUMS(dewarpModes)
 
+    enum gainModes{
+        GAIN_MIN = 0x00,
+        GAIN_MAX = 0x01,
+    };
+    Q_ENUMS(gainModes)
 
 signals:    
     void bitrateValueReceived(uint queryType, uint bitrateValue);
     void qFactorReceived(uint queryType, uint qFactorValue);
     void h264QualityReceived(uint queryType, uint qualityValue);
     void hdrModeReceived(uint queryType, uint hdrValue);
+    void gainModeReceived(uint queryType, uint gainValue);
     void noiseReductionValueReceived(uint queryType, uint noiseReductionValue);
     void dewarpModeReceived(uint queryType, uint dewarpValue);
     void titleTextChanged(QString _title, QString _text);
@@ -111,6 +116,9 @@ public slots:
 
     bool setHDRMode(QString hdrMode);
     bool getHDRMode(uint queryType);
+
+    bool setGainMode(QString gainMode);
+    bool getGainMode(uint queryType);
 
     bool setNoiseReductionValue(QString noiseReduceValue);
     bool getNoiseReductionValue(uint queryType);

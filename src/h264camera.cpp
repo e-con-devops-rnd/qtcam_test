@@ -200,6 +200,39 @@ bool H264Camera::getHDRMode(uint queryType){
         return false;
 }
 
+
+/**
+ * @brief H264Camera::setGainMode - setting gain value
+ * @param qFactorValue - gain mode to set
+ * @return true/false
+ */
+bool H264Camera::setGainMode(QString gainMode){
+
+    __u16 gain;
+
+    qDebug()<<"set gain mode";
+    gain = gainMode.toUShort();
+    return setCurrentValueCmd(V4L2_CID_XU_GAINTYPE, gain);
+}
+
+/**
+ * @brief H264Camera::get gain Mode
+ * @param queryType - UVC_GET_CUR / UVC_GET_DEF / UVC_GET_MIN / UVC_GET_MAX/ UVC_GET_RES
+* @return true/false
+ */
+bool H264Camera::getGainMode(uint queryType){
+    __u8 outputGainMode;
+
+    if(getValueCmd(V4L2_CID_XU_GAINTYPE, queryType, outputGainMode)){
+        uint gainValue = outputGainMode;
+        qDebug()<<"Gain Mode in cpp"<<gainValue;
+        emit gainModeReceived(queryType, gainValue);
+        return true;
+    }
+    else
+        return false;
+}
+
 /**
  * @brief H264Camera::setDewarpMode - setting dewarpMode mode value
  * @param dewarpMode - dewarp mode to set
