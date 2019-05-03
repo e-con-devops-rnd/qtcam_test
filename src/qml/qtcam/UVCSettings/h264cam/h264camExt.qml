@@ -29,6 +29,11 @@ Item {
         {
             root.enableVideoPin(true);
         }
+        onMouseRightClickedWithStreamResolution:{
+            if(autoexpManual.enabled && autoexpManual.checked){
+                h264camId.setROIExposureCoordinates(previewwindowWidth, previewwindowHeight, videoStreamWidth, videoStreamHeight, x, y)
+            }
+        }
     }
 
     ScrollView{
@@ -290,10 +295,10 @@ Item {
                         opacity: enabled ? 1 : 0.1
 
                         onClicked: {
-
+                            h264camId.setROIAutoExposureMode(H264camera.ROI_FULL)
                         }
                         Keys.onReturnPressed: {
-
+                            h264camId.setROIAutoExposureMode(H264camera.ROI_FULL)
                         }
                     }
                     RadioButton {
@@ -304,10 +309,10 @@ Item {
                         style: econRadioButtonStyle
                         opacity: enabled ? 1 : 0.1
                         onClicked: {
-
+                            h264camId.setROIAutoExposureMode(H264camera.ROI_MANUAL)
                         }
                         Keys.onReturnPressed: {
-
+                            h264camId.setROIAutoExposureMode(H264camera.ROI_MANUAL)
                         }
                     }
                 }
@@ -341,7 +346,7 @@ Item {
                     activeFocusOnPress: true
                     style: econComboBoxStyle
                     onCurrentIndexChanged: {
-
+                        h264camId.setROIExposureWindowSize(currentText)
                     }
                 }
 
@@ -501,6 +506,14 @@ Item {
 
         onGainModeReceived:{
             queryForGainControl(queryType, gainValue)
+        }
+
+        onRoiModeReceived:{
+            queryForRoiMode(queryType, expMode)
+        }
+
+        onRoiWindowSizeReceived:{
+            queryForWindowSize(queryType, windowSize)
         }
 
         onDewarpModeReceived:{
@@ -667,6 +680,28 @@ Item {
 
    }
 
+
+   function queryForRoiMode(queryType, expMode){
+       if(queryType == H264camera.UVC_GET_CUR){
+           switch(expMode){
+           case H264camera.ROI_FULL:
+               autoexpFull.checked = true
+               break
+           case H264camera.ROI_MANUAL:
+               autoexpManual.checked = true
+               break
+           }
+       }
+   }
+
+
+   function queryForWindowSize(queryType, windowSize){
+       if(queryType == H264camera.UVC_GET_CUR){
+            roiwindowsize.currentIndex = windowSize-1
+       }
+   }
+
+
     function queryForDewarpControl(queryType, dewarpValue){
 	if(queryType == H264camera.UVC_GET_CUR){
             switch(dewarpValue){
@@ -728,6 +763,8 @@ Item {
         h264camId.getNoiseReductionValue(valueToGet)
         h264camId.getH264Quality(valueToGet)
         h264camId.getDewarpMode(valueToGet)
+        h264camId.getROIAutoExposureMode(valueToGet)
+        h264camId.getROIExposureWindowSize(valueToGet)
     }
 
     // get minimum , maximum and step size values for bitrate, qfactor control

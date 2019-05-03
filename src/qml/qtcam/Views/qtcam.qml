@@ -36,7 +36,12 @@ Rectangle {
     id: root
     //Removed unused signals and property  - By Dhurka - 21st Oct 2016
     signal stopCamPreview()
+
+    // To pass preview window width and height
     signal mouseRightClicked(var x, var y, var width, var height)
+
+    // To pass video resolution width and height
+    signal mouseRightClickedWithStreamResolution(var x, var y, var previewwindowWidth, var previewwindowHeight, var videoStreamWidth, var videoStreamHeight)
     signal afterBurst()
     signal beforeRecordVideo()
     signal afterRecordVideo()
@@ -549,6 +554,7 @@ Rectangle {
                     }else if(mouse.button == Qt.RightButton){
                         // passing mouse x,y cororinates, preview width and height
                         mouseRightClicked(mouse.x, mouse.y, previewwindow.width, previewwindow.height)
+                        mouseRightClickedWithStreamResolution(mouse.x, mouse.y, previewwindow.width, previewwindow.height, vidstreamproperty.width, vidstreamproperty.height)
                     }
                 }
             }
