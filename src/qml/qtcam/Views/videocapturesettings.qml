@@ -40,6 +40,7 @@ Item {
     property string videoColorComboIndex : color_comp_box_VideoPin.currentIndex.toString()
     property string videoFrameRate : frame_rate_box.currentText.toString()
     property string videoFrameRateIndex : frame_rate_box.currentIndex.toString()
+    property string videoOutputSize : output_size_box_Video.currentText.toString()
 
     Action {
         id: videoCap
@@ -231,9 +232,11 @@ Item {
                                     root.informVideoColorSpaceChanged()
                                     root.vidFormatChanged = true
                                     JS.videoCaptureFormat = color_comp_box_VideoPin.currentIndex.toString()
+
                                     root.updateVideoResolution(color_comp_box_VideoPin.currentIndex.toString(),frame_rate_box.currentIndex);
                                     root.updateFPS(currentText.toString(), output_size_box_Video.currentText.toString())
                                     root.vidFormatChanged = false
+
                                 }
                             }
                         }
@@ -294,6 +297,7 @@ Item {
                         onCurrentIndexChanged: {
                             if(output_size_box_Video.count > 0){
                                 JS.videoCaptureResolution = output_size_box_Video.currentText.toString();
+
                                 if(outputSizeBox) {
                                     root.updateFPS(color_comp_box_VideoPin.currentText.toString(), currentText.toString())
                                     root.updateScenePreview(output_size_box_Video.currentText.toString(), color_comp_box_VideoPin.currentIndex.toString(),frame_rate_box.currentIndex)      
@@ -403,8 +407,7 @@ Item {
                             }
                         }
                         onCurrentIndexChanged: {
-                            JS.videoEncoder = fileEncoder.currentIndex
-                            root.videoEncoderSelected(currentIndex)                            
+                            JS.videoEncoder = fileEncoder.currentIndex                                              
                         }
                     }
 

@@ -199,8 +199,16 @@ void Cameraproperty::checkforDevice() {
      */
     uvccam.findEconDevice("hidraw");
 }
-QString  Cameraproperty::getUsbSpeed(QString busInfo){
 
+//Modified by Navya :14 May 2019
+/*
+ *Inorder to getUsbSpeed for all 3 OS's in See3cam_cu50 camera
+ *Removed libusb_get_port_numbers api as it is not working in 12.04 OS
+ */
+
+int Cameraproperty::getUsbSpeed(QString serialNumber){
+
+    QString usbType;
     int retVal, r;
     uint16_t usb;
     libusb_device **list = NULL;
@@ -210,7 +218,7 @@ QString  Cameraproperty::getUsbSpeed(QString busInfo){
     r = libusb_init(&context);
     if (r < 0 ) {
         printf("Error in initializing libusb library...\n");
-        return NULL;
+        return -1;
     }
 
     size_t count = libusb_get_device_list(context, &list);
@@ -223,35 +231,31 @@ QString  Cameraproperty::getUsbSpeed(QString busInfo){
 
         if (retVal != LIBUSB_SUCCESS) {
             printf("libusb_get_device_descriptor return %d\n", retVal);
-            return NULL;
+            return -1;
         }
-
-
         retVal = libusb_open(device, &h_handle);
 
         if(retVal < 0) {
             printf("Problem acquiring device handle in %s \n", __func__);
-            return NULL;
+            return -1;
         }
 
-        if(devDesc.idVendor == 0x2560 ){
-            uint8_t path[8];
+        if(devDesc.idVendor == 0x2560) {
+            unsigned char data[100];
+            memset(data,0,sizeof(data));
+            libusb_get_string_descriptor_ascii(h_handle,devDesc.iSerialNumber,data,sizeof(data));
 
-            QString busPath;
-
-            int r = libusb_get_port_numbers(device, path, sizeof(path));
-
-            if (r > 0) {
-
-                busPath.append(QString::number(path[0]));
-                for (int j = 1; j < r; j++){
-
-                    busPath.append(".");
-                    busPath.append(QString::number(path[j]));
-                }
+            QString serialNo = QString::fromLocal8Bit((const char *)data);
+            int ret = QString::compare(serialNo, serialNumber, Qt::CaseInsensitive);
+            if(ret == 0){
+                usb = devDesc.bcdUSB;
+                usbType.setNum(usb,16);
+                int usbValue = usbType.toInt();
+                if(usbValue < 300)
+                   return USB2_0;
+                else
+                   return USB3_0;
             }
-            usb = devDesc.bcdUSB;
-            usbhex.setNum(usb,16);
         }
         if(h_handle) {
             libusb_close(h_handle);
@@ -263,7 +267,6 @@ QString  Cameraproperty::getUsbSpeed(QString busInfo){
     libusb_exit(context);
 
 }
-
 
 void Cameraproperty::setCurrentDevice(QString deviceIndex,QString deviceName) {
 
@@ -310,6 +313,7 @@ void Cameraproperty::openHIDDevice(QString deviceName)
 {
     uvccam.exitExtensionUnit();
     deviceName.remove(QRegExp("[\n\t\r]"));
+
     bool hidInit = uvccam.initExtensionUnit(deviceName);    
     if(hidInit)
     {
@@ -327,9 +331,3 @@ void Cameraproperty::notifyUser(QString title, QString text){
     emit notifyUserInfo(title, text);
 }
 
-// Added by Navya: 30 Apr 2019
-// To emit signal to assign frametoskip for cu50 camera according to the port used
-void Cameraproperty::getPort()
-{
-    emit signalForUsbSpeed(usbhex);
-}

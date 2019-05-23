@@ -35,6 +35,7 @@
 #include <QtGui/QOpenGLContext>
 #include <QtConcurrent>
 #include "see3cam_cu1317.h"
+#include "uvccamera.h"
 
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
 
@@ -126,6 +127,7 @@ Videostreaming::Videostreaming() : m_t(0)
     flags = TJFLAG_NOREALLOC;
     yuvpad = 1;
     frameToSkip = 3;
+
     // Added by Sankari: Mar 21, 2019 - To skip preview frames in See3CAM_CU1317
     previewFrameSkipCount = 1;
     previewFrameToSkip = 1;
@@ -295,6 +297,7 @@ FrameRenderer::FrameRenderer(): m_t(0), m_programRGB(0),  m_programYUYV(0){
  * @param *destWindowHeight - to store target window viewport height 
  */
 void FrameRenderer::calculateViewport(int vidResolutionWidth, int vidResolutionHeight, int windowWidth, int windowHeight, int *x, int *y, int *destWindowWidth, int *destWindowHeight){    
+
     int original_width = vidResolutionWidth;
     int original_height = vidResolutionHeight;
     int bound_width = windowWidth;
@@ -696,6 +699,7 @@ bool Videostreaming::saveIRImage(){
         if(!writer.write(qImage2)) {            
             emit logCriticalHandle("Error while saving an image:"+writer.errorString());
             free(irBuffer); irBuffer = NULL;
+
             return false;
         }
 
@@ -809,6 +813,7 @@ void Videostreaming::capFrame()
     }
    
 
+ 
     if(m_snapShot || m_burstShot){
         int err = -1;
         if(!y16BayerFormat){ //  y16 bayer format means these conversions are not needed. Calculations are done in "prepareBuffer" function itself.
@@ -822,6 +827,7 @@ void Videostreaming::capFrame()
 
             }else if(m_capSrcFormat.fmt.pix.pixelformat == V4L2_PIX_FMT_H264 && !m_VideoRecord){ // capture and save image in h264 format[not for video recording]
                 v4l2_format tmpSrcFormat = m_capSrcFormat;
+
                 tmpSrcFormat.fmt.pix.pixelformat = V4L2_PIX_FMT_YUV420;
                 err = v4lconvert_convert(m_convertData, &tmpSrcFormat, &m_capDestFormat,
                                          (unsigned char *)yuv420pdestBuffer, (width* height * 3)/2,
@@ -919,23 +925,24 @@ void Videostreaming::capFrame()
                 captureSaveTime("Capture time: " +(QString::number((double)captureTime.elapsed()/1000)) + "seconds");
             }
             makeSnapShot = false;
+
             m_snapShot = false;
             retrieveShot = false;
             if(m_burstNumber == m_burstLength){
+
                 if (!((stillSize == lastPreviewSize) && (stillOutFormat == lastFormat)))
                 {
                     if(m_displayCaptureDialog){
                         formatSaveSuccess(m_burstShot);
                     }
                     m_burstShot = false;
+                    m_snapShot = false;
                     // after taking shot(s), restore preview resoln and format.
                     switchToStillPreviewSettings(false);
                     retrieveframeStoreCamInCross = false;
                     retrieveframeStoreCam = false;
                     emit signalTograbPreviewFrame(retrieveframeStoreCam,false);
                     return void();
-
-
                 }
                 else{
                     retrieveframeStoreCam=false;
@@ -952,11 +959,13 @@ void Videostreaming::capFrame()
         retrieveframeStoreCam=false;
    }
     if(y16BayerDestBuffer){
+
 	free(y16BayerDestBuffer);
 	y16BayerDestBuffer = NULL;
     }
 
     if(bayerIRBuffer){
+
 	free(bayerIRBuffer);
 	bayerIRBuffer = NULL;
     }   
@@ -986,7 +995,6 @@ void Videostreaming::capFrame()
          m_renderer->getPreviewFrameWindow =false;
      }
      m_timer.start(2000);
-
 
 }
 
@@ -1597,12 +1605,13 @@ void rgb2yuyv(uint8_t *prgb, uint8_t *pyuv, int width, int height)
 
 // Added by Sankari: Nov 8 2017 . prepare yuv buffer and give to shader.
 bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 bytesUsed){
+
     if(pixformat == V4L2_PIX_FMT_MJPEG){
+
         m_renderer->renderBufferFormat = CommonEnums::RGB_BUFFER_RENDER;
         if(m_capSrcFormat.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG){
             if(bytesUsed <= HEADERFRAME1) {
                 emit logCriticalHandle("Ignoring empty buffer");
-
                 return false;
             }
             if(((uint8_t *) inputbuffer)[0] == 0xFF && ((uint8_t *) inputbuffer)[1] == 0xD8){
@@ -1618,11 +1627,9 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
                 }
             }
             else{
-
                 return false;
             }
         }
-
         return true;
     }else{
         uint8_t *srcBuffer = NULL;
@@ -1672,6 +1679,7 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
 
                 case V4L2_PIX_FMT_SGRBG8:{  // BA8 to yuyv conversion
                     m_renderer->renderBufferFormat = CommonEnums::YUYV_BUFFER_RENDER;
+
                     destBuffer = (uint8_t *)malloc(width * height * 3);
                     bayer_to_rgbbgr24((uint8_t *)inputbuffer, destBuffer, width, height, 1, 1);
                     rgb2yuyv(destBuffer, yuyvBuffer, width, height);
@@ -1682,6 +1690,7 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
 
                 case V4L2_PIX_FMT_GREY:{ // grey to yuyv conversion
                     m_renderer->renderBufferFormat = CommonEnums::YUYV_BUFFER_RENDER;
+
                     uint8_t *pfmb = yuyvBuffer;
                     for(int h=0;h<height;h++)
                     {
@@ -1697,7 +1706,9 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
                 break;
 
                 case V4L2_PIX_FMT_UYVY:{ // uyvy to yuyv conversion
+
                     m_renderer->renderBufferFormat = CommonEnums::YUYV_BUFFER_RENDER;
+
                     uint8_t *ptmp = (uint8_t *)inputbuffer;
                     uint8_t *pfmb = yuyvBuffer;
                     for(int h=0;h<height;h++)             /* uyvy to yuyv conversion */
@@ -1713,16 +1724,20 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
                             pfmb += 4;
                         }
                     }
+
                     memcpy(m_renderer->yuvBuffer, yuyvBuffer, width*height*2);
                 }
                 break;
                 case V4L2_PIX_FMT_H264:{
+
                     m_renderer->renderBufferFormat = CommonEnums::YUYV_BUFFER_RENDER;
                     // check - decode h264 to yuyv available
 
                     h264Decode->decodeH264(yuv420pdestBuffer, (uint8_t *) inputbuffer, bytesUsed); /* decode h264 to yuv420p */
                     h264Decode->yu12_to_yuyv(yuyvBuffer, yuv420pdestBuffer, width, height); /*yuv420p to yuyv conversion */                    
+
                     memcpy(m_renderer->yuvBuffer, yuyvBuffer, width*height*2);
+
                 }
                 break;
 
@@ -1782,6 +1797,7 @@ void Videostreaming::doAfterChangeFPSAndShot(){
     m_burstShot = false;
     // Restore preview color space, resolution, fps.
     if(fpsChangedForStill){
+
         stopCapture();
         vidCapFormatChanged(lastFormat);
         setResoultion(lastPreviewSize);
@@ -1962,7 +1978,6 @@ void Videostreaming::makeShot(QString filePath,QString imgFormatType) {
     // Added by Sankari : to set still skip
     emit stillSkipCount(stillSize, lastPreviewSize, stillOutFormat);
     m_snapShot = true;
-
     retrieveShot =true;
     m_burstShot = false;
     m_burstNumber = 1;
@@ -1988,6 +2003,7 @@ void Videostreaming::makeShot(QString filePath,QString imgFormatType) {
         m_renderer->updateStop = true;
         stopCapture();
         vidCapFormatChanged(stillOutFormat);
+
         setResoultion(stillSize);
         startAgain();
     }
@@ -2023,6 +2039,7 @@ void  Videostreaming::changeFPSandTakeShot(QString filePath,QString imgFormatTyp
         emit stillSkipCountWhenFPSChange(true);
         stopCapture();
         vidCapFormatChanged(stillOutFormat);
+
         setResoultion(stillSize);
         frameIntervalChanged(fpsIndex);
         startAgain();
@@ -2150,6 +2167,7 @@ void Videostreaming::makeBurstShot(QString filePath,QString imgFormatType, uint 
         m_renderer->updateStop = true;
         stopCapture();
         vidCapFormatChanged(stillOutFormat);
+
         setResoultion(stillSize);
         startAgain();
     }
@@ -2167,6 +2185,7 @@ void Videostreaming::formatSaveSuccess(bool burstFlag) {
         }
         emit logDebugHandle("Captured image(s) is(are) saved successfully");
         emit titleTextChanged(_title,_text);
+
 
     }
     else {
@@ -2251,6 +2270,7 @@ void Videostreaming::displayFrame() {
     if(m_capSrcFormat.fmt.pix.pixelformat == V4L2_PIX_FMT_H264){
         h264Decode = new H264Decoder();
         h264Decode->initH264Decoder(width, height);
+
         yuv420pdestBuffer = (uint8_t *)malloc(width * (height + 8) * 2);
     }
 
@@ -2270,16 +2290,19 @@ void Videostreaming::stopCapture() {
     }  
 
     if(yuyvBuffer != NULL ){
+
         free(yuyvBuffer);
         yuyvBuffer = NULL;
     }
 
     if(yuv420pdestBuffer != NULL){
+
         free(yuv420pdestBuffer);
         yuv420pdestBuffer = NULL;
     }
 
     if(tempSrcBuffer != NULL){
+
         free(tempSrcBuffer);
         tempSrcBuffer = NULL;
     }
@@ -2319,17 +2342,19 @@ void Videostreaming::stopCapture() {
 
   
     if(m_renderer->yBuffer != NULL){
-        free(m_renderer->yBuffer);
+      free(m_renderer->yBuffer);
         m_renderer->yBuffer = NULL;
     }
 
 
     if(m_renderer->uBuffer != NULL){
+
         free(m_renderer->uBuffer);
         m_renderer->uBuffer = NULL;
     }
 
     if(m_renderer->vBuffer != NULL){
+
         free(m_renderer->vBuffer);
         m_renderer->vBuffer = NULL;
     }
@@ -2337,14 +2362,18 @@ void Videostreaming::stopCapture() {
     m_renderer->renderMutex.lock();
 
     if(m_renderer->rgbaDestBuffer != NULL){
+
 	free(m_renderer->rgbaDestBuffer);
 	m_renderer->rgbaDestBuffer = NULL;
     }
 
     if(m_renderer->yuvBuffer != NULL){
+
     	free(m_renderer->yuvBuffer);
+
     	m_renderer->yuvBuffer = NULL;
     }
+
     m_renderer->renderMutex.unlock();
 }
 
@@ -2416,6 +2445,7 @@ void Videostreaming::setResoultion(QString resolution)
     fmt.fmt.pix.height = height;
     m_width = width;
     m_height = height;
+
     try_fmt(fmt);
     s_fmt(fmt);
 }
@@ -2468,25 +2498,11 @@ void Videostreaming::displayStillResolution() {
 }
 
 void Videostreaming::displayEncoderList(){
-    QStringList encoders;
-    QString fileContent;
-    encoders.clear();
-    // read
-    QFile f("/etc/issue");
-    if (f.open(QFile::ReadOnly)){
-        QTextStream in(&f);
-        fileContent.append(in.readAll());
-        if((-1 != fileContent.indexOf("12.04")) || (-1 != fileContent.indexOf("14.04"))){
-            encoders<<"YUY"<<"MJPG"<<"H264";
-            ubuntuVersion = "<15"; // version less than 15 [ Here ubuntu 12.04 and ubuntu 14.04 ]
-            emit ubuntuVersionSelectedLessThan16(); // signal to qml that ubuntu version selected is less than 16.04
-
-        }else{
-            encoders<<"MJPG"<<"H264";
-            ubuntuVersion = ">=15"; // version >=  15 [ Here ubuntu 15.10 and ubuntu 16.04 , Linux Mint 18, ubuntu 17.04 ]            
-        }
-        encoderList.setStringList(encoders);
-    }
+    QStringList encoders;    
+    encoders.clear();    
+    encoders<<"MJPG"<<"H264";
+    emit ubuntuVersionSelectedLessThan16(); // signal to qml that ubuntu version selected is less than 16.04
+    encoderList.setStringList(encoders);
 }
 
 void Videostreaming::displayVideoResolution() {
@@ -2510,9 +2526,11 @@ void Videostreaming::displayVideoResolution() {
         do {
             indexCount++;
             dispVideoRes.append(QString("%1x%2").arg(frmsize.discrete.width).arg(frmsize.discrete.height));
+
             if (frmsize.discrete.width == m_width && frmsize.discrete.height == m_height) {
                 defaultWidth = m_width;
                 defaultHeight = m_height;
+
                 emit defaultFrameSize(indexCount, defaultWidth, defaultHeight);
             }
         } while (enum_framesizes(frmsize));
@@ -2532,6 +2550,7 @@ void Videostreaming::vidCapFormatChanged(QString idx)
     try_fmt(fmt);
     s_fmt(fmt);
     if(!makeSnapShot){
+
         updateVidOutFormat();       
     }
 }
@@ -2544,6 +2563,7 @@ void Videostreaming::updateVidOutFormat()
     m_pixelformat = fmt.fmt.pix.pixelformat;
     m_width       = fmt.fmt.pix.width;
     m_height      = fmt.fmt.pix.height;
+
     if (enum_fmt_cap(desc, m_buftype, true)) {
         do {
             if (desc.pixelformat == fmt.fmt.pix.pixelformat)
@@ -2574,6 +2594,7 @@ void Videostreaming::displayOutputFormat() {
     }
     emit logDebugHandle("Output format supported: " +dispOutFormat.join(", "));
     resolution.setStringList(dispOutFormat);
+
     updateVidOutFormat();
 }
 
@@ -2804,8 +2825,7 @@ void Videostreaming::recordBegin(int videoEncoderType, QString videoFormatType, 
     if(videoFormatType.isEmpty()) {
         videoFormatType = "avi";        //Application never enters in this condition
     }
-#if !LIBAVCODEC_VER_AT_LEAST(54, 25)
-    if(ubuntuVersion == ">=15"){
+#if !LIBAVCODEC_VER_AT_LEAST(54, 25)   
         switch(videoEncoderType) {
         case 0:
             videoEncoderType = CODEC_ID_MJPEG;
@@ -2813,48 +2833,17 @@ void Videostreaming::recordBegin(int videoEncoderType, QString videoFormatType, 
         case 1:
             videoEncoderType = CODEC_ID_H264;
             break;        
-        }
-    } else if(ubuntuVersion == "<15"){
-        switch(videoEncoderType) {
-        case 0:
-            videoEncoderType = CODEC_ID_RAWVIDEO;
-            break;
-        case 1:
-            videoEncoderType = CODEC_ID_MJPEG;
-            break;
-        case 2:
-            videoEncoderType = CODEC_ID_H264;
-            break;        
-        }
-
+        }        
+#else    
+    switch(videoEncoderType) {
+    case 0:
+        videoEncoderType = AV_CODEC_ID_MJPEG;
+        break;
+    case 1:
+        videoEncoderType = AV_CODEC_ID_H264;
+        break;
     }
-#else
-    if(ubuntuVersion == ">=15"){
-        switch(videoEncoderType) {
-
-        case 0:
-            videoEncoderType = AV_CODEC_ID_MJPEG;
-            break;
-        case 1:
-            videoEncoderType = AV_CODEC_ID_H264;
-            break;        
-        }
-    } else if(ubuntuVersion == "<15"){
-        switch(videoEncoderType) {
-        case 0:
-            videoEncoderType = AV_CODEC_ID_RAWVIDEO;
-            break;
-        case 1:
-            videoEncoderType = AV_CODEC_ID_MJPEG;
-            break;
-        case 2:
-            videoEncoderType = AV_CODEC_ID_H264;
-            break;        
-        }
-
-    }
-#endif    
-
+#endif
     fileName = fileLocation +"/Qtcam-" + QDateTime::currentDateTime().toString("yy_MM_dd:hh_mm_ss")+"."+ videoFormatType;
 
     // Fixed issue: Incorrect frame rate for video recording
@@ -2972,7 +2961,7 @@ bool Videostreaming::setUvcExtControlValue(struct uvc_xu_control_query xquery){
 void Videostreaming::retrieveFrameFromStoreCam() {
     if (!((stillSize == lastPreviewSize) && (stillOutFormat == lastFormat)))
     {
-	retrieveShot = true;
+	
         switchToStillPreviewSettings(true);
     }
     retrieveframeStoreCam = true;
@@ -2985,6 +2974,7 @@ void Videostreaming::retrieveFrameFromStoreCam() {
  */
 void Videostreaming::switchToStillPreviewSettings(bool stillSettings){
 
+
     if (!((stillSize == lastPreviewSize) && (stillOutFormat == lastFormat)))
     {
         stopCapture();
@@ -2993,6 +2983,7 @@ void Videostreaming::switchToStillPreviewSettings(bool stillSettings){
              retrieveShot =true;
              m_renderer->updateStop = true;
              vidCapFormatChanged(stillOutFormat);
+
              setResoultion(stillSize);
         }
         else{          
@@ -3078,3 +3069,4 @@ void Videostreaming :: previewWindow()
      emit signalForPreviewWindow(resWidth,resHeight,x,y);
 
 }
+

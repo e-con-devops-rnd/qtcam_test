@@ -46,6 +46,8 @@ Item {
     property bool skipUpdateUIOnDenoise: false	
     property var mcuFirmwareVersion;
 
+
+
     Timer {
         id: burstShotTimer
         interval: 1000
@@ -910,6 +912,7 @@ Item {
             messageDialog.title = qsTr("Serial Number")
             messageDialog.text = serialNumber;
         }
+
     }
 
     Component {

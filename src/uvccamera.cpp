@@ -180,6 +180,7 @@ int uvccamera::findEconDevice(QString parameter)
             QString serialNumber = udev_device_get_sysattr_value(pdev,"serial");
             QString vidValue = udev_device_get_sysattr_value(pdev,"idVendor");
             QString pidValue = udev_device_get_sysattr_value(pdev,"idProduct");
+
             if(parameter!="video4linux")
             {
                 emit logHandle(QtDebugMsg, "HID Device found: "+productName + ": Available in: "+hid_device);
@@ -215,7 +216,6 @@ int uvccamera::findEconDevice(QString parameter)
 void uvccamera::currentlySelectedDevice(QString deviceName)
 {
     deviceName.remove(QRegExp("[\n\t\r]"));
-
     bool deviceFound = false;
     QString originalDeviceName;
     // Added by Sankari: To fix string name and hid initialization issue: Check the camera name selected is having substring
@@ -373,7 +373,6 @@ bool uvccamera::readFirmwareVersion(quint8 *pMajorVersion, quint8 *pMinorVersion
                 *pMinorVersion1 = g_in_packet_buf[2];
                 *pMinorVersion2 = sdk_ver;
                 *pMinorVersion3 = svn_ver;
-
                 timeout = false;
             }
         }
@@ -388,6 +387,7 @@ bool uvccamera::readFirmwareVersion(quint8 *pMajorVersion, quint8 *pMinorVersion
 }
 
 bool uvccamera::initExtensionUnit(QString cameraName) {
+
     if(cameraName.isEmpty())
     {
         emit logHandle(QtCriticalMsg,"cameraName not passed as parameter\n");
@@ -401,12 +401,12 @@ bool uvccamera::initExtensionUnit(QString cameraName) {
         if(cameraName.contains(pidvidmapIterator.key()))
         {
             originalDeviceName = pidvidmapIterator.key();
-
         }
     }
 
     if(hid_fd >= 0)
     {
+
         close(hid_fd);
     }
 
@@ -525,6 +525,7 @@ bool uvccamera::initExtensionUnit(QString cameraName) {
         {
             hid_imu = fd;
         }
+
       return true;
     }
 
@@ -619,7 +620,12 @@ void uvccamera::getFirmWareVersion() {
 }
 
 void uvccamera::getSerialNumber(){
-    emit serialNumber("Serial Number: "+serialNumberMap.value(openNode));
+     emit serialNumber("Serial Number: "+serialNumberMap.value(openNode));
+}
+
+QString uvccamera::retrieveSerialNumber()
+{
+    return serialNumberMap.value(openNode);
 }
 
 bool See3CAM_Control::getFlashState(quint8 *flashState) {
@@ -1134,3 +1140,4 @@ bool uvccamera::sendHidCmd(unsigned char *outBuf, unsigned char *inBuf, int len)
     }
 
 }
+

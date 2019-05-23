@@ -27,10 +27,15 @@ import econ.camera.see3cam50 1.0
 import econ.camera.see3camControl 1.0
 import econ.camera.see3camGpioControl 1.0
 import cameraenum 1.0
+import econ.camera.stream 1.0
+import econ.camera.property 1.0
 Item {
     width:268
     height:720
     property bool outputPinFlag
+    property var frameToSkip  
+    property variant uniqueSerialNumber
+    property int value_ret
     id: see3CAM_cu50Camera
 
     Connections
@@ -43,10 +48,6 @@ Item {
         onGetVideoPinStatus:
         {
             root.enableVideoPin(true);
-        }
-        onUsbSpeed:{
-
-              seecam50.setStillSkipCount(usbPort)
         }
 
         onGetStillImageFormats:
@@ -476,7 +477,10 @@ Item {
         }
     }
 
+    Camproperty{
+        id:camproperty
 
+    }
 
     Uvccamera {
         id: uvccamera
@@ -489,6 +493,7 @@ Item {
             messageDialog.title = qsTr("Serial Number")
             messageDialog.text = serialNumber;
         }
+
     }
 
     See3Cam50 {
@@ -508,9 +513,6 @@ Item {
             else {
                 flash_ctrl.checked =  false;
             }
-        }
-        onUpdateFrameToSkipFromCam50:{
-            root.updateFrametoSkip(stillSkip)
         }
     }
 
@@ -570,6 +572,21 @@ Item {
         seecam50.getTorchLevel()
         outputPinFlag = true
         see3camGpio.getGpioLevel(See3CamGpio.OUT1)
+        uniqueSerialNumber = uvccamera.retrieveSerialNumber()
+
+         // Added by Navya : 07 May 2019 - To get usbspeed and assign skipframes accordingly
+        value_ret=camproperty.getUsbSpeed(uniqueSerialNumber)
+        if(value_ret > 0){
+            if(value_ret == 1)
+                frameToSkip = 8
+            else
+                frameToSkip = 5
+            root.updateFrametoSkip(frameToSkip);
+        }
     }
 
+    Component.onDestruction:{
+        frameToSkip = 3
+        root.updateFrametoSkip(frameToSkip);
+    }
 }

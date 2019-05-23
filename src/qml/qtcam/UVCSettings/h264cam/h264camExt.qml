@@ -419,10 +419,10 @@ Item {
                 }
 
               
-		 Row{
+                Row{
                     Layout.alignment: Qt.AlignCenter
 
-		 Button {
+                    Button {
                         id: f_wversion_selected
                         opacity: 1
                         activeFocusOnPress : true
@@ -438,15 +438,15 @@ Item {
                                 source: "images/f_wversion_selected.png"
                             }
                         }
-			onClicked: {
+                        onClicked: {
                             getFirmwareVer()
                         }
 
                         Keys.onReturnPressed: {
                             getFirmwareVer()
                         }
-		    }
-                 }
+                    }
+                }
             }
         }
     }

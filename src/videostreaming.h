@@ -31,6 +31,7 @@
 #include <libv4l2.h>
 #include <QMutex>
 #include <QList>
+
 #include <QStandardPaths>
 #include <turbojpeg.h>
 #include "v4l2-api.h"
@@ -46,6 +47,7 @@
 #include <QtGui/QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
 #include <QMutex>
+#include <unistd.h>
 
 class FrameRenderer : public QObject, protected QOpenGLFunctions
 {
@@ -445,6 +447,7 @@ public slots:
      * @brief To stop the camera preview
      */
     void stopCapture();
+
     void resolnSwitch();
 
     /**
@@ -528,7 +531,7 @@ public slots:
     void lastFPS(QString fps);
     void formatSaveSuccess(bool burstFlag);
     void updateFrameInterval(QString pixelFormat, QString frameSize);
-
+ 
     /**
      * @brief frameIntervalChanged
      * @param idx

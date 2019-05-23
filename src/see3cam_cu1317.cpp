@@ -187,7 +187,6 @@ bool See3CAM_CU1317::setDenoiseValue(uint deNoiseVal)
 
 bool See3CAM_CU1317::getDenoiseValue()
 {
-
    u_int8_t denoiseVal;
    // hid validation
    if(uvccamera::hid_fd < 0)
@@ -348,7 +347,6 @@ bool See3CAM_CU1317::setStreamMode(camStreamMode streamMode)
     // hid validation
     if(uvccamera::hid_fd < 0)
     {
-
         return false;
     }
     //Initialize buffers
@@ -361,8 +359,8 @@ bool See3CAM_CU1317::setStreamMode(camStreamMode streamMode)
 
     // send request and get reply from camera
     if(uvc.sendHidCmd(g_out_packet_buf, g_in_packet_buf, BUFFER_LENGTH)){
-        if (g_in_packet_buf[6]==SET_FAIL) {
 
+        if (g_in_packet_buf[6]==SET_FAIL) {
             return false;
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_See3CAM_CU1317 &&
             g_in_packet_buf[1]==SET_STREAM_MODE_See3CAM_CU1317 &&
@@ -371,7 +369,9 @@ bool See3CAM_CU1317::setStreamMode(camStreamMode streamMode)
             return true;
         }
     }
+
     return false;
+
 }
 
 bool See3CAM_CU1317::getStreamMode()
@@ -1077,7 +1077,7 @@ void See3CAM_CU1317::initializeBuffers(){
     memset(g_out_packet_buf, 0x00, sizeof(g_out_packet_buf));
     memset(g_in_packet_buf, 0x00, sizeof(g_in_packet_buf));
 }
-bool See3CAM_CU1317::initStoreCAM1335(char *hidDeviceName)
+bool See3CAM_CU1317::initSee3CAM_CU1317(char *hidDeviceName)
 {
     initializeBuffers();
     if(hidDeviceName == NULL)
@@ -1132,7 +1132,7 @@ bool See3CAM_CU1317::initStoreCAM1335(char *hidDeviceName)
 //    }
     return true;
 }
-void See3CAM_CU1317::deinitStoreCAM1335()
+void See3CAM_CU1317::deinitSee3CAM_CU1317()
 {
     close(uvccamera::hid_fd);
 }

@@ -1,3 +1,4 @@
+
 /*
  * qtcam.qml -- display preview in screen
  * Copyright © 2015  e-con Systems India Pvt. Limited
@@ -31,6 +32,7 @@ import econ.camera.see3camcu1317 1.0
 import econ.camera.see3cam50 1.0
 import "../JavaScriptFiles/tempValue.js" as JS
 import cameraenum 1.0
+import econ.camera.uvcsettings 1.0
 
 Rectangle {
     id: root
@@ -59,7 +61,7 @@ Rectangle {
     //To grab preview Frames
     signal queryFrame(bool retriveframe,bool InFailureCase);
 
-    signal usbSpeed(var usbPort);
+
     property int burstLength;
     property bool vidFormatChanged: false
     property bool keyEventFiltering
@@ -93,8 +95,9 @@ Rectangle {
     property variant videoSettingsRootObject
     property variant audioSettingsRootObject
     property variant captureVideoRecordRootObject
-
+   
     property variant pciBusCamDetails
+   
 
     //Disabling side bar controls - Added below by Dhurka
 	signal sidebarVisibleStatus(variant status);
@@ -113,7 +116,7 @@ Rectangle {
     property bool audioCaptureChildVisible: false
     property bool videoSettingsChildVisible: false    
 
-    property bool ubuntuversionLessThan16: false
+   
     property bool disableAudio: false
 
     //video scrollview visible height
@@ -325,12 +328,7 @@ Rectangle {
                 pciBusCamDetails = businfo
             }
 
-            onUbuntuVersionSelectedLessThan16:{
-                ubuntuversionLessThan16 = true
-                disableAudioSettings(true) // In ubuntu 12.04 and 14.04 (Video capture settings), video encoder index is 0,(YUY - raw format).
-                disableAudio = true          // so disable audio settings
-            }
-
+           
             onTitleTextChanged:{
                 vidstreamproperty.enabled = true
                 captureBtnEnable(true)
@@ -435,6 +433,7 @@ Rectangle {
                 setVideoColorComboOutputIndex(false,outputIndexValue)
                 vidstreamproperty.width = defaultWidth
                 vidstreamproperty.height = defaultHeight
+
             }
 
             onDefaultStillFrameSize: {
@@ -468,8 +467,7 @@ Rectangle {
                 videofileName = fileName
             }
 
-            onStillSkipCount:{
-
+            onStillSkipCount:{                
                 frameSkipCount(stillResoln, videoResoln, stillOutFormat);
             }
 
@@ -486,6 +484,7 @@ Rectangle {
                 queryFrame(retrieveframe,InFailureCase);
              }
 
+
             onCapFrameTimeout:{
                 captureFrameTimeout();
             }
@@ -498,6 +497,7 @@ Rectangle {
                      previewwindow.x = x;
                      previewwindow.y = y;
             }
+
             Rectangle
             {
                 id:previewwindow
@@ -616,20 +616,18 @@ Rectangle {
                 }
             }
             onCurrentIndexChanged: {
-                if(currentIndex.toString() != "-1" && currentIndex.toString() != "0") {                    
+                if(currentIndex.toString() != "-1" && currentIndex.toString() != "0") {
                     if(oldIndex!=currentIndex) {
+
                         seqAni.running = true
                         seqAni.start()
                         vidstreamproperty.stopFrameTimeoutTimer()
                         vidstreamproperty.setPreviewBgrndArea(previewBgrndArea.width, previewBgrndArea.height, true)
-
                         oldIndex = currentIndex
 
                         // Added by Sankari: 12 Feb 2018 : stop Getting key from camera.
                         keyEvent.stopGetKeyFromCamera()
-
                         enumerateAudioSettings();
-
                         cameraSelected()
                         //Added by Dhurka - 20th Oct 2016
                         cameraControlPropertyChange();
@@ -639,48 +637,59 @@ Rectangle {
                         captureBtnEnable(true)
                         videoRecordBtnEnable(true)
                         keyEventFiltering = false
-                        vidstreamproperty.enabled = true                                                
+                        vidstreamproperty.enabled = true
                         webcamKeyAccept = true
-                        camproperty.getUsbSpeed(pciBusCamDetails)
 
                         vidstreamproperty.stopCapture()
                         vidstreamproperty.closeDevice()
                         selectCameraSettings()
+
                         camproperty.setCurrentDevice(currentIndex.toString(),currentText.toString())
                         vidstreamproperty.setDevice("/dev/video")
+
                         vidstreamproperty.displayOutputFormat()
                         vidstreamproperty.displayStillResolution()
+
                         vidstreamproperty.displayVideoResolution()
                         vidstreamproperty.displayEncoderList()
                         //Added by Dhurka - 24th Oct 2016 - Push Auto mode item in image quality settings for ascella camera
-                        addAutoModeMenuItem();                        
+                        addAutoModeMenuItem();
                         //Added by Sankari - 06th Mar 2016
                         queryUvcControls();
                         //Added by Dhurka - 20th Oct 2016
                         disableImageSettings()
+
+
                         //Added by Dhurka - Here commonly open HID device instead of open every QML file - 17th Oct 2016
                         openHIDDevice(selectedDeviceEnumValue);
+
 
                         // Added by Sankari: 12 Feb 2018 - open camera key event file node using pci bus info.
                         camproperty.openEventNode(pciBusCamDetails)
 
                         updateFPS(stillSettingsRootObject.stillClorComboValue, stillSettingsRootObject.stillOutputTextValue)
-//                        vidstreamproperty.startAgain()
+                        //                        vidstreamproperty.startAgain()
                         vidstreamproperty.width = stillSettingsRootObject.stillOutputTextValue.split("x")[0].toString()
+
                         vidstreamproperty.height = stillSettingsRootObject.stillOutputTextValue.split("x")[1].toString()
+
                         vidstreamproperty.lastPreviewResolution(stillSettingsRootObject.stillOutputTextValue,stillSettingsRootObject.stillColorComboIndexValue)
                         JS.stillCaptureFormat = stillSettingsRootObject.stillColorComboIndexValue
                         JS.stillCaptureFormatIndex = stillSettingsRootObject.stillColorComboIndexValue*1
                         JS.stillCaptureResolution = stillSettingsRootObject.stillOutputTextValue.toString()
-                          JS.stillCaptureResolutionIndex = stillSettingsRootObject.stillResolutionIndex
+                        JS.stillCaptureResolutionIndex = stillSettingsRootObject.stillResolutionIndex
                         JS.videoCaptureFormat = JS.stillCaptureFormat
+
                         JS.videoCaptureResolution = JS.stillCaptureResolution
+
+
                         JS.videocaptureFps = videoSettingsRootObject.videoFrameRate
-						// retain lastly set fps index
+                        // retain lastly set fps index
                         vidstreamproperty.lastFPS(videoSettingsRootObject.videoFrameRateIndex)
-                        createExtensionUnitQml(selectedDeviceEnumValue) //setting ondemand mode in see3camcu1317 qml oncompleted.
+
                         vidstreamproperty.masterModeEnabled()
                         // Moved by Sankari: Mar 20, 2019. For storage camera, before start preview, we need to set ondemand mode.
+                        createExtensionUnitQml(selectedDeviceEnumValue) //setting ondemand mode in see3camcu1317 qml oncompleted.
 
                         vidstreamproperty.startAgain() // Then start preview
                         getStillImageFormats();
@@ -689,10 +698,7 @@ Rectangle {
                         keyEvent.initializeToGetKey();
 
                         // Initially enable capture image when external keyevent is occured.
-                        disableCaptureImage =  false
-
-                        //Added by Navya :30 Apr 2019 -To getusbspeed
-                        camproperty.getPort()
+                        disableCaptureImage =  false;
 
                     }
                 }
@@ -867,6 +873,13 @@ Rectangle {
     See3Cam50{
         id:see3camcu50
     }
+    See3camcu1317{
+        id:see3camcu1317
+    }
+    Uvccamera{
+        id: uvccam
+
+    }
 
     Camproperty {
         id: camproperty
@@ -876,10 +889,7 @@ Rectangle {
         {
             selectedDeviceEnumValue = selectedDevice;
         }
-        onSignalForUsbSpeed:{
 
-           usbSpeed(bcdusb);
-        }
 
         // Added by Sankari: To notify user about warning
         // 07 Dec 2017
@@ -926,25 +936,7 @@ Rectangle {
         vidstreamproperty.updatePreviewFrameSkip(previewSkip)
     }
 
-    function videoEncoderSelected(encoderIndex){
-        // Added by Sankari : Mar 7 2019
-        // ubuntu 14.04 and ubuntu 12.04
-            // index 0 - YUY
-            // index 1 - MJPG
-            // index 2 - H264
-
-        // ubuntu 14.04 and ubuntu 12.04
-            // index 0 - MJPG
-            // index 1 - H264
-         if(encoderIndex == 0 && ubuntuversionLessThan16){ // If ubuntu version is less than 16.04(i.e, 12.04 and 14.04),
-                                                           // If index is 0 (YUY), disable audio capture settings
-             disableAudioSettings(true)
-	     disableAudio = true
-         }else{
-             disableAudioSettings(false)
-	     disableAudio = false
-         }
-    }
+   
     function retrieveFrameFromStorageCamera(){
         setStillSettings()
         vidstreamproperty.retrieveFrameFromStoreCam()
@@ -984,11 +976,13 @@ Rectangle {
             vidstreamproperty.width = str.toString().split("x")[0].toString()
             vidstreamproperty.height = str.toString().split("x")[1].toString()
         }
+        //Added by Navya -To avoid unwanted call for grabPreviewFrame in case of storagecamera by giving delay.
         vidstreamproperty.resolnSwitch()
-    //    vidstreamproperty.stopCapture()
+      
         if(vidFormatChanged){
             vidstreamproperty.lastPreviewResolution(vidstreamproperty.width.toString() +"x"+vidstreamproperty.height.toString(),format)         
             JS.videoCaptureResolution = vidstreamproperty.width.toString() +"x"+vidstreamproperty.height.toString()
+
         }else{
             vidstreamproperty.lastPreviewResolution(str,format)                       
         }
@@ -1015,6 +1009,7 @@ Rectangle {
         if(JS.videoCaptureFormat !== JS.stillCaptureFormat  || JS.stillCaptureResolution !== JS.videoCaptureResolution)
         {
             vidstreamproperty.vidCapFormatChanged(JS.videoCaptureFormat)
+            checkForResoln()
             vidstreamproperty.setResoultion(JS.videoCaptureResolution)
         }
         vidstreamproperty.startAgain()
@@ -1030,7 +1025,7 @@ Rectangle {
         JS.videoCaptureFormat = videoSettingsRootObject.videoColorComboIndex
         JS.stillCaptureResolution = stillSettingsRootObject.stillOutputTextValue
         if(JS.videoCaptureFormat !== JS.stillCaptureFormat  || JS.stillCaptureResolution !== JS.videoCaptureResolution)
-        {
+        {            
             vidstreamproperty.vidCapFormatChanged(JS.videoCaptureFormat)
             vidstreamproperty.setResoultion(JS.videoCaptureResolution)
         }
@@ -1078,6 +1073,7 @@ Rectangle {
     }
 
     function masterModeCapture(){
+
         if(!captureVideoRecordRootObject.captureBtnEnable || !captureVideoRecordRootObject.recordBtnEnable)  {
             captureBtnEnable(true)
             videoRecordBtnEnable(true)
@@ -1185,8 +1181,8 @@ Rectangle {
     }
 
     function createExtensionUnitQml(selectedDeviceEnumValue){
-        if(see3cam){
-            see3cam.destroy()
+        if(see3cam){          
+            see3cam.destroy()         
         }
         if(selectedDeviceEnumValue == CommonEnums.ECON_1MP_BAYER_RGB ) {
             see3cam = Qt.createComponent("../UVCSettings/see3cam10/uvc10_c.qml").createObject(root)
@@ -1253,6 +1249,7 @@ Rectangle {
     //Added by Dhurka - Here commonly open HID device instead of open every QML file - 17th Oct 2016
     function openHIDDevice(selectedEnum)
     {
+
         switch(selectedEnum)
         {
             case CommonEnums.ECON_1MP_BAYER_RGB:
@@ -1338,6 +1335,7 @@ Rectangle {
         }
     }
     Component.onDestruction: {
+
         // Stop the timer when quitting application
         vidstreamproperty.stopFrameTimeoutTimer();
         if(captureVideoRecordRootObject.recordStopBtnVisible) {
@@ -1349,6 +1347,7 @@ Rectangle {
         setMasterMode();
         // Added by Sankari: 12 Feb 2018 - stop Getting key from camera.
         keyEvent.stopGetKeyFromCamera()
+
     }    
 
     Keys.onReleased: {
@@ -1360,21 +1359,19 @@ Rectangle {
     }
 
     Keys.onLeftPressed: {
+
         // Added by Sankari : 25 May 2017, set the flag to indicate side bar items are closed
         closeSideBarClicked = true
-
         // Added by Sankari : 25 May 2017
         // Store the last visible status of capture and record buttons when clicking close side bar button
         captureButtonVisibleStatus = captureVideoRecordRootObject.captureBtnVisible
         videoRecButtonVisibleStatus = captureVideoRecordRootObject.recordBtnVisible
         recordStopBtnVisibleStatus = captureVideoRecordRootObject.recordStopBtnVisible
-
         if(!cameraColumnLayout.visible)
             selectCameraSettings()
         sideBarItems.visible = false
         sidebarVisibleStatus(sideBarItems.visible)
         open_sideBar.visible = true
-
         // Added by Sankari: 05 Apr 2019
         // set preview background area. param1:width, param2: height, param3: sidebar visibility true/false
         vidstreamproperty.setPreviewBgrndArea(previewBgrndArea.width, previewBgrndArea.height, false)
@@ -1453,7 +1450,7 @@ Rectangle {
    //for taking snap shot
    function imageCapture(shotType)
    {
-       seqAni.stop()       
+       seqAni.stop()
        vidstreamproperty.setStillVideoSize(stillSettingsRootObject.stillOutputTextValue, stillSettingsRootObject.stillColorComboIndexValue)
        switch(shotType)
        {
@@ -1511,8 +1508,10 @@ Rectangle {
    }
    function updateVideoResolution(colorComboText,frameRateIndex)
    {
+
        root.updateScenePreview(vidstreamproperty.width.toString() +"x"+vidstreamproperty.height.toString(),colorComboText,frameRateIndex)
        vidstreamproperty.displayVideoResolution()
+       vidstreamproperty.lastPreviewResolution(vidstreamproperty.width.toString() +"x"+vidstreamproperty.height.toString(),colorComboText)
    }
    function imageSettingVisibleChanged()
    {
@@ -1535,5 +1534,11 @@ Rectangle {
    function enableTimerforGrabPreviewFrame(timerstatus)
    {
        vidstreamproperty.enableTimer(timerstatus);
+   }
+
+   // Added by Navya -To avoid crash in case of Hyperyon by setting correct resoln
+   function checkForResoln()
+   {
+          JS.videoCaptureResolution = videoSettingsRootObject.videoOutputSize
    }
 }

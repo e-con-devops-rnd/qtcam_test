@@ -309,7 +309,6 @@ bool H264Camera::getROIExposureWindowSize(uint queryType){
 
     if(getValueCmd(V4L2_CID_XU_EXPOSURE_ROI_WINSIZE, queryType, roiWinSize)){
         uint roiWindowSize = roiWinSize;
-
         emit roiWindowSizeReceived(queryType, roiWindowSize);
         return true;
     }

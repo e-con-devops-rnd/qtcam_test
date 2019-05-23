@@ -104,7 +104,7 @@ Item {
         onTriggered: {
             setMasterOnDemandMode()
         }
-    }
+   }
     Videostreaming{
         id:videostream
     }
@@ -180,14 +180,14 @@ Item {
 
         onStillFormatChanged:{
             stillFormatCurrentIndex = stillFormatcurrentIndex
-            stillResolutionCurrentIndex = stillResolncurrentIndex        
+            stillResolutionCurrentIndex = stillResolncurrentIndex
             see3camcu1317.setStillResolution(stillFormatCurrentIndex+1, stillResolutionCurrentIndex+1);
             see3camcu1317.getNumberOfFramesCanStore(stillFormatCurrentIndex+1, stillResolutionCurrentIndex+1)
 
         }
 
         onStillResolutionChanged:{
-            stillResolutionCurrentIndex = stillresolutionIndex          
+            stillResolutionCurrentIndex = stillresolutionIndex
             stillFormatCurrentIndex = stillFormatIndex
             see3camcu1317.setStillResolution(stillFormatCurrentIndex+1, stillResolutionCurrentIndex+1);
             see3camcu1317.getNumberOfFramesCanStore(stillFormatCurrentIndex+1, stillResolutionCurrentIndex+1)
@@ -201,12 +201,13 @@ Item {
             }
         }
         onExtensionTabVisible:{
-            if(visible){               
+            if(visible){
                 frameIndexCombo.currentIndex = 0
             }
-        }
+       }
+ }
 
-    }
+
 
     ScrollView{
         id: scrollview
@@ -370,7 +371,9 @@ Item {
                         maximumValue: denoiseMax
                         onValueChanged:  {
                             deNoiseTextField.text = deNoiseSlider.value
+
                             if(skipUpdateUIDenoise){
+
                                 see3camcu1317.setDenoiseValue(deNoiseSlider.value)
                             }
                         }
@@ -385,7 +388,9 @@ Item {
                         style: econTextFieldStyle
                         validator: IntValidator {bottom: deNoiseSlider.minimumValue; top: deNoiseSlider.maximumValue}
                         onTextChanged: {
+
                             if(text.length > 0){
+
                                 deNoiseSlider.value = deNoiseTextField.text
                             }
                         }
@@ -558,7 +563,7 @@ Item {
                                 see3camcu1317.grabPreviewFrame()
                             }
                         }*/
-                        RadioButton {
+                       RadioButton {
                             exclusiveGroup: streamModeGroup
                             id: streamMasterOnDemand
                             checked:false
@@ -702,19 +707,13 @@ Item {
                         text: "Store"
                         style: econButtonStyle
                         enabled: streamMasterOnDemand.checked ? true : false
-
                         opacity: enabled ? 1 : 0.1
-                        //                    enabled: true
-                        //                    opacity: 1
-
                         implicitHeight: 30
                         implicitWidth: 100
                         onClicked: {
-                            storeFrame.enabled = true
                             storeImageInCamera()
                         }
                         Keys.onReturnPressed: {
-                            storeFrame.enabled = true
                             storeImageInCamera()
                         }
                     }
@@ -960,7 +959,7 @@ Item {
                             onValueChanged:  {
                                 frameRateTextField.text = frameRateSlider.value
                                 if(skipUpdateUIFrameRate){
-                                    see3camcu1317.setFrameRateCtrlValue(frameRateSlider.value)
+                                   see3camcu1317.setFrameRateCtrlValue(frameRateSlider.value)
                                 }
                             }
                         }
@@ -1048,7 +1047,7 @@ Item {
                                 see3camcu1317.setFaceDetectionRect(faceRectEnable.checked, faceDetectEmbedData.checked, checked)
                             }
                             Keys.onReturnPressed: {
-                                see3camcu1317.setFaceDetectionRect(faceRectEnable.checked, faceDetectEmbedData.checked, checked)
+                               see3camcu1317.setFaceDetectionRect(faceRectEnable.checked, faceDetectEmbedData.checked, checked)
                             }
                         }
                     }
@@ -1072,7 +1071,7 @@ Item {
                             activeFocusOnPress: true
                             style: econRadioButtonStyle
                             onClicked:{
-                                see3camcu1317.setSmileDetection(true, smileDetectEmbedData.checked)
+                              see3camcu1317.setSmileDetection(true, smileDetectEmbedData.checked)
                             }
                             Keys.onReturnPressed: {
                                 see3camcu1317.setSmileDetection(true, smileDetectEmbedData.checked)
@@ -1173,9 +1172,22 @@ Item {
             }
         }
 
+    Component {
+        id: econTextFieldStyle
+        TextFieldStyle {
+            textColor: "black"
+            background: Rectangle {
+                radius: 2
+                implicitWidth: 50
+                implicitHeight: 20
+                border.color: "#333"
+                border.width: 2
+                y: 1
+            }
+        }
+    }
 
-
-        function setMasterOnDemandMode(){
+      function setMasterOnDemandMode(){
             root.captureBtnEnable(true)
             root.videoRecordBtnEnable(true)
             see3camcu1317.setStreamMode(See3camcu1317.STREAM_MASTER_ONDEMAND)
@@ -1196,9 +1208,10 @@ Item {
             see3camcu1317.setToDefault()
            //Added by Navya:28-Feb-2019 -To get a popup window
             messageDialog.title=qsTr("Restore Default")
-            messageDialog.text=qsTr("When we click extension unit restore default option, all the controls will be updated to their default values except stream mode. The stream mode control can be changed manually")
-             messageDialog.open()
+            messageDialog.text=qsTr("When we click Extension Settings default option, all the controls will be updated to their default values except stream mode. The stream mode control can be changed manually")
+            messageDialog.open()
             getValuesFromCamera()
+
             // Added by Sankari: 24 Apr 2017. To get preview in master mode
             root.startUpdatePreviewInMasterMode()
         }
@@ -1322,6 +1335,7 @@ Item {
 
         // Get the control values in extension settings
         function getValuesFromCamera(){
+
             scenemodeTimer.start()
             see3camcu1317.getEffectMode()
             see3camcu1317.getSceneMode()
@@ -1407,6 +1421,7 @@ Item {
             onSerialNumber:{
                 displayMessageBox(qsTr("Serial Number"), serialNumber)
             }
+
         }
 
         function getSerialNumber() {
@@ -1437,6 +1452,7 @@ Item {
                 currentEffectModeValue(effectMode)
             }
             onDenoiseValue:{
+
                 skipUpdateUIDenoise = false
                 deNoiseSlider.value = denoiseVal
                 skipUpdateUIDenoise = true
@@ -1455,7 +1471,7 @@ Item {
             }
             onStreamModeValue:{
                 if(streamMode == See3camcu1317.STREAM_MASTER_ONDEMAND){
-                    streamMasterOnDemand.checked = true                  
+                    streamMasterOnDemand.checked = true
                  //   root.enableTimerforGrabPreviewFrame(true)
                 }else if(streamMode == See3camcu1317.STREAM_SOFTWARE_TRIGGER){
                     streamSwTrigger.checked = true
@@ -1547,7 +1563,6 @@ Item {
             }
 
             onStoreStillFrameSucceess:{
-                storeFrame.enabled = true
 
                 see3camcu1317.grabPreviewFrame()
             }
@@ -1697,7 +1712,6 @@ Item {
             getValuesFromCamera()
             see3camcu1317.getStillResolution()
             root.enableTimerforGrabPreviewFrame(true)
-
         }
         Component.onDestruction:{
              // When quit stroage camera usage, set continuous mode
