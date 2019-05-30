@@ -69,7 +69,8 @@ public:
    // Added by Sankari - 02 Dec 2018 - render shader program usage
     typedef enum
     {
-        RGB_BUFFER_RENDER = 1, // rgba
+        NO_RENDER = 0,      // stop render for skipframes
+        RGB_BUFFER_RENDER , // rgba
         YUYV_BUFFER_RENDER
     }ERenderBuffer;
 	

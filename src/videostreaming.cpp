@@ -108,6 +108,7 @@ Videostreaming::Videostreaming() : m_t(0)
     triggerShot = false;
     m_displayCaptureDialog = false;
     retrieveframeStoreCam=false;
+    stopRenderOnMakeShot = false;
     m_saveImage = false;
     m_VideoRecord = false;
     retrieveframeStoreCamInCross = false;
@@ -737,7 +738,6 @@ void Videostreaming::capFrame()
         //Bug Fix: 1. Streaming is not available for higher resolution when unplug and plug cu130 camera without closing application
         v4l2_requestbuffers reqbufs;
         if (m_buffers == NULL){
-
            return;}
 
         for (uint i = 0; i < m_nbuffers; ++i)
@@ -751,15 +751,12 @@ void Videostreaming::capFrame()
 
         // When device is unplugged, Stop rendering.
         m_renderer->updateStop = true;
-
         emit deviceUnplugged("Disconnected","Device Not Found");
         emit logCriticalHandle("Device disconnected");
-
         return;
     }
 
     if (again) {
-
         return;
     }
 
@@ -800,18 +797,26 @@ void Videostreaming::capFrame()
         return;
     }
 
+    //Added by Navya - 29 May 2019 --In order to stop rendering the skipframes on capturing image
+    if(m_frame <=3 ){
+        getFrameRates();
+    }
+    else
+         stopRenderOnMakeShot = false;
+
     // prepare yuyv/rgba buffer and give to shader.
-    if(!prepareBuffer(m_capSrcFormat.fmt.pix.pixelformat, m_buffers[buf.index].start[0], buf.bytesused)){
-        qbuf(buf);
-        emit signalTograbPreviewFrame(retrieveframeStoreCam,true);  //Added by Navya  ---Querying the buffer again
-        return;
+    if(!stopRenderOnMakeShot){  //Allow render only after checking for Makeshot.
+        if(!prepareBuffer(m_capSrcFormat.fmt.pix.pixelformat, m_buffers[buf.index].start[0], buf.bytesused)){
+            qbuf(buf);
+            emit signalTograbPreviewFrame(retrieveframeStoreCam,true);  //Added by Navya  ---Querying the buffer again
+            return;
+        }
     }
 
     if(!m_snapShot && !retrieveShot){  // Checking for retrieveshot flag inorder to avoid, updating still frame to UI
         m_renderer->gotFrame = true;
        
-    }
-   
+    }   
 
  
     if(m_snapShot || m_burstShot){
@@ -2005,6 +2010,7 @@ void Videostreaming::makeShot(QString filePath,QString imgFormatType) {
         vidCapFormatChanged(stillOutFormat);
 
         setResoultion(stillSize);
+        stopRenderOnMakeShot = true;
         startAgain();
     }
 }
@@ -2979,17 +2985,20 @@ void Videostreaming::switchToStillPreviewSettings(bool stillSettings){
     {
         stopCapture();
         if(stillSettings){
-             makeSnapShot = true;
-             retrieveShot =true;
-             m_renderer->updateStop = true;
-             vidCapFormatChanged(stillOutFormat);
+            makeSnapShot = true;
+            retrieveShot =true;
+            m_renderer->updateStop = true;
+            vidCapFormatChanged(stillOutFormat);
 
-             setResoultion(stillSize);
+            setResoultion(stillSize);
+            m_renderer->renderBufferFormat = CommonEnums::NO_RENDER;
         }
-        else{          
-            retrieveShot = false;         
+        else{
+            retrieveShot = false;
+
             vidCapFormatChanged(lastFormat);
             setResoultion(lastPreviewSize);
+            m_renderer->renderBufferFormat = CommonEnums::NO_RENDER;
         }
          startAgain();
     }

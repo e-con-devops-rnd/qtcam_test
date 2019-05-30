@@ -190,6 +190,7 @@ public:
         SmileDetectEmbedDataDisable = 0x00
     };
     Q_ENUMS(camSmileDetectEmbedDataMode)
+
    
 signals:
      void sceneModeValue(uint sceneMode);
@@ -264,6 +265,7 @@ public slots:
     bool getFrameRateCtrlValue();
 
     bool enableDisableFaceRectangle(bool enableFaceRect);
+
 
 };
 #endif // SEE3CAM_130_H

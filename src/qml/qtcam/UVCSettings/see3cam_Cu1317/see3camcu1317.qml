@@ -180,14 +180,14 @@ Item {
 
         onStillFormatChanged:{
             stillFormatCurrentIndex = stillFormatcurrentIndex
-            stillResolutionCurrentIndex = stillResolncurrentIndex
+            stillResolutionCurrentIndex = stillResolncurrentIndex        
             see3camcu1317.setStillResolution(stillFormatCurrentIndex+1, stillResolutionCurrentIndex+1);
             see3camcu1317.getNumberOfFramesCanStore(stillFormatCurrentIndex+1, stillResolutionCurrentIndex+1)
 
         }
 
         onStillResolutionChanged:{
-            stillResolutionCurrentIndex = stillresolutionIndex
+            stillResolutionCurrentIndex = stillresolutionIndex          
             stillFormatCurrentIndex = stillFormatIndex
             see3camcu1317.setStillResolution(stillFormatCurrentIndex+1, stillResolutionCurrentIndex+1);
             see3camcu1317.getNumberOfFramesCanStore(stillFormatCurrentIndex+1, stillResolutionCurrentIndex+1)
@@ -571,6 +571,7 @@ Item {
                             activeFocusOnPress: true          // grabPreviewFrame
                             style: econRadioButtonStyle
                             onClicked:{
+                               root.checkForTriggerMode(false)
                                root.skipFrameInPreview(true)
                                setMasterOnDemandMode()
                                see3camcu1317.grabPreviewFrame()
@@ -591,6 +592,8 @@ Item {
                                 activeFocusOnPress: true
                                 style: econRadioButtonStyle
                                 onClicked: {
+                                 
+                                    root.checkForTriggerMode(true)
                                     root.captureBtnEnable(false)
                                     root.videoRecordBtnEnable(false)
                                     see3camcu1317.setStreamMode(See3camcu1317.STREAM_SOFTWARE_TRIGGER)
@@ -631,6 +634,8 @@ Item {
                                 activeFocusOnPress: true
                                 style: econRadioButtonStyle
                                 onClicked: {
+                                 
+                                    root.checkForTriggerMode(true)
                                     root.captureBtnEnable(false)
                                     root.videoRecordBtnEnable(false)
                                     see3camcu1317.setStreamMode(See3camcu1317.STREAM_HARDWARE_TRIGGER)
@@ -959,7 +964,7 @@ Item {
                             onValueChanged:  {
                                 frameRateTextField.text = frameRateSlider.value
                                 if(skipUpdateUIFrameRate){
-                                   see3camcu1317.setFrameRateCtrlValue(frameRateSlider.value)
+                                    see3camcu1317.setFrameRateCtrlValue(frameRateSlider.value)
                                 }
                             }
                         }
@@ -1047,7 +1052,7 @@ Item {
                                 see3camcu1317.setFaceDetectionRect(faceRectEnable.checked, faceDetectEmbedData.checked, checked)
                             }
                             Keys.onReturnPressed: {
-                               see3camcu1317.setFaceDetectionRect(faceRectEnable.checked, faceDetectEmbedData.checked, checked)
+                                see3camcu1317.setFaceDetectionRect(faceRectEnable.checked, faceDetectEmbedData.checked, checked)
                             }
                         }
                     }
@@ -1071,7 +1076,7 @@ Item {
                             activeFocusOnPress: true
                             style: econRadioButtonStyle
                             onClicked:{
-                              see3camcu1317.setSmileDetection(true, smileDetectEmbedData.checked)
+                                see3camcu1317.setSmileDetection(true, smileDetectEmbedData.checked)
                             }
                             Keys.onReturnPressed: {
                                 see3camcu1317.setSmileDetection(true, smileDetectEmbedData.checked)

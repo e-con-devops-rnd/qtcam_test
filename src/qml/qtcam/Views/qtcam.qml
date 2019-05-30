@@ -72,6 +72,7 @@ Rectangle {
 
     // Added by Sankari : 25 May 2017, the flag to indicate side bar items are opened/closed
     property bool closeSideBarClicked: false
+    property bool getTriggerMode :false
 
     // Added by Sankari : 25 May 2017, store the status of capture/record button visiblity[used when closing side bar items]
     property bool captureButtonVisibleStatus: false
@@ -513,9 +514,9 @@ Rectangle {
                             captureRecordWhenSideBarItemsClosed()
                         }
                         else{
-                            if(captureVideoRecordRootObject.captureBtnVisible){
+                            if(captureVideoRecordRootObject.captureBtnVisible && !getTriggerMode ){//Restricts in case of Trigger Modes for See3CAM_CU1317 camera.
                                 mouseClickCapture()
-                            } else if(captureVideoRecordRootObject.recordBtnVisible){
+                            } else if(captureVideoRecordRootObject.recordBtnVisible && !getTriggerMode ){
                                 videoRecordBegin()
                             } else if(captureVideoRecordRootObject.recordStopBtnVisible){
                                 videoSaveVideo()
@@ -616,10 +617,9 @@ Rectangle {
                 }
             }
             onCurrentIndexChanged: {
-                if(currentIndex.toString() != "-1" && currentIndex.toString() != "0") {
+                if(currentIndex.toString() != "-1" && currentIndex.toString() != "0") {                    
                     if(oldIndex!=currentIndex) {
-
-                        seqAni.running = true
+			seqAni.running = true
                         seqAni.start()
                         vidstreamproperty.stopFrameTimeoutTimer()
                         vidstreamproperty.setPreviewBgrndArea(previewBgrndArea.width, previewBgrndArea.height, true)
@@ -1009,7 +1009,7 @@ Rectangle {
         if(JS.videoCaptureFormat !== JS.stillCaptureFormat  || JS.stillCaptureResolution !== JS.videoCaptureResolution)
         {
             vidstreamproperty.vidCapFormatChanged(JS.videoCaptureFormat)
-            checkForResoln()
+            checkForResoln()      //To set Resolution with the updated one,specially for Hyperyon.
             vidstreamproperty.setResoultion(JS.videoCaptureResolution)
         }
         vidstreamproperty.startAgain()
@@ -1540,5 +1540,11 @@ Rectangle {
    function checkForResoln()
    {
           JS.videoCaptureResolution = videoSettingsRootObject.videoOutputSize
+   }
+
+   //Added by Navya - 29 May 2019 -- Inorder to stop VideoRecord and Image Capture in case of Software and Hardware Trigger Modes for See3CAM_CU1317 camera.
+   function checkForTriggerMode(mode)
+   {
+       getTriggerMode = mode;
    }
 }

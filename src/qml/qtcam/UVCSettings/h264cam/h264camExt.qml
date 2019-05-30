@@ -296,11 +296,9 @@ Item {
 
                         onClicked: {
                             h264camId.setROIAutoExposureMode(H264camera.ROI_FULL)
-                            autoExpoWinSizeCombo.enabled = false
                         }
                         Keys.onReturnPressed: {
                             h264camId.setROIAutoExposureMode(H264camera.ROI_FULL)
-                            autoExpoWinSizeCombo.enabled = false
                         }
                     }
                     RadioButton {
@@ -312,11 +310,10 @@ Item {
                         opacity: enabled ? 1 : 0.1
                         onClicked: {
                             h264camId.setROIAutoExposureMode(H264camera.ROI_MANUAL)
-                             autoExpoWinSizeCombo.enabled = true
                         }
                         Keys.onReturnPressed: {
                             h264camId.setROIAutoExposureMode(H264camera.ROI_MANUAL)
-                             autoExpoWinSizeCombo.enabled = true
+
                         }
                     }
                 }
@@ -419,10 +416,10 @@ Item {
                 }
 
               
-                Row{
+		 Row{
                     Layout.alignment: Qt.AlignCenter
 
-                    Button {
+		 Button {
                         id: f_wversion_selected
                         opacity: 1
                         activeFocusOnPress : true
@@ -438,7 +435,7 @@ Item {
                                 source: "images/f_wversion_selected.png"
                             }
                         }
-                        onClicked: {
+			onClicked: {
                             getFirmwareVer()
                         }
 
