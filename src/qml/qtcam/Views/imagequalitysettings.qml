@@ -77,6 +77,7 @@ Item {
     property bool focusValueChangeProperty
     property bool focusAutoChangeProperty
     property bool usb3speed: false
+    property bool enablePowerLineFreq : true
 
     property bool powerLineComboEnable
     // Skip doing things when exposure combo index changed calls when no selection of any camera
@@ -481,10 +482,10 @@ Item {
                         smooth: true
                         horizontalAlignment: TextInput.AlignHCenter
                         validator: IntValidator {bottom: white_balance_Slider.minimumValue; top: white_balance_Slider.maximumValue;}
-                        opacity: autoSelect_wb.checked ? 0: 1
-                        enabled: false
+                        opacity:  white_balance_Slider.enabled ? 1: 0
+                        enabled:   white_balance_Slider.enabled ? 1: 0
                         style: econTextFieldStyle
-                        maximumLength: (white_balance_Slider.maximumValue.toString().length > white_balance_Slider.minimumValue.toString().length) ? white_balance_Slider.maximumValue.toString().length : white_balance_Slider.minimumValue.toString().length                        
+                        maximumLength: (white_balance_Slider.maximumValue.toString().length > white_balance_Slider.minimumValue.toString().length) ? white_balance_Slider.maximumValue.toString().length : white_balance_Slider.minimumValue.toString().length
                     }
                     Text {
                         id: gamma
@@ -1688,15 +1689,23 @@ Item {
         menuitems.push(controlName)
         if(controlName === "Power Line Frequency")
         {
-            menuitems.pop() //Control Name should be removed
-            powerLine.opacity = 1
-            powerLineCombo.opacity = 1
-            powerLineComboEnable =  false	    // To avoid setting power line freq when get the control values
-            powerLineCombo.model = menuitems
-            powerLineCombo.currentIndex = controlDefaultValue
-            while(menuitems.pop()){}
-            powerLineComboControlId = controlID
-            powerLineComboEnable =  true
+            if(enablePowerLineFreq){
+                menuitems.pop() //Control Name should be removed
+                powerLine.opacity = 1
+                powerLineCombo.opacity = 1
+                powerLineComboEnable =  false	    // To avoid setting power line freq when get the control values
+                powerLineCombo.model = menuitems
+                powerLineCombo.currentIndex = controlDefaultValue;
+                while(menuitems.pop()){}
+                powerLineComboControlId = controlID
+                powerLineComboEnable =  true
+            }
+            else
+            {
+                menuitems.pop()
+                powerLineCombo.model = menuitems
+                powerLineCombo.enabled = false
+            }
 
         }
         else if(controlName === "Exposure, Auto")
@@ -1724,6 +1733,11 @@ Item {
                 exposure_value.opacity = 0                
             }
         }
+    }
+
+    function controlPowerLineFreq()
+    {
+        enablePowerLineFreq = false
     }
 
     function setOpacityFalse(){

@@ -17,6 +17,8 @@ Item {
     property bool skipUpdateInCamOnh264Quality: false
     property bool skipUpdateUIOnHDR: false
     property bool skipUpdateUIOnDewarp: false
+    property int minWindowValue
+    property int maxWindowValue
 
     Connections
     {
@@ -235,7 +237,7 @@ Item {
                     style: econComboBoxStyle
                     onCurrentIndexChanged: {
                         if(skipUpdateUIOnHDR){
-			    h264camId.setHDRMode(currentIndex)
+                            h264camId.setHDRMode(currentIndex)
                         }
                         skipUpdateUIOnHDR = true
                     }
@@ -267,7 +269,7 @@ Item {
                         if(skipUpdateUIOnDewarp){
                             h264camId.setDewarpMode(currentIndex)
                         }
-                        skipUpdateUIOnDewarp = true
+                      
                     }
                 }
 
@@ -278,6 +280,7 @@ Item {
                     font.family: "Ubuntu"
                     color: "#ffffff"
                     smooth: true
+                    enabled:hdrCombo.currentIndex == 0 ? 1 : 0
                     Layout.alignment: Qt.AlignCenter
                     opacity: 0.50196078431373
                 }
@@ -289,7 +292,7 @@ Item {
                         exclusiveGroup: roiExpogroup
                         id: autoexpFull
                         text: "Full"
-                        checked:true
+                        enabled:hdrCombo.currentIndex == 0 ?1 :0
                         activeFocusOnPress: true
                         style: econRadioButtonStyle
                         opacity: enabled ? 1 : 0.1
@@ -305,6 +308,7 @@ Item {
                         exclusiveGroup: roiExpogroup
                         id: autoexpManual
                         text: "Manual"
+                        enabled:hdrCombo.currentIndex == 0 ?1 :0
                         activeFocusOnPress: true
                         style: econRadioButtonStyle
                         opacity: enabled ? 1 : 0.1
@@ -322,6 +326,7 @@ Item {
                             id: windowsize
                             text: "--- ROI Window Size ---"
                             font.pixelSize: 14
+                            enabled:hdrCombo.currentIndex == 0 ?1 :0
                             font.family: "Ubuntu"
                             color: "#ffffff"
                             smooth: true
@@ -332,17 +337,10 @@ Item {
                 ComboBox
                 {
                     id: autoExpoWinSizeCombo
-                    enabled: (autoexpManual.enabled && autoexpManual.checked) ? true : false
-                    opacity: (autoexpManual.enabled && autoexpManual.checked) ? 1 : 0.1
+                    enabled: (autoexpManual.enabled && autoexpManual.checked && hdrCombo.currentIndex == 0) ? true : false
+                    opacity: (autoexpManual.enabled && autoexpManual.checked && hdrCombo.currentIndex == 0) ? 1 : 0.1
                     model: ListModel{
-                        ListElement {text : "1"}
-                        ListElement {text : "2"}
-                        ListElement {text : "3"}
-                        ListElement {text : "4"}
-                        ListElement {text : "5"}
-                        ListElement {text : "6"}
-                        ListElement {text : "7"}
-                        ListElement {text : "8"}
+                       id:roiwinsize
                     }
                     activeFocusOnPress: true
                     style: econComboBoxStyle
@@ -697,9 +695,22 @@ Item {
 
 
    function queryForWindowSize(queryType, windowSize){
-       if(queryType == H264camera.UVC_GET_CUR){
-            autoExpoWinSizeCombo.currentIndex = windowSize-1
-       }
+           switch(queryType){
+               case H264camera.UVC_GET_CUR:
+                   autoExpoWinSizeCombo.currentIndex = windowSize -1
+                   break;
+               case H264camera.UVC_GET_MIN:
+                   minWindowValue = windowSize
+                   break;
+               case H264camera.UVC_GET_MAX:
+                   maxWindowValue = windowSize
+                   break;
+               case H264camera.UVC_GET_RES:
+                   autoExpoWinSizeCombo.currentIndex = windowSize -1
+                   break;
+           }
+
+            fillROIWindowSizeCombo(minWindowValue,maxWindowValue)
    }
 
 
@@ -713,9 +724,18 @@ Item {
                dewarpCombo.currentIndex = 1
                break
             }
-        }	
+        }
+          skipUpdateUIOnDewarp = true
     }
 
+
+    // Added by Navya - 07 June 2019 -- To get window Size dynamically from camera.
+    function fillROIWindowSizeCombo(minWindowValue,maxWindowValue){ // need to fill based on windowsize getting from camera
+        roiwinsize.clear()
+        for (var i=minWindowValue; i <=maxWindowValue; i++){
+            roiwinsize.append({"text": i})
+        }
+    }
 
     function queryForNoiseReductionControl(queryType, noiseReductionVal){
         skipUpdateInCamOnNoiseReduceChange = false
@@ -785,6 +805,10 @@ Item {
         h264camId.getNoiseReductionValue(H264camera.UVC_GET_MIN)
         h264camId.getNoiseReductionValue(H264camera.UVC_GET_MAX)
         h264camId.getNoiseReductionValue(H264camera.UVC_GET_RES)
+
+        h264camId.getROIExposureWindowSize(H264camera.UVC_GET_MIN)
+        h264camId.getROIExposureWindowSize(H264camera.UVC_GET_MAX)
+        h264camId.getROIExposureWindowSize(H264camera.UVC_GET_RES)
     }
 
     Component.onCompleted: {
