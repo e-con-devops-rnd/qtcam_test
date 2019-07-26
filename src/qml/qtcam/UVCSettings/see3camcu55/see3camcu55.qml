@@ -1334,7 +1334,7 @@ Item {
         see3camcu55.getQFactor()
         see3camcu55.getOrientation()
         see3camcu55.getFrameRateCtrlValue()
-        see3camcu55.getExposureCompensation()
+       
         see3camcu55.getFaceDetectMode()
         see3camcu55.getFlickerDetection()
         see3camcu55.getSmileDetectMode()

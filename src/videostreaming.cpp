@@ -34,7 +34,7 @@
 #include <QOpenGLShaderProgram>
 #include <QtGui/QOpenGLContext>
 #include <QtConcurrent>
-#include "see3cam_cu1317.h"
+#include "fscam_cu135.h"
 #include "uvccamera.h"
 
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
@@ -108,6 +108,7 @@ Videostreaming::Videostreaming() : m_t(0)
     triggerShot = false;
     m_displayCaptureDialog = false;
     retrieveframeStoreCam=false;
+    onY12Format = false;
     stopRenderOnMakeShot = false;
     m_saveImage = false;
     m_VideoRecord = false;
@@ -115,6 +116,7 @@ Videostreaming::Videostreaming() : m_t(0)
     SkipIfPreviewFrame=false;
     dotile = 0;
     retrieveFrame=false;
+    saveIfY12jpg =false;
     // Modified by Sankari : Dec 5 2018, converted TJPF_RGB to TJPF_RGBA and use RGB[RGBA] shader
     pf = TJPF_RGBA;
     warmup = 1;
@@ -128,8 +130,7 @@ Videostreaming::Videostreaming() : m_t(0)
     flags = TJFLAG_NOREALLOC;
     yuvpad = 1;
     frameToSkip = 3;
-
-    // Added by Sankari: Mar 21, 2019 - To skip preview frames in See3CAM_CU1317
+    // Added by Sankari: Mar 21, 2019 - To skip preview frames in FSCAM_CU135
     previewFrameSkipCount = 1;
     previewFrameToSkip = 1;
     skippingPreviewFrame = false;
@@ -140,6 +141,7 @@ Videostreaming::Videostreaming() : m_t(0)
     y16BayerDestBuffer = NULL;
     h264Decode = NULL;
     yuyvBuffer = NULL;
+    yuyvBuffer_Y12 = NULL;
     bayerIRBuffer = NULL;
     yuv420pdestBuffer = NULL;
     y16BayerFormat = false;
@@ -556,7 +558,7 @@ void FrameRenderer::drawYUYVBUffer(){
     xcord =sidebarwidth+x+(xMargin/2);
 
     if (yBuffer != NULL && uBuffer != NULL && vBuffer != NULL){
-            if(gotFrame && !updateStop){
+            if(gotFrame && !updateStop && frame>3){
 	     // set active texture and give input y buffer
             glActiveTexture(GL_TEXTURE1);
             glUniform1i(samplerLocY, 1);
@@ -718,6 +720,55 @@ void Videostreaming::setPreviewBgrndArea(int width, int height, bool sidebarAvai
     }    
 }
 
+void Videostreaming::convertYUVtoRGB(unsigned char * buffer)
+{
+    rgb_image = new unsigned char[width * height * 3]; //width and height of the image to be converted
+    int y ,cr,cb;
+    double r,g,b;
+    for (int i = 0, j = 0; i < width * height * 3; i+=6,j+=4) {
+        //first pixel
+        y = buffer[j];
+        cb = buffer[j+1];
+        cr = buffer[j+3];
+
+        r = y + (1.4065 * (cr - 128));
+        g = y - (0.3455 * (cb - 128)) - (0.7169 * (cr - 128));
+        b = y + (1.7790 * (cb - 128));
+
+        //This prevents colour distortions in  rgb image
+        if (r < 0) r = 0;
+        else if (r > 255) r = 255;
+        if (g < 0) g = 0;
+        else if (g > 255) g = 255;
+        if (b < 0) b = 0;
+        else if (b > 255) b = 255;
+
+        rgb_image[i] = (unsigned char)r;
+        rgb_image[i+1] = (unsigned char)g;
+        rgb_image[i+2] = (unsigned char)b;
+
+        //second pixel
+        y = buffer[j+2];
+        cb = buffer[j+1];
+        cr = buffer[j+3];
+
+        r = y + (1.4065 * (cr - 128));
+        g = y - (0.3455 * (cb - 128)) - (0.7169 * (cr - 128));
+        b = y + (1.7790 * (cb - 128));
+
+        if (r < 0) r = 0;
+        else if (r > 255) r = 255;
+        if (g < 0) g = 0;
+        else if (g > 255) g = 255;
+        if (b < 0) b = 0;
+        else if (b > 255) b = 255;
+
+        rgb_image[i+3] = (unsigned char)r;
+        rgb_image[i+4] = (unsigned char)g;
+        rgb_image[i+5] = (unsigned char)b;
+    }
+}
+
 void Videostreaming::capFrame()
 {
      unsigned char *temp_Buffer=NULL;
@@ -783,7 +834,20 @@ void Videostreaming::capFrame()
             validFrame = true;
         }
     }
-    break;
+        break;
+    //Added by Navya - 22 July 2019 --To avoid invalidFrames for rendering in case of See3CAM_CU55_MH camera
+    case V4L2_PIX_FMT_Y12:{
+        if((width*height*1.5) == buf.bytesused){
+            validFrame =true;
+        }
+    }
+        break;
+    case V4L2_PIX_FMT_GREY:{
+        if((width*height*1) == buf.bytesused){
+            validFrame =true;
+        }
+    }
+        break;
     default:
         validFrame = true;
         // To do: for other color spaces
@@ -797,20 +861,12 @@ void Videostreaming::capFrame()
         return;
     }
 
-    //Added by Navya - 29 May 2019 --In order to stop rendering the skipframes on capturing image
-    if(m_frame <=3 ){
-        getFrameRates();
-    }
-    else
-         stopRenderOnMakeShot = false;
-
     // prepare yuyv/rgba buffer and give to shader.
-    if(!stopRenderOnMakeShot){  //Allow render only after checking for Makeshot.
-        if(!prepareBuffer(m_capSrcFormat.fmt.pix.pixelformat, m_buffers[buf.index].start[0], buf.bytesused)){
-            qbuf(buf);
-            emit signalTograbPreviewFrame(retrieveframeStoreCam,true);  //Added by Navya  ---Querying the buffer again
-            return;
-        }
+
+    if(!prepareBuffer(m_capSrcFormat.fmt.pix.pixelformat, m_buffers[buf.index].start[0], buf.bytesused)){
+        qbuf(buf);
+        emit signalTograbPreviewFrame(retrieveframeStoreCam,true);  //Added by Navya  ---Querying the buffer again
+        return;
     }
 
     if(!m_snapShot && !retrieveShot){  // Checking for retrieveshot flag inorder to avoid, updating still frame to UI
@@ -830,7 +886,29 @@ void Videostreaming::capFrame()
                                          (unsigned char *)m_renderer->yuvBuffer, buf.bytesused,
                                          m_capImage->bits(), m_capDestFormat.fmt.pix.sizeimage); // yuyv to rgb conversion
 
-            }else if(m_capSrcFormat.fmt.pix.pixelformat == V4L2_PIX_FMT_H264 && !m_VideoRecord){ // capture and save image in h264 format[not for video recording]
+                //Added by Navya :09 July 2019 --allowing still capture for Y12 format in See3CAM_CU55_MH especially
+            }else if(m_capSrcFormat.fmt.pix.pixelformat == V4L2_PIX_FMT_Y12){
+                err = 0;
+                if(formatType == "raw"){
+                    void *inputBuffer = m_buffers[buf.index].start[0] ;
+                    onY12Format = true;
+                    uint8_t *pfmb = yuyvBuffer_Y12;
+                    for(__u32 l=0; l<(width *height * 3)/2; l+=3){
+                        *pfmb++ = ((((((uint8_t *)inputBuffer)[l])) << 4) | (((uint8_t *)inputBuffer)[l+2]) & 0x0F);
+                        *pfmb++ = (((((uint8_t *)inputBuffer)[l]) >> 4 ));
+                        *pfmb++ = ((((((uint8_t *)inputBuffer)[l+1])) << 4) | ((((uint8_t *)inputBuffer)[l+2])) >> 4);
+                        *pfmb++ = (((((uint8_t *)inputBuffer)[l+1]) >> 4 ));
+
+                    }
+                    memcpy(m_renderer->yuvBuffer,yuyvBuffer_Y12,width*height*2);
+                }
+                else{   // still capture for jpg/bmp/png files
+                    onY12Format = false;
+                    saveIfY12jpg = true;
+                    convertYUVtoRGB((unsigned char *)m_renderer->yuvBuffer);  //removed v4l2_convert for yuyv to rgb conversion
+                }
+            }
+            else if(m_capSrcFormat.fmt.pix.pixelformat == V4L2_PIX_FMT_H264 && !m_VideoRecord){ // capture and save image in h264 format[not for video recording]
                 v4l2_format tmpSrcFormat = m_capSrcFormat;
 
                 tmpSrcFormat.fmt.pix.pixelformat = V4L2_PIX_FMT_YUV420;
@@ -883,10 +961,17 @@ void Videostreaming::capFrame()
              else if(((uint8_t *)temp_Buffer)[(buf.bytesused)-3] == 0xDD)
                 {
 
-             }
-         }
-            if(formatType == "raw"){// save incoming buffer directly
-            if(saveRawFile(m_buffers[buf.index].start[0], buf.bytesused))
+                }
+            }
+        if(formatType == "raw"){// save incoming buffer directly
+            if(onY12Format){  // To save Y12 image in See3CAM_CU55_MHL
+                if(saveRawFile(m_renderer->yuvBuffer,width*height*2))
+                {
+                    imgSaveSuccessCount++;
+                    onY12Format = false;
+                }
+            }
+            else if(saveRawFile(m_buffers[buf.index].start[0], buf.bytesused))
             {
                 imgSaveSuccessCount++;
             }
@@ -897,6 +982,9 @@ void Videostreaming::capFrame()
             unsigned char *bufferToSave = NULL;
             if(y16BayerFormat){ // y16 format - ex: cu40 camera
                 bufferToSave = y16BayerDestBuffer;
+            }else if(saveIfY12jpg){        // saving Y12 as jpg for See3CAM_CU55_MH camera.
+                bufferToSave = rgb_image;
+                saveIfY12jpg = false;
             }else{
                 bufferToSave = m_capImage->bits(); // image data converted using v4l2convert
             }
@@ -1761,6 +1849,23 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
                     freeBuffer(srcBuffer);
                 }
                 break;
+            case V4L2_PIX_FMT_Y12:{
+                m_renderer->renderBufferFormat = CommonEnums::YUYV_BUFFER_RENDER;
+                srcBuffer = (uint8_t *)malloc((width * height *3)/2);
+                uint8_t *pfmb = yuyvBuffer;
+                memcpy(srcBuffer, inputbuffer, ((width * height *3)/2));
+                for( __u32 l=0; l<(width* height * 3)/2; l=l+3) /* Y12 to YUYV conversion */
+                {
+
+                    *pfmb++ = (((uint8_t *)srcBuffer)[l]);
+                    *pfmb++ = 0x80;
+                    *pfmb++ = (((uint8_t *)srcBuffer)[l+1]);
+                    *pfmb++ = 0x80;
+                }
+                memcpy(m_renderer->yuvBuffer, yuyvBuffer, width*height*2);
+                freeBuffer(srcBuffer);
+            }
+                break;
             }
         }
         if(m_renderer->renderBufferFormat == CommonEnums::YUYV_BUFFER_RENDER){
@@ -1864,7 +1969,9 @@ void Videostreaming::getFrameRates() {
         m_lastFrame = m_frame;
         m_tv = tv;
     }
-    ++m_frame;    
+    
+    ++m_frame;
+    ++m_renderer->frame;
     emit averageFPS(m_fps);
 }
 
@@ -2084,6 +2191,7 @@ void Videostreaming::triggerModeShot(QString filePath,QString imgFormatType) {
     m_saveImage = true;
     m_displayCaptureDialog = false;
     m_frame = 3;
+    m_renderer->frame = 3;
 }
 
 void Videostreaming::getFileName(QString filePath,QString imgFormatType){
@@ -2217,8 +2325,7 @@ bool Videostreaming::getInterval(struct v4l2_fract &interval)
 void Videostreaming::displayFrame() {
 
     emit logDebugHandle("Start Previewing");
-    m_frame = m_lastFrame = m_fps = 0;
-
+    m_renderer->frame = m_frame = m_lastFrame = m_fps = 0;
     emit averageFPS(m_fps);
 
     __u32 buftype = m_buftype;
@@ -2299,6 +2406,11 @@ void Videostreaming::stopCapture() {
 
         free(yuyvBuffer);
         yuyvBuffer = NULL;
+    }
+
+    if(yuyvBuffer_Y12 != NULL ){
+        free(yuyvBuffer_Y12);
+        yuyvBuffer_Y12 = NULL;
     }
 
     if(yuv420pdestBuffer != NULL){
@@ -2414,6 +2526,9 @@ void Videostreaming::startAgain() {
     tempSrcBuffer = (unsigned char *)malloc(m_renderer->videoResolutionwidth * (m_renderer->videoResolutionHeight) * 2);
    
     yuyvBuffer = (uint8_t *)malloc(m_renderer->videoResolutionwidth * m_renderer->videoResolutionHeight * 2);
+    yuyvBuffer_Y12 = (uint8_t *)malloc(m_renderer->videoResolutionwidth * m_renderer->videoResolutionHeight * 2);
+    
+    
     
     if(openSuccess) {
         displayFrame();
@@ -2615,7 +2730,7 @@ void Videostreaming::updateFrameInterval(QString pixelFormat, QString frameSize)
     QString pixFmtValue = tempPixFmt.value(0);
 
     /* Actual Format of "Y16" is "Y16 " [Y16 with space]. So append space char */
-    if (0 == QString::compare(pixFmtValue, "Y16")){
+    if ((0 == QString::compare(pixFmtValue, "Y16"))|| (0 == QString::compare(pixFmtValue, "Y12"))){
         pixFmtValue.append(" ");
     }
 
@@ -3044,7 +3159,7 @@ void Videostreaming::setSkipPreviewFrame(bool skipFrame){
     skippingPreviewFrame = skipFrame;
 }
 
-  // Added by Navya--Enabling timer in case of See3Cam_cu1317,inorder to segregate it from other devices.
+  // Added by Navya--Enabling timer in case of Fscam_cu135,inorder to segregate it from other devices.
 
 void Videostreaming::enableTimer(bool timerstatus)
 {

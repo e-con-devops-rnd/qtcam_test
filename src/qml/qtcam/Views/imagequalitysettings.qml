@@ -86,11 +86,13 @@ Item {
     property variant exposureOrigAscella: [10, 20, 39, 78, 156, 312, 625, 1250, 2500, 5000, 10000, 20000]
     property int expAscellaTxtFiledValue;
     property bool exposureSliderSetEnable;
+    property bool exposureAutoAvailable: false
     property var menuitems:[]
 
     // It needs some time to get exposure control correct index value recently set in image quality settings when selecting camera in UI.
     Timer {
         id: queryctrlTimer
+        repeat :false
         interval: 500
         onTriggered: {
         // Adding flag to skip setting exposure auto and manual value when getting exposure value and update UI and enable back after getting all control values.       
@@ -774,6 +776,8 @@ Item {
                                 exposureValueAscella = exposureOrigAscella[value]
                                 exposure_value.text = exposureOrigAscella[value]
                                 root.changeCameraSettings(exposurecontrolId, exposureValueAscella)
+                            }else if(!exposureAutoAvailable){ // If a camera does not contain "exposure, auto" control, but having "exposure absolute" control, allow it change exposure value.
+                                root.changeCameraSettings(exposurecontrolId,value.toString())
                             }else{
                                 if((exposureCombo.currentText == "Shutter Priority Mode" || exposureCombo.currentText == "Manual Mode") || (root.selectedDeviceEnumValue == CommonEnums.ECON_CX3_RDX_V5680) || (root.selectedDeviceEnumValue == CommonEnums.ECON_CX3_RDX_T9P031) || (root.selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU40) || (root.selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU51)) {
                                     if(exposureSliderSetEnable){                                        
@@ -1404,6 +1408,7 @@ Item {
                 autoFocusUIUpdate(controlID,controlDefaultValue)
                 break;
             case "Exposure, Auto Priority":
+                exposureAutoAvailable = true; // Make it true if exposure auto control is available
                 if(root.selectedDeviceEnumValue != CommonEnums.CX3_UVC_CAM)
                 {
                     exposureAutoPriorityUIUpdate(controlID,controlDefaultValue)
@@ -1552,8 +1557,7 @@ Item {
     function exposureAbsoluteUIUpdate(controlID,controlMinValue,controlMaxValue,controlStepSize,controlDefaultValue)
     {
         exposure_absolute.opacity = 1
-        if((root.selectedDeviceEnumValue === CommonEnums.ECON_CX3_RDX_V5680) || (root.selectedDeviceEnumValue === CommonEnums.ECON_CX3_RDX_T9P031) || (root.selectedDeviceEnumValue === CommonEnums.SEE3CAM_CU40))
-        {
+        if(!exposureAutoAvailable){ // If a camera does not contain "exposure, auto" control, but having "exposure absolute" control, allow it change exposure value.
             exposure_Slider.opacity = 1
             exposure_Slider.enabled = true
             exposure_value.opacity = 1            
@@ -1704,6 +1708,7 @@ Item {
             {
                 menuitems.pop()
                 powerLineCombo.model = menuitems
+                  while(menuitems.pop()){}
                 powerLineCombo.enabled = false
             }
 
@@ -1711,6 +1716,7 @@ Item {
         else if(controlName === "Exposure, Auto")
         {
             menuitems.pop()
+            exposureAutoAvailable = true;
             if(root.selectedDeviceEnumValue == CommonEnums.CX3_UVC_CAM && !usb3speed){
                 while(menuitems.pop()){}
             }
@@ -1889,7 +1895,7 @@ Item {
             ledFreqValueChangeProperty = true
             focusLogitechValueChangeProperty = true
             focusValueChangeProperty = true
-	    focusAutoChangeProperty = true
+            focusAutoChangeProperty = true
             video_capture_filter_Child.visible = true
 	    // To avoid setting exposure when get the control values 
 	    exposureComboEnable = false
