@@ -551,20 +551,7 @@ Item {
                     Column{
                         spacing:20
                         ExclusiveGroup { id: streamModeGroup }
-                         /*          RadioButton {
-                            exclusiveGroup: streamModeGroup
-                            id: streamMasterContinuous
-                            text: "Master(Continuous)"          // We need to send hid command one time .
-                            activeFocusOnPress: true
-                            style: econRadioButtonStyle
-                            onClicked:{
-                                fscamcu135.grabPreviewFrame()
-                            }
-                            Keys.onReturnPressed: {
-                                fscamcu135.grabPreviewFrame()
-                            }
-                        }*/
-                       RadioButton {
+                        RadioButton {
                             exclusiveGroup: streamModeGroup
                             id: streamMasterOnDemand
                             checked:false
@@ -592,8 +579,7 @@ Item {
                                 text: "Software Trigger Mode"
                                 activeFocusOnPress: true
                                 style: econRadioButtonStyle
-                                onClicked: {
-                                 
+                                onClicked: {           
                                     root.checkForTriggerMode(true)
                                     root.captureBtnEnable(false)
                                     root.videoRecordBtnEnable(false)

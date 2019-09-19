@@ -48,6 +48,7 @@
 #include <QOpenGLShaderProgram>
 #include <QMutex>
 #include <unistd.h>
+#include <sys/ioctl.h>
 
 class FrameRenderer : public QObject, protected QOpenGLFunctions
 {
@@ -92,12 +93,15 @@ public:
     // rgba buffer
     unsigned char *rgbaDestBuffer;
     uint8_t renderBufferFormat;
+    uint viewportHeight;
 
     __u32 videoResolutionwidth;
     __u32 videoResolutionHeight;
     __u32 width,height;
      __u32 x1,y1;
     bool gotFrame;
+    bool copied;
+    unsigned fps;
 
     QMutex renderMutex; // mutex to use in rendering - rgba
     QMutex renderyuyvMutex; // mutex to use in rendering yuyv   
@@ -105,6 +109,7 @@ public:
     bool  m_formatChange;
     bool  m_videoResolnChange;
     bool sidebarStateChanged;
+    bool windowStatusChanged;
     int glViewPortX;
     int glViewPortY;
     int glViewPortWidth;
@@ -120,6 +125,7 @@ public slots:
 
     // spilit yuyv buffer to y,u,v buffer
     void fillBuffer();
+    void selectedCameraEnum(CommonEnums::ECameraNames selectedDeviceEnum);
 
 public:
     QSize m_viewportSize;
@@ -150,6 +156,8 @@ private:
     GLint samplerLocV;
 
     GLint samplerLocRGB;
+
+     static CommonEnums::ECameraNames currentlySelectedEnumValue;
 };
 
 class Videostreaming :  public QQuickItem, public v4l2
@@ -209,7 +217,7 @@ public:
     bool retrieveFrame;
 
     bool getPreviewWindow;
-
+    bool frameArrives;
 
     // get current resoution set in v4l2
     QString getResoultion();
@@ -340,7 +348,7 @@ private:
     static QString camDeviceName;
 
     unsigned char  *y16BayerDestBuffer;
-	bool y16BayerFormat;
+    bool y16BayerFormat,y16FormatFor20CUG;
     unsigned char* rgb_image;
  /**
      * @brief currentlySelectedCameraEnum - This contains currently selected camera enum value
@@ -355,8 +363,6 @@ private:
 
     // Added by Sankari  - 10 Nov 2016 - To decide whether to save image or not
     bool m_saveImage;
-    bool saveIfY12jpg;
-
     unsigned int imgSaveSuccessCount;
 
     bool frameSkip;
@@ -380,6 +386,8 @@ private:
     bool retrieveShot;
     bool stopRenderOnMakeShot;
     bool onY12Format;
+    bool windowResized;
+    uint resizedWidth,resizedHeight;
 
 
 private slots:
@@ -400,7 +408,8 @@ public slots:
     void enableTimer(bool timerstatus);
     void retrieveShotFromStoreCam(QString filePath,QString imgFormatType);
     void previewWindow();
-
+    void widthChangedEvent(int width);
+    void heightChangedEvent(int height);
      // Added by Sankari : 10 Dec 2016
     // To Disable image capture dialog when taking trigger shot in trigger mode for 12cunir camera
     void disableImageCaptureDialog();
@@ -552,7 +561,6 @@ public slots:
      * @param idx
      */
     void frameIntervalChanged(int idx);
-    void convertYUVtoRGB(unsigned char* buffer);
 
     void recordVideo();
       /**
@@ -619,7 +627,7 @@ signals:
     // Added by Sankari: 12 Feb 2018
     // Get the bus info details and send to qml for selected camera
     void pciDeviceBus(QString businfo);
-
+    void setWindowSize(uint win_width,uint win_height);
     void logDebugHandle(QString _text);
     void logCriticalHandle(QString _text);
     void titleTextChanged(QString _title,QString _text);

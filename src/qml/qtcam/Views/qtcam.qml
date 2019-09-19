@@ -365,6 +365,14 @@ Rectangle {
                 setControlValues(ctrlName.toString(),ctrlType,ctrlMinValue,ctrlMaxValue, ctrlStepSize, ctrlDefaultValue,ctrlID);
             }
 
+            // Added by Navya :31 July 2019
+            // To update the preview window width n height only when Application window is resized.
+            onSetWindowSize:{
+                previewBgrndArea.width = win_width * 0.85
+                previewBgrndArea.height = win_height - statusBarRootObject.statusBarHeight+5
+                setpreviewWindowSize();
+            }
+
             onDeviceUnplugged: {
                 // Added by Sankari:12 Feb 2018 - Get the Pci bus info for selected camera
                 keyEvent.stopGetKeyFromCamera()
@@ -1093,7 +1101,15 @@ Rectangle {
             vidstreamproperty.vidCapFormatChanged(JS.videoCaptureFormat)
             vidstreamproperty.setResoultion(JS.videoCaptureResolution);
             vidstreamproperty.startAgain();            
-        }
+       }
+    }
+
+    // Added by Navya :13 Aug 2019 --Implemented streamon after switching to master from Trigger mode in case of See3CAM_CU55_MH camera.
+    function masterEnableForMonochrome(){
+        vidstreamproperty.resolnSwitch();
+        vidstreamproperty.vidCapFormatChanged(JS.videoCaptureFormat)
+        vidstreamproperty.setResoultion(JS.videoCaptureResolution);
+        vidstreamproperty.startAgain();
     }
 
     function videoRecordBegin() {
@@ -1187,8 +1203,8 @@ Rectangle {
     }
 
     function createExtensionUnitQml(selectedDeviceEnumValue){
-        if(see3cam){          
-            see3cam.destroy()         
+        if(see3cam){
+            see3cam.destroy()
         }
         if(selectedDeviceEnumValue == CommonEnums.ECON_1MP_BAYER_RGB ) {
             see3cam = Qt.createComponent("../UVCSettings/see3cam10/uvc10_c.qml").createObject(root)
@@ -1234,11 +1250,12 @@ Rectangle {
             see3cam = Qt.createComponent("../UVCSettings/h264cam/h264camExt.qml").createObject(root)
         }else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU55) {
             see3cam = Qt.createComponent("../UVCSettings/see3camcu55/see3camcu55.qml").createObject(root)
-        }
-        else if(selectedDeviceEnumValue == CommonEnums.FSCAM_CU135){ // Added By Sankari
-                    see3cam = Qt.createComponent("../UVCSettings/fscamcu135/fscamcu135.qml").createObject(root)
+        }else if(selectedDeviceEnumValue == CommonEnums.FSCAM_CU135){ // Added By Sankari
+            see3cam = Qt.createComponent("../UVCSettings/fscamcu135/fscamcu135.qml").createObject(root)
         }else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU55_MH) { // Added By Navya
             see3cam = Qt.createComponent("../UVCSettings/see3camcu55_MH/see3camcu55_mh.qml").createObject(root)
+        }else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_20CUG) { // Added By Navya
+            see3cam = Qt.createComponent("../UVCSettings/see3cam20cug/see3cam_20cug.qml").createObject(root)
         }else {
             see3cam = Qt.createComponent("../UVCSettings/others/others.qml").createObject(root)
         }
@@ -1284,6 +1301,7 @@ Rectangle {
             case CommonEnums.FSCAM_CU135:
             case CommonEnums.SEE3CAM_CU38:
             case CommonEnums.SEE3CAM_CU55_MH:
+            case CommonEnums.SEE3CAM_20CUG:
 
                 camproperty.openHIDDevice(device_box.currentText);
             break;
@@ -1571,5 +1589,14 @@ Rectangle {
        checkForResoln()
        vidstreamproperty.setResoultion(JS.videoCaptureResolution)
        getExposure()
+   }
+   // Added by Navya -31 July 2019 --Updating Preview display area when Application window is resized.
+   function setpreviewWindowSize(){
+       if(closeSideBarClicked){
+           vidstreamproperty.setPreviewBgrndArea(previewBgrndArea.width, previewBgrndArea.height, false)
+       }
+       else{
+           vidstreamproperty.setPreviewBgrndArea(previewBgrndArea.width, previewBgrndArea.height, true)
+       }
    }
 }

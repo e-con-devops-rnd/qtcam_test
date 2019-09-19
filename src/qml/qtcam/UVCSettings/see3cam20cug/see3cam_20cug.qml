@@ -3,7 +3,7 @@ import QtQuick.Controls 1.1
 import QtQuick.Controls.Styles 1.0
 import QtQuick.Dialogs 1.1
 import econ.camera.uvcsettings 1.0
-import econ.camera.see3camcu55mh 1.0
+import econ.camera.see3cam20cug 1.0
 import QtQuick.Layouts 1.1
 import cameraenum 1.0
 
@@ -81,10 +81,8 @@ Item {
             Grid {
                 x: 23
                 y: 235
-
                 columns: 2
                 spacing: 15
-
                 ExclusiveGroup { id: streamModeGroup }
                 RadioButton {
                     id: rdoModeMaster
@@ -93,18 +91,10 @@ Item {
                     exclusiveGroup: streamModeGroup
                     activeFocusOnPress: true
                     onClicked: {
-                        root.checkForTriggerMode(false)
-                        root.captureBtnEnable(true)
-                        root.videoRecordBtnEnable(true)
-                        root.masterEnableForMonochrome()
-                        see3camcu55_mh.setStreamMode(See3camcu55MH.MODE_MASTER)
+                        setMasterMode()
                     }
                     Keys.onReturnPressed:  {
-                        root.checkForTriggerMode(false)
-                        root.captureBtnEnable(true)
-                        root.videoRecordBtnEnable(true)
-                        root.masterEnableForMonochrome()
-                        see3camcu55_mh.setStreamMode(See3camcu55MH.MODE_MASTER)
+                         setMasterMode()
                     }
                 }
                 RadioButton {
@@ -122,7 +112,6 @@ Item {
                         setTriggerMode()
                     }
                 }
-
             }
             Row{
                 Layout.alignment: Qt.AlignCenter
@@ -139,10 +128,8 @@ Item {
             Grid {
                 x: 23
                 y: 235
-
                 columns: 2
                 spacing: 15
-
                 ExclusiveGroup { id: flashModeGroup }
                 RadioButton {
                     id: rdoModeOff
@@ -151,42 +138,55 @@ Item {
                     exclusiveGroup: flashModeGroup
                     activeFocusOnPress: true
                     onClicked: {
-                        see3camcu55_mh.setFlashMode(See3camcu55MH.MODE_OFF)
+                        see3cam20cug.setFlashMode(See3cam20cug.MODE_OFF)
                     }
                     Keys.onReturnPressed:  {
-                        see3camcu55_mh.setFlashMode(See3camcu55MH.MODE_OFF)
+                        see3cam20cug.setFlashMode(See3cam20cug.MODE_OFF)
                     }
                 }
                 RadioButton {
-                    id: rdoModeStrobe
+                    id: rdoMode100us
                     style:  econRadioButtonStyle
-                    text: qsTr("Strobe")
+                    text: qsTr("100us")
                     exclusiveGroup: flashModeGroup
                     activeFocusOnPress: true
                     onClicked: {
-                        see3camcu55_mh.setFlashMode(See3camcu55MH.MODE_STROBE)
+                        see3cam20cug.setFlashMode(See3cam20cug.MODE_100us)
                     }
                     Keys.onReturnPressed: {
-                        see3camcu55_mh.setFlashMode(See3camcu55MH.MODE_STROBE)
+                        see3cam20cug.setFlashMode(See3cam20cug.MODE_100us)
                     }
                 }
                 RadioButton {
-                    id: rdoModeTorch
+                    id: rdoMode1ms
                     style:  econRadioButtonStyle
-                    text: qsTr("Torch")
+                    text: qsTr("1ms")
                     exclusiveGroup: flashModeGroup
                     activeFocusOnPress: true
                     onClicked: {
-                        see3camcu55_mh.setFlashMode(See3camcu55MH.MODE_TORCH)
+                        see3cam20cug.setFlashMode(See3cam20cug.MODE_1ms)
                     }
                     Keys.onReturnPressed: {
-                        see3camcu55_mh.setFlashMode(See3camcu55MH.MODE_TORCH)
+                        see3cam20cug.setFlashMode(See3cam20cug.MODE_1ms)
+                    }
+                }
+                RadioButton {
+                    id: rdoModeExposure
+                    style:  econRadioButtonStyle
+                    text: qsTr("Exposure")
+                    exclusiveGroup: flashModeGroup
+                    activeFocusOnPress: true
+                    onClicked: {
+                        see3cam20cug.setFlashMode(See3cam20cug.MODE_EXPOSURE)
+                    }
+                    Keys.onReturnPressed: {
+                        see3cam20cug.setFlashMode(See3cam20cug.MODE_EXPOSURE)
                     }
                 }
             }
             Text {
-                id: rollControlText
-                text: "--- Roll ---"
+                id: flipControlText
+                text: "--- Flip Control ---"
                 font.pixelSize: 14
                 font.family: "Ubuntu"
                 color: "#ffffff"
@@ -194,38 +194,35 @@ Item {
                 Layout.alignment: Qt.AlignCenter
                 opacity: 0.50196078431373
             }
+            Grid{
+                columns :2
+                spacing: 10
+                ExclusiveGroup { id: enableflipCtrlGrp }
+                CheckBox {
+                    id: flipHorizontal
+                    activeFocusOnPress : true
+                    text: "Horizontal"
+                    style: econCheckBoxStyle
+                    onClicked:{
+                        see3cam20cug.setFlipCtrlValue(See3cam20cug.FLIP_HORIZONTAL)
+                    }
+                    Keys.onReturnPressed: {
+                        see3cam20cug.setFlipCtrlValue(See3cam20cug.FLIP_HORIZONTAL)
+                    }
+                }
+                CheckBox {
+                    id: flipVertical
+                    activeFocusOnPress : true
+                    text: "Vertical"
+                    style: econCheckBoxStyle
+                    onClicked:{
+                        see3cam20cug.setFlipCtrlValue(See3cam20cug.FLIP_VERTICAL)
+                    }
+                    Keys.onReturnPressed: {
+                        see3cam20cug.setFlipCtrlValue(See3cam20cug.FLIP_VERTICAL)
+                    }
+                }
 
-            Row{
-                spacing: 35
-                Slider {
-                    activeFocusOnPress: true
-                    updateValueWhileDragging: false
-                    id: rollSlider
-                    width: 150
-                    stepSize: 1
-                    style:econSliderStyle
-                    minimumValue: 0
-                    maximumValue: 3
-                    onValueChanged:  {
-                        rollTextField.text = rollSlider.value                  
-                            see3camcu55_mh.setRollCtrlValue(rollSlider.value)
-                    }
-                }
-                TextField {
-                    id: rollTextField
-                    text: rollSlider.value
-                    font.pixelSize: 10
-                    font.family: "Ubuntu"
-                    smooth: true
-                    horizontalAlignment: TextInput.AlignHCenter
-                    style: econTextFieldStyle
-                    validator: IntValidator {bottom: rollSlider.minimumValue; top: rollSlider.maximumValue}
-                    onTextChanged: {
-                        if(text.length >= 0){
-                            rollSlider.value = rollTextField.text
-                        }
-                    }
-                }
             }
             Row{
                 Layout.alignment: Qt.AlignCenter
@@ -244,7 +241,7 @@ Item {
             }
             Row{
                 Button {
-                    id: f_wversion_selectedCU55_MH
+                    id: f_wversion_selected20CUG_MH
                     opacity: 1
                     action: firmwareVersion
                     activeFocusOnPress : true
@@ -288,38 +285,40 @@ Item {
             }
         }
     }
-    See3camcu55MH{
-        id:see3camcu55_mh
+    See3cam20cug{
+        id:see3cam20cug
         onStreamModeValue:{
-            if(streamMode == See3camcu55MH.MODE_MASTER){
+            if(streamMode == See3cam20cug.MODE_MASTER){
                 rdoModeMaster.checked = true
-            }else if(streamMode == See3camcu55MH.MODE_TRIGGER){
+            }else if(streamMode == See3cam20cug.MODE_TRIGGER){
                 rdoModeTrigger.checked = true
             }
         }
         onFlashModeValue:{
-            if(flashMode == See3camcu55MH.MODE_OFF){
+            if(flashMode == See3cam20cug.MODE_OFF){
                 rdoModeOff.checked = true
-            }else if(flashMode == See3camcu55MH.MODE_STROBE){
-                rdoModeStrobe.checked = true
-            }else if(flashMode == See3camcu55MH.MODE_TORCH){
-                rdoModeTorch.checked = true
+            }else if(flashMode == See3cam20cug.MODE_100us){
+                rdoMode100us.checked = true
+            }else if(flashMode == See3cam20cug.MODE_1ms){
+                rdoMode1ms.checked = true
+            }else if(flashMode == See3cam20cug.MODE_EXPOSURE){
+                rdoModeExposure.checked = true
             }
         }
 
-        onRollCtrlValue:{
+        onFlipCtrlValue:{
 
-            if(rollValue == See3camcu55MH.FLIP_NORMAL){
-                rollSlider.value = rollValue
-            }else if(rollValue == See3camcu55MH.FLIP_HORIZONTAL){
-                 rollSlider.value = rollValue
-            }else if(rollValue == See3camcu55MH.FLIP_VERTICAL){
-                rollSlider.value = rollValue
-            }else if(rollValue ==See3camcu55MH.FLIP_BOTH){
-                 rollSlider.value = rollValue
+            if(flipValue == See3cam20cug.FLIP_NORMAL){
+                flipHorizontal.checked = false
+                flipVertical.checked = false
+            }else if(flipValue == See3cam20cug.FLIP_HORIZONTAL){
+                 flipHorizontal.checked = true
+            }else if(flipValue == See3cam20cug.FLIP_VERTICAL){
+                flipVertical.checked = true
+            }else if(flipValue ==See3cam20cug.FLIP_BOTH){
+               flipHorizontal.checked = true
+               flipVertical.checked = true
             }
-
-
         }
     }
     Uvccamera {
@@ -343,6 +342,23 @@ Item {
                 border.color: "#333"
                 border.width: 2
                 y: 1
+            }
+        }
+    }
+    Component {
+        id: econCheckBoxStyle
+        CheckBoxStyle {
+            label: Text {
+                text: control.text
+                font.pixelSize: 14
+                font.family: "Ubuntu"
+                color: "#ffffff"
+                smooth: true
+                opacity: 1
+            }
+            background: Rectangle {
+                color: "#222021"
+                border.color: control.activeFocus ? "#ffffff" : "#222021"
             }
         }
     }
@@ -451,21 +467,27 @@ Item {
         messageDialog.open()
     }
     function getValuesFromCamera(){
-        see3camcu55_mh.getFlashMode()
-        see3camcu55_mh.getStreamMode()
-        see3camcu55_mh.getRollCtrlValue()
+        see3cam20cug.getFlashMode()
+        see3cam20cug.getStreamMode()
+        see3cam20cug.getFlipCtrlValue()
     }
     function setToDefaultValues(){
         root.checkForTriggerMode(false)
         root.captureBtnEnable(true)
         root.videoRecordBtnEnable(true)
-        see3camcu55_mh.setToDefault()
+        see3cam20cug.setToDefault()
         getValuesFromCamera()
     }
-    function setTriggerMode(){  
+    function setTriggerMode(){
         root.captureBtnEnable(false)
         root.videoRecordBtnEnable(false)
-        see3camcu55_mh.setStreamMode(See3camcu55MH.MODE_TRIGGER)
+        see3cam20cug.setStreamMode(See3cam20cug.MODE_TRIGGER)
+    }
+    function setMasterMode(){
+        root.checkForTriggerMode(false)
+        root.captureBtnEnable(true)
+        root.videoRecordBtnEnable(true)
+        see3cam20cug.setStreamMode(See3cam20cug.MODE_MASTER)
     }
 
     Component.onCompleted: {
@@ -473,6 +495,7 @@ Item {
     }
     Component.onDestruction:{
          // While quitting the camera, set it to continuous mode
-         see3camcu55_mh.setStreamMode(See3camcu55MH.MODE_MASTER)
+         see3cam20cug.setStreamMode(See3cam20cug.MODE_STREAM)
     }
 }
+

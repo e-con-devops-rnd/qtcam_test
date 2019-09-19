@@ -146,7 +146,7 @@ bool VideoEncoder::createFile(QString fileName,CodecID encodeType, unsigned widt
         // Added by Sankari: Mar 20, 2019
         // If fps is 120 means, bitrate is very low. So "avcodec_open2" is failed in H264 encoder. So make it as 60.
         unsigned supportedFpsDen;
-        if(fpsDenominator == 120){
+        if(fpsDenominator == 120 | fpsDenominator == 112 || fpsDenominator == 180){   // Making fps as 60 for See3CAM_CU55_MH when fps is 112
             supportedFpsDen = 60;
         }else{
             supportedFpsDen = fpsDenominator;
@@ -319,6 +319,7 @@ int VideoEncoder::encodeImage(uint8_t *buffer, bool rgbBufferformat)
 int VideoEncoder::encodePacket(uint8_t *buffer, bool rgbBufferformat){
 
     double fps, recordTimeDurationInSec, millisecondsDiff;
+    static int64_t pts_temp,pts_prev;
     if(frameCount == 0){
         time1  = QTime::currentTime();
         fps = pCodecCtx->time_base.den;
@@ -376,18 +377,29 @@ int VideoEncoder::encodePacket(uint8_t *buffer, bool rgbBufferformat){
             //pkt->pts      = frameTime / video_st->time_base.num;
             //pkt->duration = frameDuration;
 
+        pkt.duration = pCodecCtx->time_base.den/fps;
+        pts_prev = pts_temp;
         // The above calculation can be shortly gives as below
-       pkt.pts  = (frameCount*(pCodecCtx->time_base.den/fps)) / pCodecCtx->time_base.num;
+        pkt.pts  = (frameCount*(pCodecCtx->time_base.den/fps)) / pCodecCtx->time_base.num;
+        pkt.dts = pkt.pts;
 
+        // Added by Navya -- 18 Sep 2019
+        // Adjusted timestamps inorder to avoid glitches in recorded video for h264 encoder.
+
+        if(pts_prev == pkt.pts){
+            pkt.pts =((frameCount*(pCodecCtx->time_base.den/fps)) / pCodecCtx->time_base.num)+1;
+            pkt.dts = pkt.pts;
+        }
+        pts_temp = pkt.pts;
         if(pCodecCtx->coded_frame->key_frame)
             pkt.flags |= AV_PKT_FLAG_KEY;
 
         /* Write the compressed frame to the media file. */
-        out_size = av_write_frame(pFormatCtx, &pkt);
-        if(out_size == 0){            
+        out_size = av_interleaved_write_frame(pFormatCtx, &pkt);
+        if(out_size == 0){
             videoPacketReceived = true;
             m_recStop = false;
-        }        
+        }
     }
 
     return out_size;
@@ -666,7 +678,7 @@ int VideoEncoder::encodeH264Packet(void *buffer, int bytesused){
     out_size = av_write_frame(pFormatCtx, &pkt);
     if(out_size == 0){
          frameCount++;
-	 videoPacketReceived = true;
+         videoPacketReceived = true;
     }
 
      if(pkt.data != NULL && pkt.size != 0){

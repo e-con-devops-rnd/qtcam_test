@@ -36,6 +36,8 @@
 #include <QtConcurrent>
 #include "fscam_cu135.h"
 #include "uvccamera.h"
+#include <libintl.h>
+
 
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
 
@@ -52,12 +54,13 @@
  * #define CLIP(x) ((x) < 0? 0 :((x) >= 255)? 255 : (x))
  */
 #define CLIP(x) (((x) >= 255)? 255 : (x))
+#define SHIFT(x) ( x >> 2 )
 
 /* Jpeg-decode */
 #define HEADERFRAME1 0xaf
 
 #ifndef min
- #define min(a,b) ((a)<(b)?(a):(b))
+#define min(a,b) ((a)<(b)?(a):(b))
 #endif
 
 
@@ -77,6 +80,7 @@ typedef void (*ftopict) (int * out, uint8_t *pic, int width) ;
  * @brief Videostreaming::currentlySelectedCameraEnum - This contains currenly selected camera enum value
  */
 CommonEnums::ECameraNames Videostreaming::currentlySelectedCameraEnum;
+CommonEnums::ECameraNames FrameRenderer::currentlySelectedEnumValue;
 
 static GLfloat mVerticesDataPosition[] = {
     -1.f, 1.f, 0.0f, // Position 0
@@ -86,16 +90,16 @@ static GLfloat mVerticesDataPosition[] = {
 };
 
 static GLfloat mVerticesDataTextCord[] = {
-     0.0f, 0.0f, // TexCoord 0
-     0.0f, 1.0f, // TexCoord 1
-     1.0f, 1.0f, // TexCoord 2
-     1.0f, 0.0f // TexCoord 3
+    0.0f, 0.0f, // TexCoord 0
+    0.0f, 1.0f, // TexCoord 1
+    1.0f, 1.0f, // TexCoord 2
+    1.0f, 0.0f // TexCoord 3
 };
 
 static unsigned short mIndicesData[] = { 0, 1, 2, 0, 2, 3 };
 
 Videostreaming::Videostreaming() : m_t(0)
-    , m_renderer(0)
+  , m_renderer(0)
 {
     openSuccess = false;
     updateOnce = true;
@@ -116,7 +120,8 @@ Videostreaming::Videostreaming() : m_t(0)
     SkipIfPreviewFrame=false;
     dotile = 0;
     retrieveFrame=false;
-    saveIfY12jpg =false;
+    windowResized = false;
+
     // Modified by Sankari : Dec 5 2018, converted TJPF_RGB to TJPF_RGBA and use RGB[RGBA] shader
     pf = TJPF_RGBA;
     warmup = 1;
@@ -136,7 +141,7 @@ Videostreaming::Videostreaming() : m_t(0)
     skippingPreviewFrame = false;
 
     fpsChangedForStill = false;
-    imgSaveSuccessCount = 0;   
+    imgSaveSuccessCount = 0;
     // Initialize all buffers
     y16BayerDestBuffer = NULL;
     h264Decode = NULL;
@@ -145,6 +150,7 @@ Videostreaming::Videostreaming() : m_t(0)
     bayerIRBuffer = NULL;
     yuv420pdestBuffer = NULL;
     y16BayerFormat = false;
+    y16FormatFor20CUG = false;
     audio_buffer_data = NULL;
     m_capNotifier = NULL;
     m_capImage = NULL;
@@ -172,7 +178,7 @@ void Videostreaming::fillRenderBuffer(){
 *              In case of RGBA, no need to split - directly use rgb shader
 */
 void FrameRenderer::fillBuffer(){    
-    if(renderBufferFormat == CommonEnums::YUYV_BUFFER_RENDER){        
+    if(renderBufferFormat == CommonEnums::YUYV_BUFFER_RENDER){
         if(renderMutex.tryLock()){
             if(yuvBuffer != NULL){
                 if(gotFrame){
@@ -185,15 +191,15 @@ void FrameRenderer::fillBuffer(){
                 int j = 0, k = 0; // destination
 
                 for( ; pyuv < pyuv_end;  ) {
-                        yBuffer[j] = *(pyuv); // y
-                        uBuffer[k] = *(pyuv + 1); // u
-                        yBuffer[++j] = *(pyuv + 2); // y
-                        vBuffer[k] = *(pyuv + 3); // v
-                        ++j;
-                        ++k;
-                        pyuv += 4;
-                    }
-            }            
+                    yBuffer[j] = *(pyuv); // y
+                    uBuffer[k] = *(pyuv + 1); // u
+                    yBuffer[++j] = *(pyuv + 2); // y
+                    vBuffer[k] = *(pyuv + 3); // v
+                    ++j;
+                    ++k;
+                    pyuv += 4;
+                }
+            }
             renderMutex.unlock();
         }
     }
@@ -214,8 +220,7 @@ void Videostreaming::setT(qreal t)
     if (t == m_t)
         return;
     m_t = t;
-    emit tChanged();    
-
+    emit tChanged();
     fillRenderBuffer();
     if (window()){
         window()->update();
@@ -230,10 +235,15 @@ void Videostreaming::handleWindowChanged(QQuickWindow *win)
     if (win) {
         connect(win, &QQuickWindow::beforeSynchronizing, this, &Videostreaming::sync, Qt::DirectConnection);
         connect(win, &QQuickWindow::sceneGraphInvalidated, this, &Videostreaming::cleanup, Qt::DirectConnection);
-//! [1]
+
+        // Event call to acknowledge when Application window state changes.
+        connect(win, &QQuickWindow::widthChanged,this,&Videostreaming::widthChangedEvent,Qt::DirectConnection);
+        connect(win, &QQuickWindow::heightChanged,this,&Videostreaming::heightChangedEvent,Qt::DirectConnection);
+
+        //! [1]
         // If we allow QML to do the clearing, they would clear what we paint
         // and nothing would show.
-//! [3]
+        //! [3]
         win->setClearBeforeRendering(false);
     }
 }
@@ -284,7 +294,7 @@ FrameRenderer::FrameRenderer(): m_t(0), m_programRGB(0),  m_programYUYV(0){
     uBuffer = NULL;
     vBuffer = NULL;
     yuvBuffer = NULL;
-    rgbaDestBuffer = NULL;   
+    rgbaDestBuffer = NULL;
     gotFrame = false;
     updateStop = true;
 }
@@ -297,7 +307,7 @@ FrameRenderer::FrameRenderer(): m_t(0), m_programRGB(0),  m_programYUYV(0){
  * @param *x - to store x position
  * @param *y - to store y position
  * @param *destWindowWidth - to store target window viewport width
- * @param *destWindowHeight - to store target window viewport height 
+ * @param *destWindowHeight - to store target window viewport height
  */
 void FrameRenderer::calculateViewport(int vidResolutionWidth, int vidResolutionHeight, int windowWidth, int windowHeight, int *x, int *y, int *destWindowWidth, int *destWindowHeight){    
 
@@ -340,20 +350,20 @@ void FrameRenderer::calculateViewport(int vidResolutionWidth, int vidResolutionH
  * @brief FrameRenderer::drawRGBABUffer - Shader for RGBA buffer and render
  */
 void FrameRenderer::drawRGBBUffer(){
-    if (!m_programRGB) {        
+    if (!m_programRGB) {
         initializeOpenGLFunctions();
 
         m_programRGB = new QOpenGLShaderProgram();
 
         m_programRGB->addShaderFromSourceCode(QOpenGLShader::Vertex,
-                                                    "attribute vec4 a_position;\n"
-                                                    "attribute vec2 a_texCoord;\n"
-                                                    "varying vec2 v_texCoord;\n"
-                                                    "void main()\n"
-                                                    "{\n"
-                                                    "gl_Position = a_position;\n"
-                                                    "v_texCoord = a_texCoord;\n"
-                                                    "}\n");
+                                              "attribute vec4 a_position;\n"
+                                              "attribute vec2 a_texCoord;\n"
+                                              "varying vec2 v_texCoord;\n"
+                                              "void main()\n"
+                                              "{\n"
+                                              "gl_Position = a_position;\n"
+                                              "v_texCoord = a_texCoord;\n"
+                                              "}\n");
         m_programRGB->addShaderFromSourceCode(QOpenGLShader::Fragment,
                                            "varying vec2 v_texCoord;"
                                            "uniform sampler2D texture;"
@@ -380,7 +390,7 @@ void FrameRenderer::drawRGBBUffer(){
         glBindTexture (GL_TEXTURE_2D, yTextureId);
     }
 
-    m_programRGB->bind();    
+    m_programRGB->bind();
 
     glVertexAttribPointer(mPositionLoc, 3, GL_FLOAT, false, 12, mVerticesDataPosition);
     glVertexAttribPointer(mTexCoordLoc, 2, GL_FLOAT, false, 8, mVerticesDataTextCord);
@@ -400,25 +410,24 @@ void FrameRenderer::drawRGBBUffer(){
     int xMargin = 250; // [left margin + right margin ]
     int sidebarwidth;
 
-    QRect rec = QApplication::desktop()->screenGeometry();
-    if(sidebarAvailable){
-        sidebarwidth = rec.width() - previewBgrdAreaWidth;
+    if(sidebarAvailable){  //Fixed sidebarwidth,to avoid getting large values,which leads to change the preview position
+        sidebarwidth = 222;
     }else{
         sidebarwidth = 0;
     }
 
     int x, y, destWindowWidth, destWindowHeight;
     if(previewBgrdAreaHeight == 0){
-		calculateViewport(videoResolutionwidth, videoResolutionHeight, previewBgrdAreaWidth-xMargin, m_viewportSize.height(), &x, &y, &destWindowWidth, &destWindowHeight);
+        calculateViewport(videoResolutionwidth, videoResolutionHeight, previewBgrdAreaWidth-xMargin, m_viewportSize.height(), &x, &y, &destWindowWidth, &destWindowHeight);
     }else{
-		calculateViewport(videoResolutionwidth, videoResolutionHeight, previewBgrdAreaWidth-xMargin, previewBgrdAreaHeight, &x, &y, &destWindowWidth, &destWindowHeight);
+        calculateViewport(videoResolutionwidth, videoResolutionHeight, previewBgrdAreaWidth-xMargin, previewBgrdAreaHeight, &x, &y, &destWindowWidth, &destWindowHeight);
     }
-    glViewport(sidebarwidth+x+(xMargin/2), y+(m_viewportSize.height()-previewBgrdAreaHeight), destWindowWidth, destWindowHeight);
-      xcord =sidebarwidth+x+(xMargin/2);
+    glViewport(sidebarwidth+x+(xMargin/2),  y+(viewportHeight-previewBgrdAreaHeight), destWindowWidth, destWindowHeight);
+    xcord =sidebarwidth+x+(xMargin/2);
     QMutexLocker locker(&renderMutex);
 
     if(rgbaDestBuffer){
-    	glTexImage2D(GL_TEXTURE_2D, 0,  GL_RGBA, videoResolutionwidth, videoResolutionHeight, 0,GL_RGBA , GL_UNSIGNED_BYTE, rgbaDestBuffer);
+        glTexImage2D(GL_TEXTURE_2D, 0,  GL_RGBA, videoResolutionwidth, videoResolutionHeight, 0,GL_RGBA , GL_UNSIGNED_BYTE, rgbaDestBuffer);
     }
 
 
@@ -435,6 +444,10 @@ void FrameRenderer::drawRGBBUffer(){
     // mixing with raw OpenGL.
     m_window->resetOpenGLState();
 }
+void FrameRenderer::selectedCameraEnum(CommonEnums::ECameraNames selectedDeviceEnum)
+{
+    currentlySelectedEnumValue = selectedDeviceEnum;
+}
 
 /**
  * @brief FrameRenderer::drawYUYVBUffer - Shader for yuyv to RGB conversion and render buffer
@@ -442,124 +455,132 @@ void FrameRenderer::drawRGBBUffer(){
 void FrameRenderer::drawYUYVBUffer(){
 
     if (!m_programYUYV) {
-            initializeOpenGLFunctions();
-            m_programYUYV = new QOpenGLShaderProgram();
-            m_programYUYV->addShaderFromSourceCode(QOpenGLShader::Vertex,
-                                                        "attribute vec4 a_position;\n"
-                                                        "attribute vec2 a_texCoord;\n"
-                                                        "varying vec2 v_texCoord;\n"
-                                                        "void main()\n"
-                                                        "{\n"
-                                                        "gl_Position = a_position;\n"
-                                                        "v_texCoord = a_texCoord;\n"
-                                                        "}\n");
-            m_programYUYV->addShaderFromSourceCode(QOpenGLShader::Fragment,
-                                                        "#ifdef GL_ES\n"
-                                                                 "precision highp float;\n"
-                                                                 "#endif\n"
+        initializeOpenGLFunctions();
+        m_programYUYV = new QOpenGLShaderProgram();
+        m_programYUYV->addShaderFromSourceCode(QOpenGLShader::Vertex,
+                                               "attribute vec4 a_position;\n"
+                                               "attribute vec2 a_texCoord;\n"
+                                               "varying vec2 v_texCoord;\n"
+                                               "void main()\n"
+                                               "{\n"
+                                               "gl_Position = a_position;\n"
+                                               "v_texCoord = a_texCoord;\n"
+                                               "}\n");
+        m_programYUYV->addShaderFromSourceCode(QOpenGLShader::Fragment,
+                                               "#ifdef GL_ES\n"
+                                               "precision highp float;\n"
+                                               "#endif\n"
 
-                                                                 "varying vec2 v_texCoord;\n"
-                                                                 "uniform sampler2D y_texture;\n"
-                                                                 "uniform sampler2D u_texture;\n"
-                                                                 "uniform sampler2D v_texture;\n"
-
-
-                                                                 "void main()\n"
-                                                                 "{\n"
-                                                                     "float r, g, b, y, u, v;\n"
-
-                                                                     //We had put the Y values of each pixel to the R,G,B components by
-                                                                     //GL_LUMINANCE, that's why we're pulling it from the R component,
-                                                                     //we could also use G or Ba_position
-                                                                     "y = texture2D(y_texture, v_texCoord).r;\n"
-
-                                                                     //We had put the U and V values of each pixel to the A and R,G,B
-                                                                     //components of the texture respectively using GL_LUMINANCE_ALPHA.
-                                                                     //Since U,V bytes are interspread in the texture, this is probably
-                                                                     //the fastest way to use them in the shader
-                                                                     "u = texture2D(u_texture, v_texCoord).r - 0.5;\n"
-                                                                     "v = texture2D(v_texture, v_texCoord).r - 0.5;\n"
-
-                                                                     //The numbers are just YUV to RGB conversion constants
-                                                                     "r = y + 1.5701 * v;\n"
-                                                                     "g = y - 0.1870 * u - 0.4664 * v;\n"
-                                                                     "b = y + 1.8556 * u;\n"
-                                                                     "gl_FragColor = vec4(r,g,b,1.0);\n"
-                                                                 "}\n");
+                                               "varying vec2 v_texCoord;\n"
+                                               "uniform sampler2D y_texture;\n"
+                                               "uniform sampler2D u_texture;\n"
+                                               "uniform sampler2D v_texture;\n"
 
 
-            m_programYUYV->bindAttributeLocation("a_position", 0);
-            m_programYUYV->bindAttributeLocation("a_texCoord", 1);
-            m_programYUYV->link();
+                                               "void main()\n"
+                                               "{\n"
+                                               "float r, g, b, y, u, v;\n"
 
-            mPositionLoc = m_programYUYV->attributeLocation("a_position");
-            mTexCoordLoc = m_programYUYV->attributeLocation("a_texCoord");
+                                               //We had put the Y values of each pixel to the R,G,B components by
+                                               //GL_LUMINANCE, that's why we're pulling it from the R component,
+                                               //we could also use G or Ba_position
+                                               "y = texture2D(y_texture, v_texCoord).r;\n"
 
-            /*********** Y-Texture**************/
-            glEnable(GL_TEXTURE_2D);
-            samplerLocY = m_programYUYV->uniformLocation("y_texture");
-            GLuint yTextureId;
-            glGenTextures (1, &yTextureId); // Generate a texture object
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture (GL_TEXTURE_2D, yTextureId);
+                                               //We had put the U and V values of each pixel to the A and R,G,B
+                                               //components of the texture respectively using GL_LUMINANCE_ALPHA.
+                                               //Since U,V bytes are interspread in the texture, this is probably
+                                               //the fastest way to use them in the shader
+                                               "u = texture2D(u_texture, v_texCoord).r - 0.5;\n"
+                                               "v = texture2D(v_texture, v_texCoord).r - 0.5;\n"
 
-            /*********** U-Texture**************/
-            glEnable(GL_TEXTURE_2D);
-            samplerLocU = m_programYUYV->uniformLocation("u_texture");
-            GLuint uTextureId;
-            glGenTextures (1, &uTextureId); // Generate a texture object
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture (GL_TEXTURE_2D, uTextureId);
+                                               //The numbers are just YUV to RGB conversion constants
+                                               "r = y + 1.5701 * v;\n"
+                                               "g = y - 0.1870 * u - 0.4664 * v;\n"
+                                               "b = y + 1.8556 * u;\n"
+                                               "gl_FragColor = vec4(r,g,b,1.0);\n"
+                                               "}\n");
 
-            /*********** V-Texture**************/
-            glEnable(GL_TEXTURE_2D);
-            samplerLocV = m_programYUYV->uniformLocation("v_texture");
-            GLuint vTextureId;
-            glGenTextures (1, &vTextureId); // Generate a texture object
-            glActiveTexture(GL_TEXTURE3);
-            glBindTexture (GL_TEXTURE_2D, vTextureId);
-            updateStop = true;
 
-        }
+        m_programYUYV->bindAttributeLocation("a_position", 0);
+        m_programYUYV->bindAttributeLocation("a_texCoord", 1);
+        m_programYUYV->link();
+
+        mPositionLoc = m_programYUYV->attributeLocation("a_position");
+        mTexCoordLoc = m_programYUYV->attributeLocation("a_texCoord");
+
+        /*********** Y-Texture**************/
+        glEnable(GL_TEXTURE_2D);
+        samplerLocY = m_programYUYV->uniformLocation("y_texture");
+        GLuint yTextureId;
+        glGenTextures (1, &yTextureId); // Generate a texture object
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture (GL_TEXTURE_2D, yTextureId);
+
+        /*********** U-Texture**************/
+        glEnable(GL_TEXTURE_2D);
+        samplerLocU = m_programYUYV->uniformLocation("u_texture");
+        GLuint uTextureId;
+        glGenTextures (1, &uTextureId); // Generate a texture object
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture (GL_TEXTURE_2D, uTextureId);
+
+        /*********** V-Texture**************/
+        glEnable(GL_TEXTURE_2D);
+        samplerLocV = m_programYUYV->uniformLocation("v_texture");
+        GLuint vTextureId;
+        glGenTextures (1, &vTextureId); // Generate a texture object
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture (GL_TEXTURE_2D, vTextureId);
+        updateStop = true;
+
+    }
     //! [4] //! [5]
     //!
-        renderyuyvMutex.lock();
+    renderyuyvMutex.lock();
 
-        m_programYUYV->bind();        
+    m_programYUYV->bind();
 
-        glVertexAttribPointer(mPositionLoc, 3, GL_FLOAT, false, 12, mVerticesDataPosition);
-        glVertexAttribPointer(mTexCoordLoc, 2, GL_FLOAT, false, 8, mVerticesDataTextCord);
+    glVertexAttribPointer(mPositionLoc, 3, GL_FLOAT, false, 12, mVerticesDataPosition);
+    glVertexAttribPointer(mTexCoordLoc, 2, GL_FLOAT, false, 8, mVerticesDataTextCord);
 
-        m_programYUYV->enableAttributeArray(0);
-        m_programYUYV->enableAttributeArray(1);
+    m_programYUYV->enableAttributeArray(0);
+    m_programYUYV->enableAttributeArray(1);
 
 
     int xMargin = 250; // [left margin + right margin ]
     int sidebarwidth;
+    int skipFrames = 4;
 
-    QRect rec = QApplication::desktop()->screenGeometry();
-    if(sidebarAvailable){
-        sidebarwidth = rec.width() - previewBgrdAreaWidth;
+    if(sidebarAvailable){  //Fixed sidebarwidth,to avoid getting large values,which leads to change the preview position
+        sidebarwidth = 222;
     }else{
         sidebarwidth = 0;
     }
-	
-	// calculate view port 
-	int x, y, destWindowWidth, destWindowHeight;
-	if(previewBgrdAreaHeight == 0){
-		calculateViewport(videoResolutionwidth, videoResolutionHeight, previewBgrdAreaWidth-xMargin, m_viewportSize.height(), &x, &y, &destWindowWidth, &destWindowHeight);
-	}else{
-		calculateViewport(videoResolutionwidth, videoResolutionHeight, previewBgrdAreaWidth-xMargin, previewBgrdAreaHeight, &x, &y, &destWindowWidth, &destWindowHeight);
-	}
 
-        // set view port
-	glViewport(sidebarwidth+x+(xMargin/2), y+(m_viewportSize.height()-previewBgrdAreaHeight), destWindowWidth, destWindowHeight);
+    // calculate view port
+    int x, y, destWindowWidth, destWindowHeight;
+    if(previewBgrdAreaHeight == 0){
+        calculateViewport(videoResolutionwidth, videoResolutionHeight, previewBgrdAreaWidth-xMargin, m_viewportSize.height(), &x, &y, &destWindowWidth, &destWindowHeight);
+    }else{
+        calculateViewport(videoResolutionwidth, videoResolutionHeight, previewBgrdAreaWidth-xMargin, previewBgrdAreaHeight, &x, &y, &destWindowWidth, &destWindowHeight);
+    }
+
+    // set view port
+    glViewport(sidebarwidth+x+(xMargin/2), y+(viewportHeight-previewBgrdAreaHeight), destWindowWidth, destWindowHeight);
 
     xcord =sidebarwidth+x+(xMargin/2);
 
     if (yBuffer != NULL && uBuffer != NULL && vBuffer != NULL){
-            if(gotFrame && !updateStop && frame>3){
-	     // set active texture and give input y buffer
+
+        // Added by Navya -- 18 Sep 2019
+        // Skipped frames inorder to avoid grren strips in streaming while switching resolution or capturing images continuosly.
+        if(currentlySelectedEnumValue == CommonEnums::ECAM22_USB | currentlySelectedEnumValue == CommonEnums::SEE3CAM_20CUG){
+            skipFrames = frame;
+        }else{
+            skipFrames = 4;
+        }
+        if(gotFrame && !updateStop && skipFrames >3){
+            // set active texture and give input y buffer
             glActiveTexture(GL_TEXTURE1);
             glUniform1i(samplerLocY, 1);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, videoResolutionwidth, videoResolutionHeight, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, yBuffer);
@@ -568,7 +589,7 @@ void FrameRenderer::drawYUYVBUffer(){
             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	    // set active texture and give input u buffer
+            // set active texture and give input u buffer
             glActiveTexture(GL_TEXTURE2);
             glUniform1i(samplerLocU, 2);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, videoResolutionwidth/2, videoResolutionHeight, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, uBuffer);
@@ -577,28 +598,28 @@ void FrameRenderer::drawYUYVBUffer(){
             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	    // set active texture and give input v buffer
+            // set active texture and give input v buffer
             glActiveTexture(GL_TEXTURE3);
             glUniform1i(samplerLocV, 3);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, videoResolutionwidth/2, videoResolutionHeight, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, vBuffer);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);            
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, mIndicesData);
-            }
         }
+    }
 
-        m_programYUYV->disableAttributeArray(0);
-        m_programYUYV->disableAttributeArray(1);
+    m_programYUYV->disableAttributeArray(0);
+    m_programYUYV->disableAttributeArray(1);
 
 
-        m_programYUYV->removeAllShaders();
-        m_programYUYV->release();
+    m_programYUYV->removeAllShaders();
+    m_programYUYV->release();
 
-        // Not strictly needed for this example, but generally useful for when
-        // mixing with raw OpenGL.
-        m_window->resetOpenGLState();
+    // Not strictly needed for this example, but generally useful for when
+    // mixing with raw OpenGL.
+    m_window->resetOpenGLState();
 
     renderyuyvMutex.unlock();
 }
@@ -714,64 +735,22 @@ bool Videostreaming::saveIRImage(){
 
 void Videostreaming::setPreviewBgrndArea(int width, int height, bool sidebarAvailable){    
     if(m_renderer){
+        if(windowResized){  //Update Application width and height only when window is resized.
+            m_renderer->windowStatusChanged = true;
+            m_renderer->viewportHeight = resizedHeight;
+            windowResized = false;
+        }
         m_renderer->previewBgrdAreaHeight = height;
         m_renderer->previewBgrdAreaWidth = width;
         m_renderer->sidebarAvailable = sidebarAvailable;
     }    
 }
 
-void Videostreaming::convertYUVtoRGB(unsigned char * buffer)
-{
-    rgb_image = new unsigned char[width * height * 3]; //width and height of the image to be converted
-    int y ,cr,cb;
-    double r,g,b;
-    for (int i = 0, j = 0; i < width * height * 3; i+=6,j+=4) {
-        //first pixel
-        y = buffer[j];
-        cb = buffer[j+1];
-        cr = buffer[j+3];
 
-        r = y + (1.4065 * (cr - 128));
-        g = y - (0.3455 * (cb - 128)) - (0.7169 * (cr - 128));
-        b = y + (1.7790 * (cb - 128));
-
-        //This prevents colour distortions in  rgb image
-        if (r < 0) r = 0;
-        else if (r > 255) r = 255;
-        if (g < 0) g = 0;
-        else if (g > 255) g = 255;
-        if (b < 0) b = 0;
-        else if (b > 255) b = 255;
-
-        rgb_image[i] = (unsigned char)r;
-        rgb_image[i+1] = (unsigned char)g;
-        rgb_image[i+2] = (unsigned char)b;
-
-        //second pixel
-        y = buffer[j+2];
-        cb = buffer[j+1];
-        cr = buffer[j+3];
-
-        r = y + (1.4065 * (cr - 128));
-        g = y - (0.3455 * (cb - 128)) - (0.7169 * (cr - 128));
-        b = y + (1.7790 * (cb - 128));
-
-        if (r < 0) r = 0;
-        else if (r > 255) r = 255;
-        if (g < 0) g = 0;
-        else if (g > 255) g = 255;
-        if (b < 0) b = 0;
-        else if (b > 255) b = 255;
-
-        rgb_image[i+3] = (unsigned char)r;
-        rgb_image[i+4] = (unsigned char)g;
-        rgb_image[i+5] = (unsigned char)b;
-    }
-}
 
 void Videostreaming::capFrame()
 {
-     unsigned char *temp_Buffer=NULL;
+    unsigned char *temp_Buffer=NULL;
     __u32 buftype = m_buftype;
     v4l2_plane planes[VIDEO_MAX_PLANES];
     v4l2_buffer buf;
@@ -835,7 +814,7 @@ void Videostreaming::capFrame()
         }
     }
         break;
-    //Added by Navya - 22 July 2019 --To avoid invalidFrames for rendering in case of See3CAM_CU55_MH camera
+        //Added by Navya - 22 July 2019 --To avoid invalidFrames for rendering in case of See3CAM_CU55_MH camera
     case V4L2_PIX_FMT_Y12:{
         if((width*height*1.5) == buf.bytesused){
             validFrame =true;
@@ -846,6 +825,14 @@ void Videostreaming::capFrame()
         if((width*height*1) == buf.bytesused){
             validFrame =true;
         }
+    }
+        break;
+    case V4L2_PIX_FMT_Y16:{
+        if((width*height*2) == buf.bytesused){
+            validFrame =true;
+        }
+        else
+            qDebug()<<"Invalid frame";
     }
         break;
     default:
@@ -871,8 +858,7 @@ void Videostreaming::capFrame()
 
     if(!m_snapShot && !retrieveShot){  // Checking for retrieveshot flag inorder to avoid, updating still frame to UI
         m_renderer->gotFrame = true;
-       
-    }   
+    }
 
  
     if(m_snapShot || m_burstShot){
@@ -904,8 +890,16 @@ void Videostreaming::capFrame()
                 }
                 else{   // still capture for jpg/bmp/png files
                     onY12Format = false;
-                    saveIfY12jpg = true;
-                    convertYUVtoRGB((unsigned char *)m_renderer->yuvBuffer);  //removed v4l2_convert for yuyv to rgb conversion
+
+                    // Added by Navya: 12 Aug 2019 -- Fixed sizeimage and bytesperline values for incoming Src Buffer as they are updated with improper values.
+                    m_capSrcFormat.fmt.pix.sizeimage = width*height*2; // Initially it was width*height*1.5
+                    m_capSrcFormat.fmt.pix.bytesperline = width *2;  // Initially it was width *1.5
+                    copy = m_capSrcFormat;
+                    copy.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
+
+                    err = v4lconvert_convert(m_convertData, &copy, &m_capDestFormat,
+                                             (unsigned char *)m_renderer->yuvBuffer, width*height*2,
+                                             m_capImage->bits(), m_capDestFormat.fmt.pix.sizeimage); // yuyv to rgb conversion
                 }
             }
             else if(m_capSrcFormat.fmt.pix.pixelformat == V4L2_PIX_FMT_H264 && !m_VideoRecord){ // capture and save image in h264 format[not for video recording]
@@ -927,42 +921,41 @@ void Videostreaming::capFrame()
                         dqbuf_mmap(buf, buftype, again);
                     }
                 }
-                   qbuf(buf);
-
+                qbuf(buf);
                 emit signalTograbPreviewFrame(retrieveframeStoreCam,true);
                 return;
-          }
             }
         }
-
+    }
+    
     // Taking single shot or burst shot - Skip frames if needed
 
-       if(((m_frame > frameToSkip) && m_snapShot) || ((m_frame > frameToSkip) && m_burstShot)){
-         getFileName(getFilePath(),getImageFormatType());
+    if(((m_frame > frameToSkip) && m_snapShot) || ((m_frame > frameToSkip) && m_burstShot)){
+        getFileName(getFilePath(),getImageFormatType());
 
-         /*Added by Navya: 27 Mar 2019
+        /*Added by Navya: 27 Mar 2019
            Checking whether the frame is still/preview. */
 
-         temp_Buffer = (unsigned char *)malloc(width * height * 2);
-         memcpy(temp_Buffer,(unsigned char *)m_buffers[buf.index].start[0],buf.bytesused);
+        temp_Buffer = (unsigned char *)malloc(width * height * 2);
+        memcpy(temp_Buffer,(unsigned char *)m_buffers[buf.index].start[0],buf.bytesused);
 
-         if(buf.bytesused>0){
-             if(((uint8_t *)temp_Buffer)[(buf.bytesused)-3] == 0xDC)
-             {
-                 if(retrieveframeStoreCam || retrieveframeStoreCamInCross)
-                 {
-                     SkipIfPreviewFrame=true;
-                 }
-                 else if(!retrieveframeStoreCam)
-                 {
-                     OnMouseClick=true;
-                 }
-             }
-             else if(((uint8_t *)temp_Buffer)[(buf.bytesused)-3] == 0xDD)
+        if(buf.bytesused>0){
+            if(((uint8_t *)temp_Buffer)[(buf.bytesused)-3] == 0xDC)
+            {
+                if(retrieveframeStoreCam || retrieveframeStoreCamInCross)
                 {
-
+                    SkipIfPreviewFrame=true;
+                }
+                else if(!retrieveframeStoreCam)
+                {
+                    OnMouseClick=true;
                 }
             }
+            else if(((uint8_t *)temp_Buffer)[(buf.bytesused)-3] == 0xDD)
+            {
+
+            }
+        }
         if(formatType == "raw"){// save incoming buffer directly
             if(onY12Format){  // To save Y12 image in See3CAM_CU55_MHL
                 if(saveRawFile(m_renderer->yuvBuffer,width*height*2))
@@ -982,9 +975,6 @@ void Videostreaming::capFrame()
             unsigned char *bufferToSave = NULL;
             if(y16BayerFormat){ // y16 format - ex: cu40 camera
                 bufferToSave = y16BayerDestBuffer;
-            }else if(saveIfY12jpg){        // saving Y12 as jpg for See3CAM_CU55_MH camera.
-                bufferToSave = rgb_image;
-                saveIfY12jpg = false;
             }else{
                 bufferToSave = m_capImage->bits(); // image data converted using v4l2convert
             }
@@ -1082,12 +1072,17 @@ void Videostreaming::capFrame()
 
     // Added by Navya :23 Apr 2019
     // Call for previewwindow inorder to set mousearea in qml.
-     getPreviewWindow = m_renderer -> getPreviewFrameWindow;
-     if(getPreviewWindow){
-         previewWindow();
-         m_renderer->getPreviewFrameWindow =false;
-     }
-     m_timer.start(2000);
+    getPreviewWindow = m_renderer -> getPreviewFrameWindow;
+    if(getPreviewWindow){
+        previewWindow();
+        m_renderer->getPreviewFrameWindow =false;
+    }
+    // signal to update preview width and height in qml
+    if(windowResized){
+        emit setWindowSize(resizedWidth,resizedHeight);
+    }
+    m_timer.start(2000);
+
 
 }
 
@@ -1265,8 +1260,8 @@ bailout:
 
 /* Decompression test */
 int Videostreaming::decomp(Videostreaming *obj,unsigned char **jpegbuf,
-    unsigned long *jpegsize, unsigned char *dstbuf, int w, int h,
-    int jpegqual, int tilew, int tileh,unsigned char **pic)
+                           unsigned long *jpegsize, unsigned char *dstbuf, int w, int h,
+                           int jpegqual, int tilew, int tileh,unsigned char **pic)
 {
     tjhandle handle = NULL;
     char  qualstr[6] = "\0";
@@ -1316,7 +1311,7 @@ int Videostreaming::decomp(Videostreaming *obj,unsigned char **jpegbuf,
                 }
 
                 if(tjDecompress2(handle, jpegbuf[tile], jpegsize[tile], *pic,
-                                    width, pitch, height, obj->pf, obj->flags) == -1){
+                                 width, pitch, height, obj->pf, obj->flags) == -1){
                     //emit logCriticalHandle("tjDecompress2() failed");
                     retval = -1;
                     goto bailout;
@@ -1726,6 +1721,7 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
         return true;
     }else{
         uint8_t *srcBuffer = NULL;
+        uint16_t *sourceBuf20CUG =NULL;
         uint8_t *destBuffer = NULL;
         getFrameRates();
         m_renderer->renderyuyvMutex.lock();
@@ -1754,31 +1750,43 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
             {
                 for( y = 0; y < height; y += 2)
                 {
-                   B(x, y, width) = B(x + 1, y, width) = B(x, y + 1, width) = B(x + 1, y + 1, width) = CLIP(Bay(x, y, width));
-                   G(x, y, width) = G(x + 1, y, width) = G(x, y + 1, width) = G(x + 1, y + 1, width) = CLIP(Bay(x + 1, y, width));
-                   R(x, y, width) = R(x + 1, y, width) = R(x, y + 1, width) = R(x + 1, y + 1, width) = CLIP(Bay(x + 1, y + 1, width));
+                    B(x, y, width) = B(x + 1, y, width) = B(x, y + 1, width) = B(x + 1, y + 1, width) = CLIP(Bay(x, y, width));
+                    G(x, y, width) = G(x + 1, y, width) = G(x, y + 1, width) = G(x + 1, y + 1, width) = CLIP(Bay(x + 1, y, width));
+                    R(x, y, width) = R(x + 1, y, width) = R(x, y + 1, width) = R(x + 1, y + 1, width) = CLIP(Bay(x + 1, y + 1, width));
                 }
             }
             rgb2yuyv(y16BayerDestBuffer, yuyvBuffer, width, height);
             memcpy(m_renderer->yuvBuffer, yuyvBuffer, width*height*2);
+
+        }else if(y16FormatFor20CUG){
+           m_renderer->renderBufferFormat = CommonEnums::YUYV_BUFFER_RENDER;
+            sourceBuf20CUG = (uint16_t *)malloc(width * height * 2);
+            uint8_t *pfmb = yuyvBuffer;
+            memcpy(sourceBuf20CUG, inputbuffer, (width * height * 2));
+            for(__u32 l=0; l<(width * height); l++) /* Y16 to YUYV conversion */
+            {
+                *pfmb++ =uint8_t(sourceBuf20CUG[l] * 0.2490234375);
+                *pfmb++ = 0x80;
+            }
+            memcpy(m_renderer->yuvBuffer, yuyvBuffer, width*height*2);
+            freeBuffer((uint8_t *)sourceBuf20CUG);
         }else{
             switch(pixformat){
-                case V4L2_PIX_FMT_YUYV:{
-                    m_renderer->renderBufferFormat = CommonEnums::YUYV_BUFFER_RENDER;
-                   // m_renderer->yuvBuffer = (uint8_t *)inputbuffer;
-                      memcpy(m_renderer->yuvBuffer, (uint8_t *)inputbuffer, width*height*2);/* directly giving yuyv to render */
-                }
+            case V4L2_PIX_FMT_YUYV:{
+                m_renderer->renderBufferFormat = CommonEnums::YUYV_BUFFER_RENDER;
+                // m_renderer->yuvBuffer = (uint8_t *)inputbuffer;
+                memcpy(m_renderer->yuvBuffer, (uint8_t *)inputbuffer, width*height*2);/* directly giving yuyv to render */
+            }
                 break;
 
-                case V4L2_PIX_FMT_SGRBG8:{  // BA8 to yuyv conversion
-                    m_renderer->renderBufferFormat = CommonEnums::YUYV_BUFFER_RENDER;
-
-                    destBuffer = (uint8_t *)malloc(width * height * 3);
-                    bayer_to_rgbbgr24((uint8_t *)inputbuffer, destBuffer, width, height, 1, 1);
-                    rgb2yuyv(destBuffer, yuyvBuffer, width, height);
-                    memcpy(m_renderer->yuvBuffer, yuyvBuffer, width*height*2);
-                    freeBuffer(destBuffer);
-                }
+            case V4L2_PIX_FMT_SGRBG8:{  // BA8 to yuyv conversion
+                m_renderer->renderBufferFormat = CommonEnums::YUYV_BUFFER_RENDER;
+                destBuffer = (uint8_t *)malloc(width * height * 3);
+                bayer_to_rgbbgr24((uint8_t *)inputbuffer, destBuffer, width, height, 1, 1);
+                rgb2yuyv(destBuffer, yuyvBuffer, width, height);
+                memcpy(m_renderer->yuvBuffer, yuyvBuffer, width*height*2);
+                freeBuffer(destBuffer);
+            }
                 break;
 
                 case V4L2_PIX_FMT_GREY:{ // grey to yuyv conversion
@@ -1972,6 +1980,7 @@ void Videostreaming::getFrameRates() {
     
     ++m_frame;
     ++m_renderer->frame;
+    m_renderer->fps = m_fps;
     emit averageFPS(m_fps);
 }
 
@@ -2380,6 +2389,9 @@ void Videostreaming::displayFrame() {
         y16BayerFormat = true;
     }
 
+    if(currentlySelectedCameraEnum == CommonEnums::SEE3CAM_20CUG && m_capSrcFormat.fmt.pix.pixelformat == V4L2_PIX_FMT_Y16) {
+        y16FormatFor20CUG = true;
+    }
     if(m_capSrcFormat.fmt.pix.pixelformat == V4L2_PIX_FMT_H264){
         h264Decode = new H264Decoder();
         h264Decode->initH264Decoder(width, height);
@@ -2430,7 +2442,7 @@ void Videostreaming::stopCapture() {
 
     y16BayerFormat = false; // BY default this will be false, If cu40 [ y16 bayer format ] is selected ,
     //this will be enabled.
-
+    y16FormatFor20CUG = false;
     if (fd() >= 0) {
         emit logDebugHandle("Stop Previewing...");
         v4l2_requestbuffers reqbufs;
@@ -2480,16 +2492,13 @@ void Videostreaming::stopCapture() {
     m_renderer->renderMutex.lock();
 
     if(m_renderer->rgbaDestBuffer != NULL){
-
-	free(m_renderer->rgbaDestBuffer);
-	m_renderer->rgbaDestBuffer = NULL;
+        free(m_renderer->rgbaDestBuffer);
+        m_renderer->rgbaDestBuffer = NULL;
     }
 
     if(m_renderer->yuvBuffer != NULL){
-
-    	free(m_renderer->yuvBuffer);
-
-    	m_renderer->yuvBuffer = NULL;
+        free(m_renderer->yuvBuffer);
+        m_renderer->yuvBuffer = NULL;
     }
 
     m_renderer->renderMutex.unlock();
@@ -2671,8 +2680,7 @@ void Videostreaming::vidCapFormatChanged(QString idx)
     try_fmt(fmt);
     s_fmt(fmt);
     if(!makeSnapShot){
-
-        updateVidOutFormat();       
+        updateVidOutFormat();
     }
 }
 
@@ -3098,7 +3106,7 @@ void Videostreaming::switchToStillPreviewSettings(bool stillSettings){
 
     if (!((stillSize == lastPreviewSize) && (stillOutFormat == lastFormat)))
     {
-        stopCapture();
+        resolnSwitch();   //Replaced stopCapture() with resolnSwitch() inorder to get preview in higher resolns while using Retrieve button.
         if(stillSettings){
             makeSnapShot = true;
             retrieveShot =true;
@@ -3173,12 +3181,12 @@ void Videostreaming::enableTimer(bool timerstatus)
 
 }
 
- //Added by Navya :15 Apr 2019
- //In order to Stop preview, only after frame comes ,when grabPreviewFrame call happens
+//Added by Navya :15 Apr 2019
+//In order to Stop preview, only after frame comes ,when grabPreviewFrame call happens
 
 void Videostreaming::resolnSwitch()
 {
-    usleep(1000000);    //wait until frame comes
+    usleep(1000000);    // inorder to avoid ioctl block,while switching to higher resolutions
     stopCapture();
 }
 
@@ -3190,7 +3198,22 @@ void Videostreaming :: previewWindow()
     resHeight = m_renderer->height;
     x = m_renderer->xcord;
     y= m_renderer->y1;
-     emit signalForPreviewWindow(resWidth,resHeight,x,y);
+    emit signalForPreviewWindow(resWidth,resHeight,x,y);
 
 }
+/** Added by Navya :31 July 2019
+  * Event to know the change in ApplicationWindow width
+  * @param - width- resized window width
+  **/
+void Videostreaming::widthChangedEvent(int width){
+    windowResized =true;
+    resizedWidth = width;
+}
 
+/** Event to know the change in ApplicationWindow height
+  * @param height- resized window height
+  * */
+void Videostreaming::heightChangedEvent(int height){
+    windowResized =true;
+    resizedHeight = height;
+}

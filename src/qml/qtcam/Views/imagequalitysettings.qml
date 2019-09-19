@@ -97,10 +97,8 @@ Item {
         onTriggered: {
         // Adding flag to skip setting exposure auto and manual value when getting exposure value and update UI and enable back after getting all control values.       
             exposureSliderSetEnable = false
-	    exposureComboEnable = false
-
+            exposureComboEnable = false
             root.cameraFilterControls(true)
-
             exposureComboEnable = true
             exposureSliderSetEnable = true
             stop()
@@ -779,10 +777,10 @@ Item {
                             }else if(!exposureAutoAvailable){ // If a camera does not contain "exposure, auto" control, but having "exposure absolute" control, allow it change exposure value.
                                 root.changeCameraSettings(exposurecontrolId,value.toString())
                             }else{
-                                if((exposureCombo.currentText == "Shutter Priority Mode" || exposureCombo.currentText == "Manual Mode") || (root.selectedDeviceEnumValue == CommonEnums.ECON_CX3_RDX_V5680) || (root.selectedDeviceEnumValue == CommonEnums.ECON_CX3_RDX_T9P031) || (root.selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU40) || (root.selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU51)) {
-                                    if(exposureSliderSetEnable){                                        
-                                         root.changeCameraSettings(exposurecontrolId,value.toString())
-					}
+                                if((exposureCombo.currentText == "Shutter Priority Mode" || exposureCombo.currentText == "Manual Mode")) {
+                                    if(exposureSliderSetEnable){
+                                        root.changeCameraSettings(exposurecontrolId,value.toString())
+                                    }
                                 }
                             }
                         }
