@@ -88,6 +88,7 @@ Item {
                     id: rdoModeMaster
                     style:  econRadioButtonStyle
                     text:   qsTr("Master")
+                    tooltip: "After choosing master mode, the application starts video streaming. This is a simple mode of operation for the camera without any external trigger capability. "
                     exclusiveGroup: streamModeGroup
                     activeFocusOnPress: true
                     onClicked: {
@@ -101,6 +102,7 @@ Item {
                     id: rdoModeTrigger
                     style:  econRadioButtonStyle
                     text: qsTr("Trigger")
+                    tooltip: "In trigger mode, Frames will be out only when external hardware pulses are given to PIN 5 of CN3."
                     exclusiveGroup: streamModeGroup
                     activeFocusOnPress: true
                     onClicked: {
@@ -135,6 +137,7 @@ Item {
                     id: rdoModeOff
                     style:  econRadioButtonStyle
                     text:   qsTr("OFF")
+                    tooltip:"It disables the flash mode"
                     exclusiveGroup: flashModeGroup
                     activeFocusOnPress: true
                     onClicked: {
@@ -145,42 +148,17 @@ Item {
                     }
                 }
                 RadioButton {
-                    id: rdoMode100us
+                    id: rdoModeOn
                     style:  econRadioButtonStyle
-                    text: qsTr("100us")
+                    text: qsTr("ON")
+                    tooltip:"When this control is selected, the LED ON time is set based on the current manual exposure value."
                     exclusiveGroup: flashModeGroup
                     activeFocusOnPress: true
                     onClicked: {
-                        see3cam20cug.setFlashMode(See3cam20cug.MODE_100us)
+                        see3cam20cug.setFlashMode(See3cam20cug.MODE_ON)
                     }
                     Keys.onReturnPressed: {
-                        see3cam20cug.setFlashMode(See3cam20cug.MODE_100us)
-                    }
-                }
-                RadioButton {
-                    id: rdoMode1ms
-                    style:  econRadioButtonStyle
-                    text: qsTr("1ms")
-                    exclusiveGroup: flashModeGroup
-                    activeFocusOnPress: true
-                    onClicked: {
-                        see3cam20cug.setFlashMode(See3cam20cug.MODE_1ms)
-                    }
-                    Keys.onReturnPressed: {
-                        see3cam20cug.setFlashMode(See3cam20cug.MODE_1ms)
-                    }
-                }
-                RadioButton {
-                    id: rdoModeExposure
-                    style:  econRadioButtonStyle
-                    text: qsTr("Exposure")
-                    exclusiveGroup: flashModeGroup
-                    activeFocusOnPress: true
-                    onClicked: {
-                        see3cam20cug.setFlashMode(See3cam20cug.MODE_EXPOSURE)
-                    }
-                    Keys.onReturnPressed: {
-                        see3cam20cug.setFlashMode(See3cam20cug.MODE_EXPOSURE)
+                        see3cam20cug.setFlashMode(See3cam20cug.MODE_ON)
                     }
                 }
             }
@@ -202,24 +180,26 @@ Item {
                     id: flipHorizontal
                     activeFocusOnPress : true
                     text: "Horizontal"
+                    tooltip: "This control flips the preview left or right."
                     style: econCheckBoxStyle
                     onClicked:{
-                        see3cam20cug.setFlipCtrlValue(See3cam20cug.FLIP_HORIZONTAL)
+                        see3cam20cug.setFlipCtrlValue(flipHorizontal.checked,flipVertical.checked)
                     }
                     Keys.onReturnPressed: {
-                        see3cam20cug.setFlipCtrlValue(See3cam20cug.FLIP_HORIZONTAL)
+                        see3cam20cug.setFlipCtrlValue(flipHorizontal.checked,flipVertical.checked)
                     }
                 }
                 CheckBox {
                     id: flipVertical
                     activeFocusOnPress : true
                     text: "Vertical"
+                    tooltip: "This control flips the preview up or down."
                     style: econCheckBoxStyle
                     onClicked:{
-                        see3cam20cug.setFlipCtrlValue(See3cam20cug.FLIP_VERTICAL)
+                        see3cam20cug.setFlipCtrlValue(flipHorizontal.checked,flipVertical.checked)
                     }
                     Keys.onReturnPressed: {
-                        see3cam20cug.setFlipCtrlValue(See3cam20cug.FLIP_VERTICAL)
+                        see3cam20cug.setFlipCtrlValue(flipHorizontal.checked,flipVertical.checked)
                     }
                 }
 
@@ -297,12 +277,8 @@ Item {
         onFlashModeValue:{
             if(flashMode == See3cam20cug.MODE_OFF){
                 rdoModeOff.checked = true
-            }else if(flashMode == See3cam20cug.MODE_100us){
-                rdoMode100us.checked = true
-            }else if(flashMode == See3cam20cug.MODE_1ms){
-                rdoMode1ms.checked = true
-            }else if(flashMode == See3cam20cug.MODE_EXPOSURE){
-                rdoModeExposure.checked = true
+            }else if(flashMode == See3cam20cug.MODE_ON){
+                rdoModeOn.checked = true
             }
         }
 
@@ -312,12 +288,12 @@ Item {
                 flipHorizontal.checked = false
                 flipVertical.checked = false
             }else if(flipValue == See3cam20cug.FLIP_HORIZONTAL){
-                 flipHorizontal.checked = true
+                flipHorizontal.checked = true
             }else if(flipValue == See3cam20cug.FLIP_VERTICAL){
                 flipVertical.checked = true
             }else if(flipValue ==See3cam20cug.FLIP_BOTH){
-               flipHorizontal.checked = true
-               flipVertical.checked = true
+                flipHorizontal.checked = true
+                flipVertical.checked = true
             }
         }
     }
@@ -494,8 +470,8 @@ Item {
         getValuesFromCamera();
     }
     Component.onDestruction:{
-         // While quitting the camera, set it to continuous mode
-         see3cam20cug.setStreamMode(See3cam20cug.MODE_STREAM)
+        // While quitting the camera, set it to continuous mode
+        see3cam20cug.setStreamMode(See3cam20cug.MODE_STREAM)
     }
 }
 

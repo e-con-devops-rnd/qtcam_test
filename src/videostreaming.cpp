@@ -60,7 +60,7 @@
 #define HEADERFRAME1 0xaf
 
 #ifndef min
-#define min(a,b) ((a)<(b)?(a):(b))
+ #define min(a,b) ((a)<(b)?(a):(b))
 #endif
 
 
@@ -260,7 +260,7 @@ void Videostreaming::cleanup()
 }
 
 /**
-* cleanup - This will be called when QQuickItem::beforeSynchronizing signal fires.
+* sync - This will be called when QQuickItem::beforeSynchronizing signal fires.
 */
 void Videostreaming::sync()
 {    
@@ -831,8 +831,6 @@ void Videostreaming::capFrame()
         if((width*height*2) == buf.bytesused){
             validFrame =true;
         }
-        else
-            qDebug()<<"Invalid frame";
     }
         break;
     default:
@@ -1302,8 +1300,8 @@ int Videostreaming::decomp(Videostreaming *obj,unsigned char **jpegbuf,
         {
             for(col=0, dstptr2=dstptr; col<ntilesw; col++, tile++, dstptr2+=ps*tilew)
             {
-                int width = obj->dotile? min(tilew, w-col*tilew):scaledw;
-                int height = obj->dotile? min(tileh, h-row*tileh):scaledh;
+                __u32 width = obj->dotile? min(tilew, w-col*tilew):scaledw;
+                __u32 height = obj->dotile? min(tileh, h-row*tileh):scaledh;
                 // Added by Sankari: To avoid crash when switching resolution.[in storage camera]
                 if(obj->m_capSrcFormat.fmt.pix.width != width && obj->m_capSrcFormat.fmt.pix.height != height){
                     retval = -1;
@@ -1793,10 +1791,10 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
                     m_renderer->renderBufferFormat = CommonEnums::YUYV_BUFFER_RENDER;
 
                     uint8_t *pfmb = yuyvBuffer;
-                    for(int h=0;h<height;h++)
+                    for(__u32 h=0;h<height;h++)
                     {
                         int offset = width * h;
-                        for(int w=0;w<width;w++)
+                        for(__u32 w=0;w<width;w++)
                         {
                             *pfmb++=(((uint8_t *) inputbuffer)[w + offset]); // y
                             *pfmb++=0x80;                  //U or V
@@ -1812,9 +1810,9 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
 
                     uint8_t *ptmp = (uint8_t *)inputbuffer;
                     uint8_t *pfmb = yuyvBuffer;
-                    for(int h=0;h<height;h++)             /* uyvy to yuyv conversion */
+                    for(__u32 h=0;h<height;h++)             /* uyvy to yuyv conversion */
                     {
-                        int w=0;
+                        __u32 w=0;
                         for(w=0;w<(width*2);w+=4)
                         {
                             pfmb[0] = ptmp[1]; /* Y0 */
@@ -2389,7 +2387,7 @@ void Videostreaming::displayFrame() {
         y16BayerFormat = true;
     }
 
-    if(currentlySelectedCameraEnum == CommonEnums::SEE3CAM_20CUG && m_capSrcFormat.fmt.pix.pixelformat == V4L2_PIX_FMT_Y16) {
+    if((currentlySelectedCameraEnum == CommonEnums::SEE3CAM_20CUG) && (m_capSrcFormat.fmt.pix.pixelformat == V4L2_PIX_FMT_Y16)) {
         y16FormatFor20CUG = true;
     }
     if(m_capSrcFormat.fmt.pix.pixelformat == V4L2_PIX_FMT_H264){
@@ -2951,6 +2949,7 @@ void Videostreaming::recordVideo(){
 
 void Videostreaming::recordBegin(int videoEncoderType, QString videoFormatType, QString fileLocation, int audioDeviceIndex, unsigned sampleRate, int channels) {
     m_VideoRecord = true;
+    videoEncoder->pts_prev = 0;     // To clear the previously stored pts value before recording video,so that video lag can be avoided in h264 encoder type.
     if(videoFormatType.isEmpty()) {
         videoFormatType = "avi";        //Application never enters in this condition
     }

@@ -1571,10 +1571,14 @@ Rectangle {
           JS.videoCaptureResolution = videoSettingsRootObject.videoOutputSize
    }
 
-   //Added by Navya - 29 May 2019 -- Inorder to stop VideoRecord and Image Capture in case of Software and Hardware Trigger Modes for FSCAM_CU135 camera.
+   //Added by Navya - 29 May 2019 -- Inorder to stop VideoRecord and Image Capture in case of Trigger Mode.
    function checkForTriggerMode(mode)
    {
        getTriggerMode = mode;
+       if(mode)
+           keyEventFiltering = true;
+        else
+           keyEventFiltering = false;
    }
 
    //Added by Navya - 3rd June 2019 -- Disabling powerLine Frequency due to mismatch in set and get controls from HID and v4l2.

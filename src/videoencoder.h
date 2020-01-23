@@ -84,6 +84,7 @@ public:
    QTime time2;
 
    bool videoPacketReceived;
+   int64_t pts_prev =0;
 
    bool m_recStop;
 

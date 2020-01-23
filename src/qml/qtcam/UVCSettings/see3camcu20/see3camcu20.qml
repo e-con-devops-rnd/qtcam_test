@@ -61,29 +61,12 @@ Item {
             see3camcu20.getExposureCompensation()
         }
     }
-
-    Timer {
-        id: enableSettings
-        interval: 3000
-        onTriggered: {
-            root.enableAllSettingsTab()
-            stop()
-        }
-    }
-
     Connections
     {
         target: root
         onTakeScreenShot:
         {
             root.imageCapture(CommonEnums.BURST_SHOT);
-            // Added by Sankari: 16 Mar 2018
-            // Disable saving image when trigger mode is selected initially and capturing image then switch to master mode
-            if(cameraModeSlave.checked){
-               root.disableSaveImage()
-               // In trigger mode, if frames are not coming then after 3 seconds enable all settings
-               enableSettings.start()
-            }
         }
         onGetVideoPinStatus:
         {
@@ -154,7 +137,7 @@ Item {
         height: 500
         style: econscrollViewStyle
         Item {
-            height: 1350
+            height: 1500
             ColumnLayout{
                 x:2
                 y:5
@@ -177,6 +160,8 @@ Item {
                         id: sensorStandard
                         style:  econRadioButtonStyle
                         text:   qsTr("Standard")
+                        tooltip: "When the sensor is operated in standard mode, the dynamic range of
+the device will be in normal range."
                         exclusiveGroup: sensorInputGroup
                         activeFocusOnPress: true
                         onClicked: {
@@ -190,6 +175,8 @@ Item {
                         id: sensorHdrDlo
                         style:  econRadioButtonStyle
                         text: qsTr("HDR")
+                        tooltip: "When the sensor is operated in HDR mode, the dynamic range of the
+device will be high."
                         exclusiveGroup: sensorInputGroup
                         activeFocusOnPress: true
                         onClicked: {
@@ -217,28 +204,30 @@ Item {
                         id: cameraModeMaster
                         style:  econRadioButtonStyle
                         text:   qsTr("Master")
+                        tooltip: "The application starts streaming the video, when the master mode is
+selected."
                         exclusiveGroup: cameraModeGroup
                         activeFocusOnPress: true
                         onClicked: {
-                            see3camcu20.setCameraMode(See3Camcu20.CAMERA_MASTER)
+                            setMasterMode()
                         }
                         Keys.onReturnPressed: {
-                            see3camcu20.setCameraMode(See3Camcu20.CAMERA_MASTER)
+                            setMasterMode()
                         }
                     }
                     RadioButton {
                         id: cameraModeSlave
                         style:  econRadioButtonStyle
                         text: qsTr("Trigger")
+                        tooltip: "The devices starts streaming when external trigger pulse is applied. There will be no streaming
+when no external trigger pulse is applied."
                         exclusiveGroup: cameraModeGroup
                         activeFocusOnPress: true
                         onClicked: {
-                            defaultValue.enabled = true
-                            see3camcu20.setCameraMode(See3Camcu20.CAMERA_SLAVE)
+                             setTriggerMode()
                         }
                         Keys.onReturnPressed: {
-                            defaultValue.enabled = true
-                            see3camcu20.setCameraMode(See3Camcu20.CAMERA_SLAVE)
+                              setTriggerMode()
                         }
                     }
                 }
@@ -259,6 +248,8 @@ Item {
                         id: specialModeNormal
                         style:  econRadioButtonStyle
                         text:   qsTr("Normal")
+                        tooltip: "In this mode, the normal unprocessed UYVY image stream from the
+camera."
                         exclusiveGroup: specialModeGroup
                         activeFocusOnPress: true
                         onClicked: {
@@ -272,6 +263,8 @@ Item {
                         id: specialModeGreyscale
                         style:  econRadioButtonStyle
                         text: qsTr("Greyscale")
+                        tooltip: "In this mode, the normal preview is desaturated, and the image
+stream is composed of grey shades"
                         exclusiveGroup: specialModeGroup
                         activeFocusOnPress: true
                         onClicked: {
@@ -300,6 +293,7 @@ Item {
                         id: flipCtrlHorizotal
                         activeFocusOnPress : true
                         text: "Horizontal"
+                        tooltip: "This mode flips the preview left or right"
                         style: econCheckBoxStyle
                         onClicked:{
                             defaultValue.enabled = true
@@ -314,6 +308,7 @@ Item {
                         id: flipCtrlVertical
                         activeFocusOnPress : true
                         text: "Vertical"
+                        tooltip: "This mode flips the preview vertically up or down."
                         style: econCheckBoxStyle
                         onClicked:{
                             defaultValue.enabled = true
@@ -344,6 +339,7 @@ Item {
                             checked: false
                             id: strobeFlashVidoStreaming
                             text: "Flash for Video Streaming"
+                            tooltip: "When Flash for Video Streaming is selected, it switches ON the LED while video is streaming."
                             activeFocusOnPress: true
                             style: econRadioButtonStyle
                             onClicked: {
@@ -362,6 +358,7 @@ Item {
                             checked: false
                             id: strobeTorch
                             text: "Torch"
+                            tooltip: "When Torch is selected, the LED will switch ON and it acts as a torch."
                             activeFocusOnPress: true
                             style: econRadioButtonStyle
                             onClicked: {                                
@@ -378,6 +375,7 @@ Item {
                             checked: false
                             id: strobeOff
                             text: "OFF"
+                            tooltip: "When OFF is selected, it disables all the strobe controls"
                             activeFocusOnPress: true
                             style: econRadioButtonStyle
                             onClicked: {
@@ -408,6 +406,8 @@ Item {
                           exclusiveGroup: roiExpogroup
                           id: autoexpCentered
                           text: "Centered"
+                          tooltip: "In this mode, the centered region-based exposure value will be
+applied to the frame."
                           activeFocusOnPress: true
                           style: econRadioButtonStyle
                           opacity: enabled ? 1 : 0.1
@@ -427,6 +427,8 @@ Item {
                           exclusiveGroup: roiExpogroup
                           id: autoexpManual
                           text: "Manual"
+                          tooltip: "In this mode, you can select the ROI and at that region, the exposure
+value will be applied to the entire frame."
                           activeFocusOnPress: true
                           style: econRadioButtonStyle
                           opacity: enabled ? 1 : 0.1
@@ -618,6 +620,7 @@ Item {
                         id: denoiseEnable
                         style:  econRadioButtonStyle
                         text:   qsTr("Enable")
+                        tooltip: "When it is enabled, the noise in the image preview will get blur."
                         exclusiveGroup: denoiseControlGroup
                         activeFocusOnPress: true
                         onClicked: {
@@ -631,6 +634,7 @@ Item {
                         id: denoiseDisable
                         style:  econRadioButtonStyle
                         text: qsTr("Disable")
+                        tooltip: "When it is disabled, the preview will be noisy but it retains more details."
                         exclusiveGroup: denoiseControlGroup
                         activeFocusOnPress: true
                         onClicked: {                            
@@ -659,6 +663,8 @@ Item {
                         id: lscModeAuto
                         style:  econRadioButtonStyle
                         text:   qsTr("Auto")
+                        tooltip: "In this mode, the lens correction will be applied automatically according to
+the lighting condition present in the scene."
                         exclusiveGroup: lscModeControlGroup
                         activeFocusOnPress: true
                         onClicked: {                            
@@ -672,6 +678,8 @@ Item {
                         id: lscModeManual
                         style:  econRadioButtonStyle
                         text: qsTr("Manual")
+                        tooltip: "In this mode, you can select the lens correction setting appropriate to
+the lighting condition, when the lens correction setting applied in the auto mode is not appropriate"
                         exclusiveGroup: lscModeControlGroup
                         activeFocusOnPress: true
                         onClicked: {
@@ -729,6 +737,8 @@ Item {
                           exclusiveGroup: antiFlickerModegroup
                           id: antiFlickerModeAuto
                           text: "Auto"
+                          tooltip: "In auto mode, the device will automatically switch between the flicker
+frequencies if the flicker is detected in preview."
                           activeFocusOnPress: true
                           style: econRadioButtonStyle
                           opacity: enabled ? 1 : 0.1
@@ -743,6 +753,8 @@ Item {
                           exclusiveGroup: antiFlickerModegroup
                           id: antiFlickerModeManual
                           text: "Manual"
+                          tooltip: "In manual mode, the flicker frequency must be chosen manually to
+avoid the flickering in the preview."
                           activeFocusOnPress: true
                           style: econRadioButtonStyle
                           opacity: enabled ? 1 : 0.1
@@ -1221,7 +1233,25 @@ Item {
         }
     }
 
+    function setMasterMode(){
+        see3camcu20.setCameraMode(See3Camcu20.CAMERA_MASTER)
+        root.checkForTriggerMode(false)
+        root.captureBtnEnable(true)
+        root.videoRecordBtnEnable(true)
+    }
+
+    function setTriggerMode(){
+        defaultValue.enabled = true
+        see3camcu20.setCameraMode(See3Camcu20.CAMERA_SLAVE)
+        root.checkForTriggerMode(true)
+        root.captureBtnEnable(false)
+        root.videoRecordBtnEnable(false)
+    }
+
     function setToDefaultValues(){
+        root.checkForTriggerMode(false)
+        root.captureBtnEnable(true)
+        root.videoRecordBtnEnable(true)
         defaultValue.enabled = false
         if(see3camcu20.setToDefaultValues()){
             see3camcu20.getAutoExpROIModeAndWindowSize()

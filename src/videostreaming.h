@@ -87,7 +87,7 @@ public:
     uint8_t *uBuffer;
     uint8_t *vBuffer;
     uint8_t *yuvBuffer;
-      __u32 xcord;
+      __u32 xcord,ycord;
     unsigned frame;
 
     // rgba buffer

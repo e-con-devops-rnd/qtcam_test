@@ -125,7 +125,6 @@ contains(UNAME_MACHINE_64BIT, amd64):{
         -lusb-1.0 \
         -lpulse \
         -lasound\
-        -lgviewv4l2core\
         -L/usr/lib/ -lturbojpeg \        
         -L/usr/lib/x86_64-linux-gnu/ -levdev
 }
