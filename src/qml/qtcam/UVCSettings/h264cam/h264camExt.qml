@@ -744,53 +744,78 @@ value will be applied to the entire frame"
         }
     }
 
-   function queryForGainControl(queryType, gainVal){
-       if(queryType == H264camera.UVC_GET_CUR){
-           switch(gainVal){
-           case H264camera.GAIN_MIN:
-               gainLcg.checked = true
-               break
-           case H264camera.GAIN_MAX:
-               gainHcg.checked = true
-               break
-           }
-       }
+    function queryForHFlipControl(queryType, HFlipVal){
+        if(queryType == H264camera.UVC_GET_CUR){
+            switch(HFlipVal){
+            case H264camera.HFLIP_MAX:
+                flipCtrlHorizotal.checked = true;
+                break
+            case H264camera.HFLIP_MIN:
+                flipCtrlHorizotal.checked = false;
+                break
+            }
+        }
+    }
 
-   }
+    function queryForVFlipControl(queryType, VFlipVal){
+        if(queryType == H264camera.UVC_GET_CUR){
+            switch(VFlipVal){
+            case H264camera.VFLIP_MAX:
+                flipCtrlVertical.checked = true;
+                break
+            case H264camera.VFLIP_MIN:
+                flipCtrlVertical.checked = false;
+                break
+            }
+        }
+    }
+
+    function queryForGainControl(queryType, gainVal){
+        if(queryType == H264camera.UVC_GET_CUR){
+            switch(gainVal){
+            case H264camera.GAIN_MIN:
+                gainLcg.checked = true
+                break
+            case H264camera.GAIN_MAX:
+                gainHcg.checked = true
+                break
+            }
+        }
+
+    }
+
+    function queryForRoiMode(queryType, expMode){
+        if(queryType == H264camera.UVC_GET_CUR){
+            switch(expMode){
+            case H264camera.ROI_FULL:
+                autoexpFull.checked = true
+                break
+            case H264camera.ROI_MANUAL:
+                autoexpManual.checked = true
+                break
+            }
+        }
+    }
 
 
-   function queryForRoiMode(queryType, expMode){
-       if(queryType == H264camera.UVC_GET_CUR){
-           switch(expMode){
-           case H264camera.ROI_FULL:
-               autoexpFull.checked = true
-               break
-           case H264camera.ROI_MANUAL:
-               autoexpManual.checked = true
-               break
-           }
-       }
-   }
+    function queryForWindowSize(queryType, windowSize){
+        switch(queryType){
+        case H264camera.UVC_GET_CUR:
+            autoExpoWinSizeCombo.currentIndex = windowSize -1
+            break;
+        case H264camera.UVC_GET_MIN:
+            minWindowValue = windowSize
+            break;
+        case H264camera.UVC_GET_MAX:
+            maxWindowValue = windowSize
+            break;
+        case H264camera.UVC_GET_RES:
+            autoExpoWinSizeCombo.currentIndex = windowSize -1
+            break;
+        }
 
-
-   function queryForWindowSize(queryType, windowSize){
-           switch(queryType){
-               case H264camera.UVC_GET_CUR:
-                   autoExpoWinSizeCombo.currentIndex = windowSize -1
-                   break;
-               case H264camera.UVC_GET_MIN:
-                   minWindowValue = windowSize
-                   break;
-               case H264camera.UVC_GET_MAX:
-                   maxWindowValue = windowSize
-                   break;
-               case H264camera.UVC_GET_RES:
-                   autoExpoWinSizeCombo.currentIndex = windowSize -1
-                   break;
-           }
-
-            fillROIWindowSizeCombo(minWindowValue,maxWindowValue)
-   }
+        fillROIWindowSizeCombo(minWindowValue,maxWindowValue)
+    }
 
 
     function queryForDewarpControl(queryType, dewarpValue){
@@ -860,6 +885,8 @@ value will be applied to the entire frame"
         h264camId.getQFactor(valueToGet)
         h264camId.getHDRMode(valueToGet)
         h264camId.getGainMode(valueToGet)
+        h264camId.getHorizontalFlip(valueToGet)
+        h264camId.getVerticalFlip(valueToGet)
         h264camId.getNoiseReductionValue(valueToGet)
         h264camId.getH264Quality(valueToGet)
         h264camId.getDewarpMode(valueToGet)

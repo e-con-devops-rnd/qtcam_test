@@ -91,6 +91,7 @@ void uvccamera::initCameraEnumMap()
     cameraEnumMap.insert(econVid + (",c155"),CommonEnums::SEE3CAM_CU55_MH); // cu55 monochrome
     cameraEnumMap.insert(econVid + (",c1d4"),CommonEnums::FSCAM_CU135);
     cameraEnumMap.insert(econVid + (",c124"),CommonEnums::SEE3CAM_20CUG);
+    cameraEnumMap.insert(econVid + (",c126"),CommonEnums::SEE3CAM_CU22);
 }
 
 unsigned int uvccamera::getTickCount()
@@ -354,7 +355,7 @@ bool uvccamera::readFirmwareVersion(quint8 *pMajorVersion, quint8 *pMinorVersion
     /* Send a Report to the Device */
     ret = write(hid_fd, g_out_packet_buf, BUFFER_LENGTH);
     if (ret < 0) {
-        perror("write");
+    //    perror("write");
         _text = tr("Device not available");
         return false;
     }
@@ -669,7 +670,7 @@ bool See3CAM_Control::getFlashState(quint8 *flashState) {
     ret = write(uvccamera::hid_fd, g_out_packet_buf, BUFFER_LENGTH);
 
     if (ret < 0) {
-        perror("write");
+      //  perror("write");
         return false;
     }
     /* Read the Status code from the device */
@@ -810,7 +811,7 @@ bool See3CAM_Control::getTorchState(quint8 *torchState)
     g_out_packet_buf[2] = GET_TORCH_LEVEL; /* Report Number */
     ret = write(uvccamera::hid_fd, g_out_packet_buf, BUFFER_LENGTH);
     if (ret < 0) {
-        perror("write");
+       // perror("write");
         return false;
     }
     /* Read the Status code from the device */
@@ -961,7 +962,7 @@ bool See3CAM_GPIOControl::getGpioLevel(camGpioPin gpioPinNumber)
     /* Send a Report to the Device */
     ret = write(uvccamera::hid_fd, g_out_packet_buf, BUFFER_LENGTH);
     if (ret < 0) {
-        perror("write");
+      //  perror("write");
         return false;
     }
     /* Read the GPIO level and status of read from the device */
@@ -1068,7 +1069,7 @@ bool See3CAM_ModeControls::enableMasterMode()
     g_out_packet_buf[1] = ENABLEMASTERMODE; /* Report Number */
     ret = write(uvccamera::hid_fd, g_out_packet_buf, BUFFER_LENGTH);
     if (ret < 0) {
-        perror("write");
+       // perror("write");
         return false;
     }
     return true;
@@ -1091,7 +1092,7 @@ bool See3CAM_ModeControls::enableTriggerMode()
 
     ret = write(uvccamera::hid_fd, g_out_packet_buf, BUFFER_LENGTH);
     if (ret < 0) {
-        perror("write");
+        //perror("write");
         return false;
     }
     return true;
@@ -1110,7 +1111,7 @@ bool uvccamera::sendHidCmd(unsigned char *outBuf, unsigned char *inBuf, int len)
     // Write data into camera
     int ret = write(hid_fd, outBuf, len);
     if (ret < 0) {        
-        perror("write");
+        //perror("write");
         return false;
     }
     struct timeval tv;

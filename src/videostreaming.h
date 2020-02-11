@@ -616,9 +616,6 @@ public slots:
 
 signals:
 
-    // signal to qml that ubuntu version selected is less than 16.04
-    void ubuntuVersionSelectedLessThan16();
-
     // from qml file , rendering animation duration t changed
     void tChanged();
 
@@ -643,6 +640,7 @@ signals:
     void refreshDevice();
     void addControls();
     void rcdStop(QString recordFail);
+    void videoRecordInvalid(QString noVideo);
     void videoRecord(QString fileName);
     void enableRfRectBackInPreview();
     void enableFactRectInPreview();
@@ -659,6 +657,7 @@ signals:
     // To get FPS list
     void sendFPSlist(QString fpsList);
      void signalTograbPreviewFrame(bool retrieveframe,bool InFailureCase);
+     void signalToSwitchResoln(bool switchResoln);
 };
 
 #endif // VIDEOSTREAMING_H

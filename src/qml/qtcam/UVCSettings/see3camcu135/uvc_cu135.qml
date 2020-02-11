@@ -1171,6 +1171,7 @@ with smile details"
 
     // set trigger stream mode
     function setTriggerMode(){
+        root.checkForTriggerMode(true)
         root.captureBtnEnable(false)
         root.videoRecordBtnEnable(false)
         seecamcu135.setStreamMode(See3CamCu135.STREAM_TRIGGER)        

@@ -54,7 +54,6 @@
  * #define CLIP(x) ((x) < 0? 0 :((x) >= 255)? 255 : (x))
  */
 #define CLIP(x) (((x) >= 255)? 255 : (x))
-#define SHIFT(x) ( x >> 2 )
 
 /* Jpeg-decode */
 #define HEADERFRAME1 0xaf
@@ -236,7 +235,7 @@ void Videostreaming::handleWindowChanged(QQuickWindow *win)
         connect(win, &QQuickWindow::beforeSynchronizing, this, &Videostreaming::sync, Qt::DirectConnection);
         connect(win, &QQuickWindow::sceneGraphInvalidated, this, &Videostreaming::cleanup, Qt::DirectConnection);
 
-        // Event call to acknowledge when Application window state changes.
+        // Added by Navya -- Event call to acknowledge when Application window state changes.
         connect(win, &QQuickWindow::widthChanged,this,&Videostreaming::widthChangedEvent,Qt::DirectConnection);
         connect(win, &QQuickWindow::heightChanged,this,&Videostreaming::heightChangedEvent,Qt::DirectConnection);
 
@@ -2047,6 +2046,8 @@ bool Videostreaming::startCapture()
         return false;
     }
 
+    // Added by Navya : 11 Feb 2020 -- Enabling capturing images once after streamon
+    emit signalToSwitchResoln(true);
     previewFrameSkipCount = 1;
     return true;
 }
@@ -2450,6 +2451,9 @@ void Videostreaming::stopCapture() {
             perror("VIDIOC_STREAMOFF");
             emit logCriticalHandle("Stream OFF failed");
         }
+
+        // Added by Navya : 11 Feb 2020 -- emitting signal to disable capturing until streamon occurs
+        emit signalToSwitchResoln(false);
         for (uint i = 0; i < m_nbuffers; ++i)
             for (unsigned p = 0; p < m_buffers[i].planes; p++)
                 if (-1 == munmap(m_buffers[i].start[p], m_buffers[i].length[p]))
@@ -2534,9 +2538,7 @@ void Videostreaming::startAgain() {
    
     yuyvBuffer = (uint8_t *)malloc(m_renderer->videoResolutionwidth * m_renderer->videoResolutionHeight * 2);
     yuyvBuffer_Y12 = (uint8_t *)malloc(m_renderer->videoResolutionwidth * m_renderer->videoResolutionHeight * 2);
-    
-    
-    
+
     if(openSuccess) {
         displayFrame();
     }
@@ -2626,10 +2628,9 @@ void Videostreaming::displayStillResolution() {
 }
 
 void Videostreaming::displayEncoderList(){
-    QStringList encoders;    
-    encoders.clear();    
+    QStringList encoders;
+    encoders.clear();
     encoders<<"MJPG"<<"H264";
-    emit ubuntuVersionSelectedLessThan16(); // signal to qml that ubuntu version selected is less than 16.04
     encoderList.setStringList(encoders);
 }
 
@@ -2735,7 +2736,7 @@ void Videostreaming::updateFrameInterval(QString pixelFormat, QString frameSize)
     QStringList tempPixFmt = pixelFormat.split(' ');
     QString pixFmtValue = tempPixFmt.value(0);
 
-    /* Actual Format of "Y16" is "Y16 " [Y16 with space]. So append space char */
+    /* Actual Format of "Y16" and "Y12" is "Y16 " and "Y12 "[Y16 ,Y12 with space]. So append space char */
     if ((0 == QString::compare(pixFmtValue, "Y16"))|| (0 == QString::compare(pixFmtValue, "Y12"))){
         pixFmtValue.append(" ");
     }
@@ -2944,7 +2945,9 @@ void Videostreaming::setSampleRate(uint index){
 }
 
 void Videostreaming::recordVideo(){
-    videoEncoder->encodeImage(m_renderer->yuvBuffer, false /* other than rgba format means, false */);
+    if(width !=320 && height!= 240){   // Added by Navya -- Avoid encoding image if the selected resolution is 320x240
+        videoEncoder->encodeImage(m_renderer->yuvBuffer, false /* other than rgba format means, false */);
+    }
 }
 
 void Videostreaming::recordBegin(int videoEncoderType, QString videoFormatType, QString fileLocation, int audioDeviceIndex, unsigned sampleRate, int channels) {
@@ -2994,6 +2997,12 @@ void Videostreaming::recordBegin(int videoEncoderType, QString videoFormatType, 
         audiorecordStart = true;
     }
 
+    // Added by Navya : 10 Feb 2020 -- To display the Message Box indicating invalid resolution to record video
+    if(width == 320 && height == 240)
+    {
+        emit videoRecordInvalid("Video Recording Disabled for this Resolution");
+    }
+    else{
 #if LIBAVCODEC_VER_AT_LEAST(54,25)
     bool tempRet = videoEncoder->createFile(fileName,(AVCodecID)videoEncoderType, m_capDestFormat.fmt.pix.width,m_capDestFormat.fmt.pix.height,temp_interval.denominator,temp_interval.numerator,10000000, audioDeviceIndex, sampleRate, channels);
 #else
@@ -3002,6 +3011,7 @@ void Videostreaming::recordBegin(int videoEncoderType, QString videoFormatType, 
     if(!tempRet){
         emit rcdStop("Unable to record the video");
     }
+}
 }
 
 void Videostreaming::recordStop() {    
