@@ -47,8 +47,8 @@ public:
 
     enum sensorModes {
         SENSOR_STANDARD = 0x01,
-        SENSOR_HDR1X  = 0x02,
-        SENSOR_HDR2X = 0x03
+        SENSOR_HDRLFM  = 0x02,
+        SENSOR_HiHDR = 0x03
     };
     Q_ENUMS(sensorModes)
 
@@ -146,6 +146,7 @@ signals:
     void lscModeChanged(uint lscMode);
     void setdefaultValueFailed();
     void exposureCompValue(uint exposureCompensation);
+    void disableHDR(bool hdrstatus);
 };
 #endif // SEE3CAM_CU22
 

@@ -23,7 +23,7 @@
 
 /**
  * @brief See3CAM_CU22::setSensorMode - setting sensor mode
- * @param sensorMode - standard/dsr hlo mode
+ * @param sensorMode - standard/hdr+lfm/Hi-hdr  mode
  * @return true/false
  */
 bool See3CAM_CU22::setSensorMode(sensorModes  sensorMode)
@@ -40,7 +40,7 @@ bool See3CAM_CU22::setSensorMode(sensorModes  sensorMode)
     // fill buffer values
     g_out_packet_buf[1] = CAMERA_CONTROL_CU22; /* camera id */
     g_out_packet_buf[2] = SET_SENSOR_MODE_CU22; /* set sensor command  */
-    g_out_packet_buf[3] = sensorMode; /* pass camera mode value */
+    g_out_packet_buf[3] = sensorMode; /* pass sensor mode value */
 
     // send request and get reply from camera
     if(uvc.sendHidCmd(g_out_packet_buf, g_in_packet_buf, BUFFER_LENGTH)){
@@ -78,9 +78,14 @@ bool See3CAM_CU22::getSensorMode()
     if(uvc.sendHidCmd(g_out_packet_buf, g_in_packet_buf, BUFFER_LENGTH)){
         if (g_in_packet_buf[6]==GET_FAIL) {
             return false;
-        } else if(g_in_packet_buf[0] == CAMERA_CONTROL_CU22 &&
-            g_in_packet_buf[1]==GET_SENSOR_MODE_CU22 &&
-            g_in_packet_buf[6]==GET_SUCCESS) {
+        }
+        else if(g_in_packet_buf[6]==GET_INVALID){
+            emit disableHDR(true);
+        }
+        else if(g_in_packet_buf[0] == CAMERA_CONTROL_CU22 &&
+                 g_in_packet_buf[1]==GET_SENSOR_MODE_CU22 &&
+                 g_in_packet_buf[6]==GET_SUCCESS) {
+            emit disableHDR(false);
             emit sensorModeReceived(g_in_packet_buf[2]);
             return true;
         }

@@ -98,6 +98,10 @@ Item {
             }
             autoExpROITimer.start()
         }
+        onExtensionTabVisible:{
+            if(visible)
+                getCurrentValuesFromCamera()
+        }
     }
 
     ScrollView{
@@ -145,34 +149,34 @@ the device will be in normal range."
                         }
                     }
                     RadioButton {
-                        id: sensorHdr1x
+                        id: sensorHdrlfm
                         style:  econRadioButtonStyle
-                        text: qsTr("HDR 1x")
-                        tooltip:"When the sensor is operated in this mode dynamic range will be greater than standard mode as well as this mode has effective LFM feature"
+                        text: qsTr("HDR+LFM")
+                        opacity: enabled ? 1 : 0.5
                         exclusiveGroup: sensorInputGroup
                         activeFocusOnPress: true
                         onClicked: {
-                            see3camcu22.setSensorMode(See3Camcu22.SENSOR_HDR1X)
+                            see3camcu22.setSensorMode(See3Camcu22.SENSOR_HDRLFM)
                             defaultValue.enabled = true
                         }
                         Keys.onReturnPressed: {
-                            see3camcu22.setSensorMode(See3Camcu22.SENSOR_HDR1X)
+                            see3camcu22.setSensorMode(See3Camcu22.SENSOR_HDRLFM)
                             defaultValue.enabled = true
                         }
                     }
                     RadioButton {
-                        id: sensorHdr2x
+                        id: sensorHiHdr
                         style:  econRadioButtonStyle
-                        text: qsTr("HDR 2x")
-                        tooltip: "When the sensor is operated in this mode dynamic range will be greater than HDR 1x mode. HDR 2x mode also has LFM feature similar to HDR 1x mode but comparatively lesser effective."
+                        text: qsTr("Hi-HDR")
+                        opacity: enabled ? 1 : 0.5
                         exclusiveGroup: sensorInputGroup
                         activeFocusOnPress: true
                         onClicked: {
-                            see3camcu22.setSensorMode(See3Camcu22.SENSOR_HDR2X)
+                            see3camcu22.setSensorMode(See3Camcu22.SENSOR_HiHDR)
                             defaultValue.enabled = true
                         }
                         Keys.onReturnPressed: {
-                            see3camcu22.setSensorMode(See3Camcu22.SENSOR_HDR2X)
+                            see3camcu22.setSensorMode(See3Camcu22.SENSOR_HiHDR)
                             defaultValue.enabled = true
                         }
                     }
@@ -878,10 +882,10 @@ avoid the flickering in the preview."
         onSensorModeReceived:{
             if(sensorMode == See3Camcu22.SENSOR_STANDARD){
                 sensorStandard.checked = true
-            }else if(sensorMode == See3Camcu22.SENSOR_HDR1X){
-                sensorHdr1x.checked = true
-            }else if(sensorMode == See3Camcu22.SENSOR_HDR2X){
-                sensorHdr2x.checked = true
+            }else if(sensorMode == See3Camcu22.SENSOR_HDRLFM){
+                sensorHdrlfm.checked = true
+            }else if(sensorMode == See3Camcu22.SENSOR_HiHDR){
+                sensorHiHdr.checked = true
             }
         }
         onCameraModeReceived:{
@@ -933,6 +937,17 @@ avoid the flickering in the preview."
         }
         onSetdefaultValueFailed:{
             displayMessageBox(qsTr("Failure"), qsTr("Setting default value is failed"))
+        }
+        onDisableHDR: {
+            if(hdrstatus){
+                sensorHdrlfm.enabled = false
+                sensorHiHdr.enabled = false
+                sensorStandard.checked = true
+            }
+            else{
+                sensorHdrlfm.enabled = true
+                sensorHiHdr.enabled = true
+            }
         }
     }
 

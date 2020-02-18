@@ -605,6 +605,7 @@ Rectangle {
                 open_sideBar.visible = false
                 // set preview background area. param1:width, param2: height, param3: sidebar visibility true/false
                 vidstreamproperty.setPreviewBgrndArea(previewBgrndArea.width, previewBgrndArea.height, true)
+                vidstreamproperty.sidebarStateChanged()
             }
         }
     }
@@ -902,6 +903,7 @@ Rectangle {
                     open_sideBar.visible = true
                     // set preview backgrond area. param1:width, param2: height, param3: sidebar visibility true/false
                     vidstreamproperty.setPreviewBgrndArea(previewBgrndArea.width, previewBgrndArea.height, false)
+                    vidstreamproperty.sidebarStateChanged()
                 }
             }
         }
@@ -1430,6 +1432,7 @@ Rectangle {
         // Added by Sankari: 05 Apr 2019
         // set preview background area. param1:width, param2: height, param3: sidebar visibility true/false
         vidstreamproperty.setPreviewBgrndArea(previewBgrndArea.width, previewBgrndArea.height, false)
+        vidstreamproperty.sidebarStateChanged()
     }
 
     Keys.onRightPressed: {
@@ -1445,7 +1448,8 @@ Rectangle {
         // Added by Sankari: 05 Apr 2019 - To prevent overlapping preview with side bar.
         // set preview background area. param1:width, param2: height, param3: sidebar visibility true/false
         vidstreamproperty.setPreviewBgrndArea(previewBgrndArea.width, previewBgrndArea.height, true)
-    }
+        vidstreamproperty.sidebarStateChanged()
+   }
 
     function enableAllSettingsTab(){
         imageQualitySettingsEnable(true)

@@ -88,6 +88,8 @@ void uvccamera::initCameraEnumMap()
     cameraEnumMap.insert(econVid + (",c132"),CommonEnums::NILECAM30_USB);
     cameraEnumMap.insert(econVid + (",c123"),CommonEnums::ECAM22_USB); // h264 camera
     cameraEnumMap.insert(econVid + (",c154"),CommonEnums::SEE3CAM_CU55);
+
+    // Added by Navya
     cameraEnumMap.insert(econVid + (",c155"),CommonEnums::SEE3CAM_CU55_MH); // cu55 monochrome
     cameraEnumMap.insert(econVid + (",c1d4"),CommonEnums::FSCAM_CU135);
     cameraEnumMap.insert(econVid + (",c124"),CommonEnums::SEE3CAM_20CUG);
@@ -355,7 +357,6 @@ bool uvccamera::readFirmwareVersion(quint8 *pMajorVersion, quint8 *pMinorVersion
     /* Send a Report to the Device */
     ret = write(hid_fd, g_out_packet_buf, BUFFER_LENGTH);
     if (ret < 0) {
-    //    perror("write");
         _text = tr("Device not available");
         return false;
     }
@@ -366,7 +367,6 @@ bool uvccamera::readFirmwareVersion(quint8 *pMajorVersion, quint8 *pMinorVersion
         /* Get a report from the device */
         ret = read(hid_fd, g_in_packet_buf, BUFFER_LENGTH);
         if (ret < 0) {
-            //perror("read");
         } else {            
             if(g_in_packet_buf[0] == READFIRMWAREVERSION) {
                 sdk_ver = (g_in_packet_buf[3]<<8)+g_in_packet_buf[4];
@@ -574,7 +574,6 @@ bool uvccamera::sendOSCode() {
     /* Send a Report to the Device */
     ret = write(hid_fd, g_out_packet_buf, BUFFER_LENGTH);
     if (ret < 0) {
-        perror("write");
         emit logHandle(QtCriticalMsg, "\nOS Identification Failed\n");
         return false;
     }
@@ -584,7 +583,6 @@ bool uvccamera::sendOSCode() {
         /* Get a report from the device */
         ret = read(hid_fd, g_in_packet_buf, BUFFER_LENGTH);
         if (ret < 0) {
-            //perror("read");
         } else {            
             if(g_in_packet_buf[0] == OS_CODE &&
                     g_in_packet_buf[1] == LINUX_OS ) {
@@ -670,7 +668,6 @@ bool See3CAM_Control::getFlashState(quint8 *flashState) {
     ret = write(uvccamera::hid_fd, g_out_packet_buf, BUFFER_LENGTH);
 
     if (ret < 0) {
-      //  perror("write");
         return false;
     }
     /* Read the Status code from the device */
@@ -680,7 +677,7 @@ bool See3CAM_Control::getFlashState(quint8 *flashState) {
         /* Get a report from the device */
         ret = read(uvccamera::hid_fd, g_in_packet_buf, BUFFER_LENGTH);
         if (ret < 0) {
-            //perror("read");
+
         } else {            
             if((g_in_packet_buf[0] == g_out_packet_buf[1])&&
                     (g_in_packet_buf[1]==GET_FLASH_LEVEL)) {
@@ -738,7 +735,7 @@ bool See3CAM_Control::setFlashState(flashTorchState flashState)
         ret = write(uvccamera::hid_fd, g_out_packet_buf, BUFFER_LENGTH);
 
         if (ret < 0) {
-            perror("write");
+
             return false;
         }
         /* Read the Status code from the device */
@@ -748,7 +745,7 @@ bool See3CAM_Control::setFlashState(flashTorchState flashState)
             /* Get a report from the device */
             ret = read(uvccamera::hid_fd, g_in_packet_buf, BUFFER_LENGTH);
             if (ret < 0) {
-                //perror("read");
+
             } else {                
                 if((g_in_packet_buf[0] == g_out_packet_buf[1])&&
                         (g_in_packet_buf[1]==SET_FLASH_LEVEL) &&
@@ -811,7 +808,7 @@ bool See3CAM_Control::getTorchState(quint8 *torchState)
     g_out_packet_buf[2] = GET_TORCH_LEVEL; /* Report Number */
     ret = write(uvccamera::hid_fd, g_out_packet_buf, BUFFER_LENGTH);
     if (ret < 0) {
-       // perror("write");
+
         return false;
     }
     /* Read the Status code from the device */
@@ -821,7 +818,7 @@ bool See3CAM_Control::getTorchState(quint8 *torchState)
         /* Get a report from the device */
         ret = read(hid_fd, g_in_packet_buf, BUFFER_LENGTH);
         if (ret < 0) {
-            //perror("read");
+
         } else {            
             if((g_in_packet_buf[0] == g_out_packet_buf[1])&&
                     (g_in_packet_buf[1] == GET_TORCH_LEVEL)) {
@@ -887,7 +884,7 @@ bool See3CAM_Control::setTorchState(flashTorchState torchState)
         ret = write(uvccamera::hid_fd, g_out_packet_buf, BUFFER_LENGTH);
 
         if (ret < 0) {
-            perror("write");
+
             return false;
         }
         /* Read the Status code from the device */
@@ -897,7 +894,7 @@ bool See3CAM_Control::setTorchState(flashTorchState torchState)
             /* Get a report from the device */
             ret = read(uvccamera::hid_fd, g_in_packet_buf, BUFFER_LENGTH);
             if (ret < 0) {
-                //perror("read");
+
             } else {                
                 if((g_in_packet_buf[0] == g_out_packet_buf[1])&&
                         (g_in_packet_buf[1]==SET_TORCH_LEVEL) &&
@@ -962,7 +959,7 @@ bool See3CAM_GPIOControl::getGpioLevel(camGpioPin gpioPinNumber)
     /* Send a Report to the Device */
     ret = write(uvccamera::hid_fd, g_out_packet_buf, BUFFER_LENGTH);
     if (ret < 0) {
-      //  perror("write");
+
         return false;
     }
     /* Read the GPIO level and status of read from the device */
@@ -973,7 +970,7 @@ bool See3CAM_GPIOControl::getGpioLevel(camGpioPin gpioPinNumber)
         ret = read(uvccamera::hid_fd, g_in_packet_buf, BUFFER_LENGTH);
 
         if (ret < 0) {
-         //   perror("read");
+
         } else {
             if(g_in_packet_buf[0] == GPIO_OPERATION &&
                     g_in_packet_buf[1] == GPIO_GET_LEVEL &&
@@ -1019,7 +1016,7 @@ bool See3CAM_GPIOControl::setGpioLevel(camGpioPin gpioPin,camGpioValue gpioValue
     /* Send a Report to the Device */
     ret = write(uvccamera::hid_fd, g_out_packet_buf, BUFFER_LENGTH);
     if (ret < 0) {
-        perror("write");
+
         return false;
     }
     /* Read the GPIO level and status of read from the device */
@@ -1029,7 +1026,7 @@ bool See3CAM_GPIOControl::setGpioLevel(camGpioPin gpioPin,camGpioValue gpioValue
         /* Get a report from the device */
         ret = read(uvccamera::hid_fd, g_in_packet_buf, BUFFER_LENGTH);
         if (ret < 0) {
-        //    perror("read");
+
         } else {
             if(g_in_packet_buf[0] == GPIO_OPERATION &&
                     g_in_packet_buf[1] == GPIO_SET_LEVEL &&
@@ -1069,7 +1066,7 @@ bool See3CAM_ModeControls::enableMasterMode()
     g_out_packet_buf[1] = ENABLEMASTERMODE; /* Report Number */
     ret = write(uvccamera::hid_fd, g_out_packet_buf, BUFFER_LENGTH);
     if (ret < 0) {
-       // perror("write");
+
         return false;
     }
     return true;
@@ -1092,7 +1089,7 @@ bool See3CAM_ModeControls::enableTriggerMode()
 
     ret = write(uvccamera::hid_fd, g_out_packet_buf, BUFFER_LENGTH);
     if (ret < 0) {
-        //perror("write");
+
         return false;
     }
     return true;
@@ -1111,7 +1108,7 @@ bool uvccamera::sendHidCmd(unsigned char *outBuf, unsigned char *inBuf, int len)
     // Write data into camera
     int ret = write(hid_fd, outBuf, len);
     if (ret < 0) {        
-        //perror("write");
+
         return false;
     }
     struct timeval tv;
@@ -1135,7 +1132,7 @@ bool uvccamera::sendHidCmd(unsigned char *outBuf, unsigned char *inBuf, int len)
     // Read data from camera
     int retval = read(hid_fd, inBuf, len);
     if (retval < 0) {
-    //    perror("read");
+
         return false;
     }
     else{
