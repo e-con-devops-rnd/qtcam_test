@@ -366,6 +366,7 @@ Rectangle {
             }
             seqAni.start()
             vidstreamproperty.stopUpdatePreview()
+<<<<<<< HEAD
 
         }
         onEnableRfRectBackInPreview:{
@@ -389,6 +390,30 @@ Rectangle {
             setpreviewWindowSize();
         }
 
+=======
+        }
+        onEnableRfRectBackInPreview:{
+            afterBurst() // signal to do anything need to do after capture continuous[burst] shots.
+        }
+
+        // Enable Face detection rect in preview
+        onEnableFactRectInPreview:{
+            enableFaceRectafterBurst()
+        }
+
+        onNewControlAdded: {
+            setControlValues(ctrlName.toString(),ctrlType,ctrlMinValue,ctrlMaxValue, ctrlStepSize, ctrlDefaultValue,ctrlID);
+        }
+
+        // Added by Navya :31 July 2019
+        // To update the preview window width n height only when Application window is resized.
+        onSetWindowSize:{
+            previewBgrndArea.width = win_width * 0.85
+            previewBgrndArea.height = win_height - statusBarRootObject.statusBarHeight+5
+            setpreviewWindowSize();
+        }
+
+>>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
         onDeviceUnplugged: {
             // Added by Sankari:12 Feb 2018 - Get the Pci bus info for selected camera
             keyEvent.stopGetKeyFromCamera()
@@ -508,6 +533,7 @@ Rectangle {
         onStillSkipCount:{
             frameSkipCount(stillResoln, videoResoln, stillOutFormat);
         }
+<<<<<<< HEAD
 
         onStillSkipCountWhenFPSChange:{
             frameSkipCountWhenFPSChange(fpsChange)
@@ -522,6 +548,22 @@ Rectangle {
             queryFrame(retrieveframe,InFailureCase);
         }
 
+=======
+
+        onStillSkipCountWhenFPSChange:{
+            frameSkipCountWhenFPSChange(fpsChange)
+        }
+
+        // Added by Sankari - get FPS list
+        onSendFPSlist:{
+            availableFpslist = fpsList;
+        }
+
+        onSignalTograbPreviewFrame:{
+            queryFrame(retrieveframe,InFailureCase);
+        }
+
+>>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
         onCapFrameTimeout:{
             captureFrameTimeout();
         }
@@ -541,11 +583,19 @@ Rectangle {
             if(switchResoln){
                 keyEventFiltering = false
                 captureBtnEnable(true)
+<<<<<<< HEAD
             }
             else {
                 keyEventFiltering = true
                 captureBtnEnable(false)
             }
+=======
+            }
+            else {
+                keyEventFiltering = true
+                captureBtnEnable(false)
+            }
+>>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
         }
 
         Rectangle
@@ -633,7 +683,6 @@ Rectangle {
             textRole: "display"
             model: camModels
             activeFocusOnPress : true
-
             style: ComboBoxStyle {
                 background: Image {
                     id: deviceBox
@@ -697,7 +746,6 @@ Rectangle {
                         keyEventFiltering = false
                         vidstreamproperty.enabled = true
                         webcamKeyAccept = true
-
                         vidstreamproperty.stopCapture()
                         vidstreamproperty.closeDevice()
                         selectCameraSettings()
@@ -745,7 +793,10 @@ Rectangle {
 
                         // Initially enable capture image when external keyevent is occured.
                         disableCaptureImage =  false
+<<<<<<< HEAD
 
+=======
+>>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
                     }
                 }
                 else {
@@ -982,7 +1033,10 @@ Rectangle {
         vidstreamproperty.updatePreviewFrameSkip(previewSkip)
     }
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
     function retrieveFrameFromStorageCamera(){
         setStillSettings()
         vidstreamproperty.retrieveFrameFromStoreCam()
@@ -1017,6 +1071,10 @@ Rectangle {
     }
 
     function updateScenePreview(str, format, fps) {
+<<<<<<< HEAD
+=======
+
+>>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
         m_Snap = false
         if (!vidFormatChanged){
             vidstreamproperty.width = str.toString().split("x")[0].toString()
@@ -1039,6 +1097,7 @@ Rectangle {
         }
         vidstreamproperty.frameIntervalChanged(fps,Videostreaming.FPS_DEFAULT)
         vidstreamproperty.startAgain()
+
     }
 
     function updateStillPreview(str, format) {
@@ -1155,6 +1214,10 @@ Rectangle {
         }
 
         // Added by Navya - 10 Feb 2020 : Disabling the video record for 320x240 resolution in See3CAM_20CUG camera.
+<<<<<<< HEAD
+=======
+
+>>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
         if(!(vidstreamproperty.width == 320 && vidstreamproperty.height ==240)){
             beforeRecordVideo() // signal to do before starting record video
             // disable capture image when smile trigger key or external camera key when recording video
@@ -1203,6 +1266,7 @@ Rectangle {
         uvc_settings.enabled = true
         uvc_settings.opacity = 1
         afterRecordVideo() // signal to do after finishing record video
+
     }
 
     function extensionTab() {
@@ -1516,7 +1580,10 @@ Rectangle {
     function imageCapture(shotType)
     {
         seqAni.stop()
+<<<<<<< HEAD
         vidstreamproperty.setFpsOnCheckingFormat(stillSettingsRootObject.stillClorComboValue)
+=======
+>>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
         vidstreamproperty.setStillVideoSize(stillSettingsRootObject.stillOutputTextValue, stillSettingsRootObject.stillColorComboIndexValue)
         switch(shotType)
         {

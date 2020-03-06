@@ -135,6 +135,11 @@ Item {
                         id: sensorStandard
                         style:  econRadioButtonStyle
                         text:   qsTr("Standard")
+<<<<<<< HEAD
+=======
+                        tooltip: "When the sensor is operated in standard mode, the dynamic range of
+the device will be in normal range."
+>>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
                         exclusiveGroup: sensorInputGroup
                         activeFocusOnPress: true
                         onClicked: {
@@ -196,6 +201,11 @@ Item {
                         id: cameraModeMaster
                         style:  econRadioButtonStyle
                         text:   qsTr("Master")
+<<<<<<< HEAD
+=======
+                        tooltip: "The application starts streaming the video, when the master mode is
+selected."
+>>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
                         exclusiveGroup: cameraModeGroup
                         activeFocusOnPress: true
                         onClicked: {
@@ -208,7 +218,13 @@ Item {
                     RadioButton {
                         id: cameraModeTrigger
                         style:  econRadioButtonStyle
+<<<<<<< HEAD
                         text: qsTr("Trigger")                       
+=======
+                        text: qsTr("Trigger")
+                        tooltip: "The devices starts streaming when external trigger pulse is applied. There will be no streaming
+when no external trigger pulse is applied."
+>>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
                         exclusiveGroup: cameraModeGroup
                         activeFocusOnPress: true
                         onClicked: {
@@ -237,7 +253,13 @@ Item {
                     RadioButton {
                         id: specialModeNormal
                         style:  econRadioButtonStyle
+<<<<<<< HEAD
                         text:   qsTr("Normal")                     
+=======
+                        text:   qsTr("Normal")
+                        tooltip: "In this mode, the normal unprocessed UYVY image stream from the
+camera."
+>>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
                         exclusiveGroup: specialModeGroup
                         activeFocusOnPress: true
                         onClicked: {
@@ -250,7 +272,13 @@ Item {
                     RadioButton {
                         id: specialModeGreyscale
                         style:  econRadioButtonStyle
+<<<<<<< HEAD
                         text: qsTr("Greyscale")                      
+=======
+                        text: qsTr("Greyscale")
+                        tooltip: "In this mode, the normal preview is desaturated, and the image
+stream is composed of grey shades"
+>>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
                         exclusiveGroup: specialModeGroup
                         activeFocusOnPress: true
                         onClicked: {
@@ -279,6 +307,10 @@ Item {
                         id: flipCtrlHorizotal
                         activeFocusOnPress : true
                         text: "Horizontal"
+<<<<<<< HEAD
+=======
+                        tooltip: "This mode flips the preview left or right"
+>>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
                         style: econCheckBoxStyle
                         onClicked:{
                             defaultValue.enabled = true
@@ -293,6 +325,10 @@ Item {
                         id: flipCtrlVertical
                         activeFocusOnPress : true
                         text: "Vertical"
+<<<<<<< HEAD
+=======
+                        tooltip: "This mode flips the preview vertically up or down."
+>>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
                         style: econCheckBoxStyle
                         onClicked:{
                             defaultValue.enabled = true
@@ -321,7 +357,13 @@ Item {
                     RadioButton {
                         exclusiveGroup: roiExpogroup
                         id: autoexpCentered
+<<<<<<< HEAD
                         text: "Centered"                   
+=======
+                        text: "Centered"
+                        tooltip: "In this mode, the centered region-based exposure value will be
+applied to the frame."
+>>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
                         activeFocusOnPress: true
                         style: econRadioButtonStyle
                         opacity: enabled ? 1 : 0.1
@@ -340,7 +382,13 @@ Item {
                     RadioButton {
                         exclusiveGroup: roiExpogroup
                         id: autoexpManual
+<<<<<<< HEAD
                         text: "Manual"                       
+=======
+                        text: "Manual"
+                        tooltip: "In this mode, you can select the ROI and at that region, the exposure
+value will be applied to the entire frame."
+>>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
                         activeFocusOnPress: true
                         style: econRadioButtonStyle
                         opacity: enabled ? 1 : 0.1
@@ -528,6 +576,10 @@ Item {
                         exclusiveGroup: lscMode
                         id: warmWhiteMode
                         text: "Warm White"
+<<<<<<< HEAD
+=======
+                        tooltip: "This Lens shading correction setting should be used when the scene is at 2700K to 3000K color temperature range."
+>>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
                         activeFocusOnPress: true
                         style: econRadioButtonStyle
                         opacity: enabled ? 1 : 0.1
@@ -542,6 +594,10 @@ Item {
                         exclusiveGroup: lscMode
                         id: brightWhiteMode
                         text: "Bright  White"
+<<<<<<< HEAD
+=======
+                        tooltip: " This Lens shading correction setting should be used when the scene is at 3100K to 4500K color temperature range."
+>>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
                         activeFocusOnPress: true
                         style: econRadioButtonStyle
                         opacity: enabled ? 1 : 0.1
@@ -556,6 +612,10 @@ Item {
                         exclusiveGroup: lscMode
                         id: dayLightMode
                         text: "Day Light"
+<<<<<<< HEAD
+=======
+                        tooltip: " This Lens shading correction setting should be used when scene is at 4600K to 6500K color temperature range"
+>>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
                         activeFocusOnPress: true
                         style: econRadioButtonStyle
                         opacity: enabled ? 1 : 0.1
@@ -586,6 +646,11 @@ Item {
                         exclusiveGroup: antiFlickerModegroup
                         id: antiFlickerModeAuto
                         text: "Auto"
+<<<<<<< HEAD
+=======
+                        tooltip: "In auto mode, the device will automatically switch between the flicker
+frequencies if the flicker is detected in preview."
+>>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
                         activeFocusOnPress: true
                         style: econRadioButtonStyle
                         opacity: enabled ? 1 : 0.1
@@ -600,6 +665,11 @@ Item {
                         exclusiveGroup: antiFlickerModegroup
                         id: antiFlickerModeManual
                         text: "Manual"
+<<<<<<< HEAD
+=======
+                        tooltip: "In manual mode, the flicker frequency must be chosen manually to
+avoid the flickering in the preview."
+>>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
                         activeFocusOnPress: true
                         style: econRadioButtonStyle
                         opacity: enabled ? 1 : 0.1

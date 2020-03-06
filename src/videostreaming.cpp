@@ -396,16 +396,24 @@ void FrameRenderer::drawYUYVBUffer(){
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, mIndicesData);
         }
         renderyuyvMutex.unlock();
+<<<<<<< HEAD
     }
     else{
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, mIndicesData);
     }
+=======
+    }
+    else{
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, mIndicesData);
+    }
+>>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
     m_shaderProgram->disableAttributeArray(0);
     m_shaderProgram->disableAttributeArray(1);
     // Not strictly needed for this example, but generally useful for when
     // mixing with raw OpenGL.
     m_window->resetOpenGLState();
 }
+<<<<<<< HEAD
 
 /**
  * @brief FrameRenderer::drawUYVYBUffer - draw uyvy buffer
@@ -430,6 +438,32 @@ void FrameRenderer::drawUYVYBUffer(){
 
     if(renderyuyvMutex.tryLock()){
 
+=======
+
+/**
+ * @brief FrameRenderer::drawUYVYBUffer - draw uyvy buffer
+ */
+void FrameRenderer::drawUYVYBUffer(){
+
+    int skipFrames = 4;
+    m_shaderProgram->bind();
+    glVertexAttribPointer(mPositionLoc, 3, GL_FLOAT, false, 12, mVerticesDataPosition);
+    glVertexAttribPointer(mTexCoordLoc, 2, GL_FLOAT, false, 8, mVerticesDataTextCord);
+
+    m_shaderProgram->enableAttributeArray(0);
+    m_shaderProgram->enableAttributeArray(1);
+
+    // set active texture and give input y buffer
+    glActiveTexture(GL_TEXTURE1);
+    glUniform1i(samplerLocUYVY, 1);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    if(renderyuyvMutex.tryLock()){
+
+>>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
         // Added by Navya -- 18 Sep 2019
         // Skipped frames inorder to avoid green strips in streaming while switching resolution or capturing images continuosly.
         if((currentlySelectedEnumValue == CommonEnums::ECAM22_USB) |(currentlySelectedEnumValue == CommonEnums::SEE3CAM_20CUG)){
@@ -464,6 +498,7 @@ void FrameRenderer::drawY8BUffer(){
     m_shaderProgram->bind();
     glVertexAttribPointer(mPositionLoc, 3, GL_FLOAT, false, 12, mVerticesDataPosition);
     glVertexAttribPointer(mTexCoordLoc, 2, GL_FLOAT, false, 8, mVerticesDataTextCord);
+<<<<<<< HEAD
 
     m_shaderProgram->enableAttributeArray(0);
     m_shaderProgram->enableAttributeArray(1);
@@ -489,6 +524,33 @@ void FrameRenderer::drawY8BUffer(){
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, mIndicesData);
     }
 
+=======
+
+    m_shaderProgram->enableAttributeArray(0);
+    m_shaderProgram->enableAttributeArray(1);
+
+    // set active texture and give input y buffer
+    glActiveTexture(GL_TEXTURE1);
+    glUniform1i(samplerLocGREY,1);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    if(renderyuyvMutex.tryLock()){
+        if (greyBuffer != NULL){
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, videoResolutionwidth ,videoResolutionHeight, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, greyBuffer);
+        }
+        if(gotFrame && !updateStop){
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, mIndicesData);
+        }
+        renderyuyvMutex.unlock();
+    }
+    else{
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, mIndicesData);
+    }
+
+>>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
     m_shaderProgram->disableAttributeArray(0);
     m_shaderProgram->disableAttributeArray(1);
     // Not strictly needed for this example, but generally useful for when
@@ -580,7 +642,10 @@ void FrameRenderer::shaderRGB(){
 
         mPositionLoc = m_shaderProgram->attributeLocation("a_position");
         mTexCoordLoc = m_shaderProgram->attributeLocation("a_texCoord");
+<<<<<<< HEAD
 
+=======
+>>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
 
         /*********** Y-Texture**************/
         glEnable(GL_TEXTURE_2D);
@@ -821,6 +886,10 @@ void FrameRenderer::shaderUYVY(){
         updateStop = true;
     }
 }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
 /**
 * paint in Quick painted item (qml)
 */
@@ -3192,6 +3261,11 @@ void Videostreaming::recordBegin(int videoEncoderType, QString videoFormatType, 
         }
     }
 }
+<<<<<<< HEAD
+=======
+}
+
+>>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
 void Videostreaming::recordStop() {    
     emit videoRecord(fileName);
     m_VideoRecord = false;

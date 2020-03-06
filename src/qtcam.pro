@@ -50,6 +50,10 @@ SOURCES += main.cpp \
     see3camcu55_mh.cpp \
     see3cam_20cug.cpp \
     see3cam_cu22.cpp
+<<<<<<< HEAD
+=======
+
+>>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
 
 # Installation path
 # target.path =
@@ -98,7 +102,11 @@ HEADERS += \
     alsa.h\
     fscam_cu135.h\
     see3camcu55_mh.h \
+<<<<<<< HEAD
     see3cam_20cug.h  \
+=======
+    see3cam_20cug.h \
+>>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
     see3cam_cu22.h
 
 
