@@ -1,6 +1,6 @@
 import QtQuick 2.0
 import QtQuick.Controls 1.1
-import QtQuick.Controls.Styles 1.4
+import QtQuick.Controls.Styles 1.1
 import QtQuick.Dialogs 1.1
 import econ.camera.uvcsettings 1.0
 import econ.camera.fscamcu135 1.0
@@ -242,7 +242,6 @@ Item {
                         id: effectNormal
                         style:  econRadioButtonStyle
                         text:   qsTr("Normal")
-                        tooltip: "In this mode, the normal unprocessed UYVY or MJPEG image stream from the camera"
                         exclusiveGroup: effectInputGroup
                         activeFocusOnPress: true
                         onClicked: {
@@ -256,8 +255,6 @@ Item {
                         id: effectBW
                         style:  econRadioButtonStyle
                         text: qsTr("Black and White")
-                        tooltip: "In this mode, thresholding is applied to the normal preview
-and the image stream is composed of black and white pixels"
                         exclusiveGroup: effectInputGroup
                         activeFocusOnPress: true
                         onClicked: {
@@ -271,7 +268,6 @@ and the image stream is composed of black and white pixels"
                         id: effectNegative
                         style:  econRadioButtonStyle
                         text: qsTr("Negative")
-                        tooltip: "In this mode, the normal preview is color inversed"
                         exclusiveGroup: effectInputGroup
                         activeFocusOnPress: true
                         onClicked: {
@@ -286,8 +282,6 @@ and the image stream is composed of black and white pixels"
                         id: effectGrayscale
                         style:  econRadioButtonStyle
                         text: qsTr("Grayscale")
-                        tooltip: "In this mode, the normal preview is desaturated, and the image
-stream is composed of gray shades"
                         exclusiveGroup: effectInputGroup
                         activeFocusOnPress: true
                         onClicked: {
@@ -301,8 +295,6 @@ stream is composed of gray shades"
                         id: effectSketch
                         style:  econRadioButtonStyle
                         text: qsTr("Sketch")
-                        tooltip: "In this mode, an effect of edge dominant image stream useful for edge-
-detection is produced"
                         exclusiveGroup: effectInputGroup
                         activeFocusOnPress: true
                         onClicked: {
@@ -330,9 +322,7 @@ detection is produced"
                     RadioButton {
                         id: sceneNormal
                         style:  econRadioButtonStyle
-                        text:   qsTr("Normal")
-                        tooltip: "In this mode, the normal unprocessed UYVY or MJPEG image stream
-from the camera"
+                        text:   qsTr("Normal")                      
                         exclusiveGroup: sceneInputGroup
                         activeFocusOnPress: true
                         onClicked: {
@@ -346,8 +336,6 @@ from the camera"
                         id: sceneDoc
                         style:  econRadioButtonStyle
                         text: qsTr("Document")
-                        tooltip: "In this mode, the contrast between letters and background is
-increased to make it easier to read black writings on white paper."
                         exclusiveGroup: sceneInputGroup
                         activeFocusOnPress: true
                         onClicked: {
@@ -384,7 +372,6 @@ increased to make it easier to read black writings on white paper."
                         maximumValue: denoiseMax
                         onValueChanged:  {
                             deNoiseTextField.text = deNoiseSlider.value
-
                             if(skipUpdateUIDenoise){
                                 fscamcu135.setDenoiseValue(deNoiseSlider.value)
                             }
@@ -400,9 +387,7 @@ increased to make it easier to read black writings on white paper."
                         style: econTextFieldStyle
                         validator: IntValidator {bottom: deNoiseSlider.minimumValue; top: deNoiseSlider.maximumValue}
                         onTextChanged: {
-
                             if(text.length > 0){
-
                                 deNoiseSlider.value = deNoiseTextField.text
                             }
                         }
@@ -471,7 +456,6 @@ increased to make it easier to read black writings on white paper."
                         exclusiveGroup: iHDRgroup
                         id: hdrOff
                         text: "Off"
-                        tooltip: "Both modes will be off in this case"
                         activeFocusOnPress: true
                         style: econRadioButtonStyle
                         onClicked:{
@@ -486,7 +470,6 @@ increased to make it easier to read black writings on white paper."
                         exclusiveGroup: iHDRgroup
                         id:hdrAuto
                         text: "Auto"
-                        tooltip: "In auto mode, the on-board image processor decides the factor of HDR"
                         activeFocusOnPress: true
                         style: econRadioButtonStyle
                         onClicked: {
@@ -501,7 +484,6 @@ increased to make it easier to read black writings on white paper."
                         exclusiveGroup: iHDRgroup
                         id: hdrManual
                         text: "Manual"
-                        tooltip: "In manual mode, you can select the intensity at which HDR must be applied"
                         activeFocusOnPress: true
                         style: econRadioButtonStyle
                         onClicked:{
@@ -570,7 +552,6 @@ increased to make it easier to read black writings on white paper."
                             id: streamMasterOnDemand
                             checked:false
                             text: "Master"                    // We need to send "queryNext" hid command every time. It gives one frame at a time
-                            tooltip: "After choosing master mode, the application starts video streaming. This is a simple mode of operation for the camera without any external trigger capability. "
                             activeFocusOnPress: true          // grabPreviewFrame
                             style: econRadioButtonStyle
                             onClicked:{
@@ -592,7 +573,6 @@ increased to make it easier to read black writings on white paper."
                                 exclusiveGroup: streamModeGroup  // We need to send commands for storeframe and grab frame
                                 id: streamSwTrigger
                                 text: "Software Trigger Mode"
-                                tooltip: "In software trigger mode, the host application request to store the current frame into the camera.Then the application will request camera to retrieve the stored frame."
                                 activeFocusOnPress: true
                                 style: econRadioButtonStyle
                                 onClicked: {           
@@ -615,7 +595,6 @@ increased to make it easier to read black writings on white paper."
                                 id: swTrigger
                                 activeFocusOnPress : true
                                 text: "Grab"
-                                tooltip: "While pressing the Grab button, the host application requests the camera to store and retrieve the frame sequentially."
                                 style: econButtonStyle
                                 opacity: streamSwTrigger.checked ? 1 : 0.1
                                 implicitHeight: 20
@@ -635,7 +614,6 @@ increased to make it easier to read black writings on white paper."
                                 exclusiveGroup: streamModeGroup
                                 id: streamHwTrigger
                                 text: "Hardware Trigger Mode"
-                                tooltip: "In hardware trigger, the frame will be out only when external hardware pulses are given to PIN 2 of CN6."
                                 activeFocusOnPress: true
                                 style: econRadioButtonStyle
                                 onClicked: {                            
@@ -670,7 +648,6 @@ increased to make it easier to read black writings on white paper."
                             id: flipCtrlHorizotal
                             activeFocusOnPress : true
                             text: "Horizontal"
-                            tooltip: "This control flips the preview left or right."
                             style: econCheckBoxStyle
                             onClicked:{
                                 fscamcu135.setOrientation(flipCtrlHorizotal.checked, flipCtrlVertical.checked)
@@ -683,7 +660,6 @@ increased to make it easier to read black writings on white paper."
                             id: flipCtrlVertical
                             activeFocusOnPress : true
                             text: "Vertical"
-                            tooltip: "This control flips the preview up or down."
                             style: econCheckBoxStyle
                             onClicked:{
                                 fscamcu135.setOrientation(flipCtrlHorizotal.checked, flipCtrlVertical.checked)
@@ -826,8 +802,6 @@ increased to make it easier to read black writings on white paper."
                             id: autoexpFull
                             text: "Full"
                             checked:true
-                            tooltip: "In this mode, the full region-based exposure value will be applied to the
-  frame."
                             activeFocusOnPress: true
                             style: econRadioButtonStyle
                             opacity: enabled ? 1 : 0.1
@@ -847,8 +821,6 @@ increased to make it easier to read black writings on white paper."
                             exclusiveGroup: roiExpogroup
                             id: autoexpManual
                             text: "Manual"
-                            tooltip: "In this mode, you can select the ROI and at that region the exposure
-  value will be applied to the entire frame"
                             activeFocusOnPress: true
                             style: econRadioButtonStyle
                             opacity: enabled ? 1 : 0.1
@@ -927,8 +899,6 @@ increased to make it easier to read black writings on white paper."
                             id: exposureCompSet
                             activeFocusOnPress : true
                             text: "Set"
-                            tooltip: "You can set the required exposure compensation value by changing the
-    value in the text box and click the Set button"
                             style: econButtonStyle
                             enabled: true
                             opacity: 1
@@ -1013,7 +983,6 @@ increased to make it easier to read black writings on white paper."
                             exclusiveGroup: faceRectGroup
                             id: faceRectEnable
                             text: "Enable"
-                            tooltip: "Will enable the overlay rectangle around faces"
                             activeFocusOnPress: true
                             style: econRadioButtonStyle
                             onClicked:{
@@ -1027,7 +996,6 @@ increased to make it easier to read black writings on white paper."
                             exclusiveGroup: faceRectGroup
                             id:faceRectDisable
                             text: "Disable"
-                             tooltip: "Will disable the overlay rectangle"
                             activeFocusOnPress: true
                             style: econRadioButtonStyle
                             onClicked: {
@@ -1044,8 +1012,6 @@ increased to make it easier to read black writings on white paper."
                             id: faceDetectEmbedData
                             activeFocusOnPress : true
                             text: "Embed \nData"
-                            tooltip: "When embed data option is selected, the last section of the frame will be replaced
-    with face details"
                             style: econCheckBoxTextWrapModeStyle
                             enabled: faceRectEnable.checked ? true : false
                             opacity: enabled ? 1 : 0.1
@@ -1088,7 +1054,6 @@ increased to make it easier to read black writings on white paper."
                             exclusiveGroup: smileDetectGroup
                             id: smileDetectEnable
                             text: "Enable"
-                            tooltip: "Enable the smile detection"
                             activeFocusOnPress: true
                             style: econRadioButtonStyle
                             onClicked:{
@@ -1102,7 +1067,6 @@ increased to make it easier to read black writings on white paper."
                             exclusiveGroup: smileDetectGroup
                             id:smileDetectDisable
                             text: "Disable"
-                            tooltip: "Will disable the smile detection"
                             activeFocusOnPress: true
                             style: econRadioButtonStyle
                             onClicked: {
@@ -1119,8 +1083,6 @@ increased to make it easier to read black writings on white paper."
                             id: smileDetectEmbedData
                             activeFocusOnPress : true
                             text: "Embed Data"
-                            tooltip: "When embed data option is selected, the last section of the frame will be replaced
-    with smile details"
                             style: econCheckBoxStyle
                             enabled: smileDetectEnable.checked ? true : false
                             opacity: enabled ? 1 : 0.1
@@ -1487,7 +1449,6 @@ increased to make it easier to read black writings on white paper."
 
         // Get the control values in extension settings
         function getValuesFromCamera(){
-
             scenemodeTimer.start()
             fscamcu135.getEffectMode()
             fscamcu135.getSceneMode()
@@ -1594,7 +1555,6 @@ increased to make it easier to read black writings on white paper."
             onSerialNumber:{
                 displayMessageBox(qsTr("Serial Number"), serialNumber)
             }
-
         }
 
         function getSerialNumber() {
@@ -1625,7 +1585,6 @@ increased to make it easier to read black writings on white paper."
                 currentEffectModeValue(effectMode)
             }
             onDenoiseValue:{
-
                 skipUpdateUIDenoise = false
                 deNoiseSlider.value = denoiseVal
                 skipUpdateUIDenoise = true
@@ -1765,7 +1724,6 @@ increased to make it easier to read black writings on white paper."
                     root.imageCapture(CommonEnums.STORECAM_RETRIEVE_SHOT)
                 }else{ // If grab still frame command is failure, then ignore
                     
-
                     root.switchToCamFrameSettings(false)
                     fscamcu135.grabPreviewFrame()
                 }

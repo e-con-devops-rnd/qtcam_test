@@ -170,9 +170,7 @@ Item {
                 RadioButton {
                     id: sceneNormal
                     style:  econRadioButtonStyle
-                    text:   qsTr("Normal")
-                    tooltip: "In this mode, the normal unprocessed UYVY or MJPEG image stream
-from the camera"
+                    text:   qsTr("Normal")                   
                     exclusiveGroup: sceneInputGroup
                     activeFocusOnPress: true                    
                     onClicked: {
@@ -185,9 +183,7 @@ from the camera"
                 RadioButton {
                     id: sceneDoc
                     style:  econRadioButtonStyle
-                    text: qsTr("Document")
-                    tooltip: "In this mode, the contrast between letters and background is
-increased to make it easier to read black writings on white paper."
+                    text: qsTr("Document")               
                     exclusiveGroup: sceneInputGroup
                     activeFocusOnPress: true
                     onClicked: {
@@ -220,9 +216,7 @@ increased to make it easier to read black writings on white paper."
                 RadioButton {
                     id: effectNormal
                     style:  econRadioButtonStyle
-                    text:   qsTr("Normal")
-                    tooltip: "In this mode, the contrast between letters and background is
-increased to make it easier to read black writings on white paper."
+                    text:   qsTr("Normal")                 
                     exclusiveGroup: effectInputGroup
                     activeFocusOnPress: true
                     //checked: true
@@ -237,9 +231,7 @@ increased to make it easier to read black writings on white paper."
                 RadioButton {
                     id: effectBW
                     style:  econRadioButtonStyle
-                    text: qsTr("Black and White")
-                    tooltip: "In this mode, thresholding is applied to the normal preview
-and the image stream is composed of black and white pixels"
+                    text: qsTr("Black and White")                  
                     exclusiveGroup: effectInputGroup
                     activeFocusOnPress: true
                     onClicked: {
@@ -253,7 +245,6 @@ and the image stream is composed of black and white pixels"
                     id: effectNegative
                     style:  econRadioButtonStyle
                     text: qsTr("Negative")
-                    tooltip: "In this mode, the normal preview is color inversed"
                     exclusiveGroup: effectInputGroup
                     activeFocusOnPress: true
                     onClicked: {
@@ -267,9 +258,7 @@ and the image stream is composed of black and white pixels"
                 RadioButton {
                     id: effectGrayscale
                     style:  econRadioButtonStyle
-                    text: qsTr("Grayscale")
-                    tooltip: "In this mode, the normal preview is desaturated, and the image
-stream is composed of gray shades"
+                    text: qsTr("Grayscale")                 
                     exclusiveGroup: effectInputGroup
                     activeFocusOnPress: true
                     onClicked: {
@@ -282,9 +271,7 @@ stream is composed of gray shades"
                 RadioButton {
                     id: effectSketch
                     style:  econRadioButtonStyle
-                    text: qsTr("Sketch")
-                    tooltip: "In this mode, an effect of edge dominant image stream useful for edge-
-detection is produced"
+                    text: qsTr("Sketch")                
                     exclusiveGroup: effectInputGroup
                     activeFocusOnPress: true
                     onClicked: {
@@ -314,7 +301,6 @@ detection is produced"
                     exclusiveGroup: afgroup
                     id: radioContin
                     text: "Continuous"
-                    tooltip: "In this mode ,the camera detects the object movements and refocuses accordinglyto keep the object as a tack"
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     opacity: enabled ? 1 : 0.1
@@ -332,7 +318,6 @@ detection is produced"
                     exclusiveGroup: afgroup
                     id: radioOneshot
                     text: "One-Shot"
-                    tooltip: "In this mode,the camera focussed on object once and there is no continuous adjustment"
                     activeFocusOnPress: true
                     style: econRadioButtonStyle                    
                     opacity: enabled ? 1 : 0.1
@@ -376,7 +361,6 @@ detection is produced"
                     exclusiveGroup: afRectGroup
                     id: rectEnable
                     text: "Enable"
-                    tooltip: "Will enable the overlay rectangle around faces"
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked:{
@@ -390,7 +374,6 @@ detection is produced"
                     exclusiveGroup: afRectGroup
                     id:rectDisable
                     text: "Disable"
-                    tooltip: "Will disable the overlay rectangle around faces"
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked: {
@@ -419,7 +402,6 @@ detection is produced"
                     exclusiveGroup: roiAfgroup
                     id: afCentered
                     text: "Centered"
-                    tooltip: "In this mode,the focus point will be in the middle of the frame"
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     opacity: afCentered.enabled ? 1 : 0.1
@@ -439,7 +421,6 @@ detection is produced"
                     exclusiveGroup: roiAfgroup
                     id: afManual
                     text: "Manual"
-                    tooltip: "In this mode,user the select the region to be focussed by clicking on the preview "
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     opacity: afManual.enabled ? 1 : 0.1
@@ -496,7 +477,6 @@ detection is produced"
                     exclusiveGroup: iHDRgroup
                     id: hdrOff
                     text: "Off"
-                    tooltip: "Both modes will be off in this case"
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked:{
@@ -511,7 +491,6 @@ detection is produced"
                     exclusiveGroup: iHDRgroup
                     id:hdrAuto
                     text: "Auto"
-                    tooltip: "In auto mode, the on-board image processor decides the factor of HDR"
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked: {
@@ -526,7 +505,6 @@ detection is produced"
                     exclusiveGroup: iHDRgroup
                     id: hdrManual
                     text: "Manual"
-                    tooltip: "In manual mode, you can select the intensity at which HDR must be applied"
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked:{
@@ -596,7 +574,6 @@ detection is produced"
                     exclusiveGroup: streamModeGroup
                     id: streamMaster
                     text: "Master"
-                    tooltip: "After choosing master mode, the application starts video streaming. This is a simple mode of operation for the camera without any external trigger capability."
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked:{
@@ -610,7 +587,6 @@ detection is produced"
                     exclusiveGroup: streamModeGroup
                     id: streamTrigger
                     text: "Trigger"
-                    tooltip: "In trigger mode, Frames will be out only when external hardware pulses are given to PIN 5 of CN3."
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked: {
@@ -683,45 +659,41 @@ detection is produced"
                   spacing:38
                   ExclusiveGroup { id: roiExpogroup }
 
-                RadioButton {
-                    exclusiveGroup: roiExpogroup
-                    id: autoexpFull
-                    text: "Full"
-                    tooltip: "In this mode, the full region-based exposure value will be applied to the
-frame."
-                    activeFocusOnPress: true
-                    style: econRadioButtonStyle
-                    opacity: enabled ? 1 : 0.1
-                    // setROIAutoExposure() args:  mode, videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord, WinSize]
-                    // videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord - these parameters are required only when click in preview]
-                    // winSize is required only for manual mode
-                    onClicked: {
-                        seecam130A.setROIAutoExposure(See3Cam130A.AutoExpFull, 0, 0, 0, 0, 0);
-                        autoExpoWinSizeCombo.enabled = false
-                    }
-                    Keys.onReturnPressed: {
-                        seecam130A.setROIAutoExposure(See3Cam130A.AutoExpFull, 0, 0, 0, 0, 0);
-                        autoExpoWinSizeCombo.enabled = false
-                    }
-                }
-                RadioButton {
-                    exclusiveGroup: roiExpogroup
-                    id: autoexpManual
-                    text: "Manual"
-                    tooltip: "In this mode, you can select the ROI and at that region the exposure
-value will be applied to the entire frame"
-                    activeFocusOnPress: true
-                    style: econRadioButtonStyle
-                    opacity: enabled ? 1 : 0.1
-                    onClicked: {
-                        seecam130A.setROIAutoExposure(See3Cam130A.AutoExpManual, 0, 0, 0, 0, 0);
-                        autoExpoWinSizeCombo.enabled = true
-                    }
-                    Keys.onReturnPressed: {
-                        seecam130A.setROIAutoExposure(See3Cam130A.AutoExpManual, 0, 0, 0, 0, 0);
-                        autoExpoWinSizeCombo.enabled = true
-                    }
-                }
+                  RadioButton {
+                      exclusiveGroup: roiExpogroup
+                      id: autoexpFull
+                      text: "Full"
+                      activeFocusOnPress: true
+                      style: econRadioButtonStyle                      
+                      opacity: enabled ? 1 : 0.1
+                      // setROIAutoExposure() args:  mode, videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord, WinSize]
+                      // videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord - these parameters are required only when click in preview]
+                      // winSize is required only for manual mode
+                      onClicked: {
+                          seecam130A.setROIAutoExposure(See3Cam130A.AutoExpFull, 0, 0, 0, 0, 0);
+                          autoExpoWinSizeCombo.enabled = false
+                      }
+                      Keys.onReturnPressed: {
+                          seecam130A.setROIAutoExposure(See3Cam130A.AutoExpFull, 0, 0, 0, 0, 0);
+                          autoExpoWinSizeCombo.enabled = false
+                      }
+                  }
+                  RadioButton {
+                      exclusiveGroup: roiExpogroup
+                      id: autoexpManual
+                      text: "Manual"
+                      activeFocusOnPress: true
+                      style: econRadioButtonStyle                      
+                      opacity: enabled ? 1 : 0.1
+                      onClicked: {
+                          seecam130A.setROIAutoExposure(See3Cam130A.AutoExpManual, 0, 0, 0, 0, 0);
+                          autoExpoWinSizeCombo.enabled = true
+                      }
+                      Keys.onReturnPressed: {
+                          seecam130A.setROIAutoExposure(See3Cam130A.AutoExpManual, 0, 0, 0, 0, 0);
+                          autoExpoWinSizeCombo.enabled = true
+                      }
+                  }
             }
 
             ComboBox
@@ -913,7 +885,6 @@ value in the text box and click the Set button"
                     id: flipCtrlHorizotal
                     activeFocusOnPress : true
                     text: "Horizontal"
-                    tooltip: "This control flips the preview left or right."
                     style: econCheckBoxStyle
                     onClicked:{
                         seecam130A.setFlipMode(flipCtrlHorizotal.checked, flipCtrlVertical.checked)
@@ -926,7 +897,6 @@ value in the text box and click the Set button"
                     id: flipCtrlVertical
                     activeFocusOnPress : true
                     text: "Vertical"
-                    tooltip: "This control flips the preview up or down."
                     style: econCheckBoxStyle
                     onClicked:{
                         seecam130A.setFlipMode(flipCtrlHorizotal.checked, flipCtrlVertical.checked)
@@ -955,7 +925,6 @@ value in the text box and click the Set button"
                     exclusiveGroup: faceRectGroup
                     id: faceRectEnable
                     text: "Enable"
-                    tooltip: "This will enable the overlay rectangle around faces"
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked:{
@@ -969,7 +938,6 @@ value in the text box and click the Set button"
                     exclusiveGroup: faceRectGroup
                     id:faceRectDisable
                     text: "Disable"
-                    tooltip: "This will disable the overlay rectangle around faces"
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked: {
@@ -985,9 +953,7 @@ value in the text box and click the Set button"
                 CheckBox {
                     id: faceDetectEmbedData
                     activeFocusOnPress : true
-                    text: "Embed \nData"
-                    tooltip: "When embed data option is selected, the last section of the frame will be replaced
-with face details"
+                    text: "Embed \nData"                  
                     style: econCheckBoxTextWrapModeStyle
                     enabled: faceRectEnable.checked ? true : false
                     opacity: enabled ? 1 : 0.1
@@ -1031,7 +997,6 @@ with face details"
                     exclusiveGroup: smileDetectGroup
                     id: smileDetectEnable
                     text: "Enable"
-                    tooltip: "Enable the smile detection"
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked:{
@@ -1045,7 +1010,6 @@ with face details"
                     exclusiveGroup: smileDetectGroup
                     id:smileDetectDisable
                     text: "Disable"
-                    tooltip: "Disable the smile detection"
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked: {
@@ -1062,9 +1026,7 @@ with face details"
                 CheckBox {
                     id: smileDetectEmbedData
                     activeFocusOnPress : true
-                    text: "Embed Data"
-                    tooltip: "When embed data option is selected, the last section of the frame will be replaced
-with smile details"
+                    text: "Embed Data"                  
                     style: econCheckBoxStyle
                     enabled: smileDetectEnable.checked ? true : false
                     opacity: enabled ? 1 : 0.1

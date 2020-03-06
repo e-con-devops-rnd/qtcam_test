@@ -348,6 +348,7 @@ bool FSCAM_CU135::setStreamMode(camStreamMode streamMode)
     // hid validation
     if(uvccamera::hid_fd < 0)
     {
+
         return false;
     }
     //Initialize buffers
@@ -360,8 +361,8 @@ bool FSCAM_CU135::setStreamMode(camStreamMode streamMode)
 
     // send request and get reply from camera
     if(uvc.sendHidCmd(g_out_packet_buf, g_in_packet_buf, BUFFER_LENGTH)){
-
         if (g_in_packet_buf[6]==SET_FAIL) {
+
             return false;
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_FSCAM_CU135 &&
             g_in_packet_buf[1]==SET_STREAM_MODE_FSCAM_CU135 &&
@@ -370,9 +371,7 @@ bool FSCAM_CU135::setStreamMode(camStreamMode streamMode)
             return true;
         }
     }
-
     return false;
-
 }
 
 bool FSCAM_CU135::getStreamMode()

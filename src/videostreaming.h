@@ -31,7 +31,6 @@
 #include <libv4l2.h>
 #include <QMutex>
 #include <QList>
-
 #include <QStandardPaths>
 #include <turbojpeg.h>
 #include "v4l2-api.h"
@@ -69,7 +68,7 @@ public:
      * @param *x - to store x position
      * @param *y - to store y position
      * @param *destWindowWidth - to store target window viewport width
-     * @param *destWindowHeight - to store target window viewport height 
+     * @param *destWindowHeight - to store target window viewport height
      */
     void calculateViewport(int vidResolutionWidth, int  vidResolutionHeight, int windowHeight, int windowWidth, int *x, int *y, int *destWindowWidth, int *destWindowHeight);
 
@@ -78,6 +77,16 @@ public:
 
     // Convert YUYV  to RGB and draw
     void drawYUYVBUffer();
+    void drawUYVYBUffer();
+    void drawY8BUffer();
+    void clearShader();
+    void changeShader();
+    void shaderRGB();
+    void shaderYUYV();
+    void shaderUYVY();
+    void shaderY8();
+    void getDisplayRenderArea(int *displayX, int *displayY, int *destWidth, int *destHeight);
+    void updateBuffer();
 
     // opengl context
     QOpenGLContext *m_context;
@@ -86,7 +95,7 @@ public:
     uint8_t *yBuffer;
     uint8_t *uBuffer;
     uint8_t *vBuffer;
-    uint8_t *yuvBuffer;
+    uint8_t *yuvBuffer,*greyBuffer;
       __u32 xcord,ycord;
     unsigned frame;
 
@@ -124,7 +133,6 @@ public slots:
     void paint();
 
     // spilit yuyv buffer to y,u,v buffer
-    void fillBuffer();
     void selectedCameraEnum(CommonEnums::ECameraNames selectedDeviceEnum);
 
 public:
@@ -137,9 +145,8 @@ public:
     bool updateStop;
     bool getPreviewFrameWindow;
 
-    // shader programs
-    QOpenGLShaderProgram *m_programRGB; // RGBA shader
-    QOpenGLShaderProgram *m_programYUYV; // YUYV shader
+    // shader program
+    QOpenGLShaderProgram *m_shaderProgram;    
 
 private:    
     qreal m_t;
@@ -150,12 +157,10 @@ private:
     int mPositionLoc;
     int mTexCoordLoc;
 
-    // uinform location
-    GLint samplerLocY;
-    GLint samplerLocU;
-    GLint samplerLocV;
-
+    GLint samplerLocYUYV;
+    GLint samplerLocUYVY;
     GLint samplerLocRGB;
+    GLint samplerLocGREY;
 
      static CommonEnums::ECameraNames currentlySelectedEnumValue;
 };
@@ -175,7 +180,7 @@ public:
     
     qreal t() const { return m_t; }
     void setT(qreal t);
-    void fillRenderBuffer();
+    void updateBuffer();
 
     QString fileName;
 
@@ -217,7 +222,7 @@ public:
     bool retrieveFrame;
 
     bool getPreviewWindow;
-    bool frameArrives;
+    bool frameArrives,frameMjpeg;
 
     // get current resoution set in v4l2
     QString getResoultion();
@@ -256,10 +261,16 @@ public:
     tjscalingfactor sf;
 
     uint frameToSkip;
-
+    int frame;
     uint previewFrameSkipCount;
     uint previewFrameToSkip;
     bool skippingPreviewFrame;
+    enum fpsChange {
+        FPS_30 = 0x00,
+        FPS_60 = 0x01,
+        FPS_DEFAULT =0x02
+    };
+    Q_ENUMS(fpsChange)
 
 private:
     qreal m_t;
@@ -387,7 +398,7 @@ private:
     bool stopRenderOnMakeShot;
     bool onY12Format;
     bool windowResized;
-    uint resizedWidth,resizedHeight;
+    uint resizedWidth,resizedHeight,changeFPSForHyperyon;
 
 
 private slots:
@@ -399,6 +410,8 @@ public slots:
     void sync();
     void cleanup();   
     void setPreviewBgrndArea(int width, int height, bool sidebarAvailable);
+    // Added by Sankari: 21 May 2019, Called this when sidebar opened/closed
+    void sidebarStateChanged();
     void enumerateAudioProperties();
     void setChannelCount(uint index);
     void setSampleRate(uint index);
@@ -471,7 +484,6 @@ public slots:
      * @brief To stop the camera preview
      */
     void stopCapture();
-
     void resolnSwitch();
 
     /**
@@ -547,7 +559,7 @@ public slots:
      */
     void selectMenuIndex(unsigned int id, int value);
 
-
+    void setFpsOnCheckingFormat(QString stillFmt);
     void vidCapFormatChanged(QString idx);
     void setStillVideoSize(QString stillValue,QString stillFormat);
     void lastPreviewResolution(QString resolution,QString format);
@@ -555,12 +567,12 @@ public slots:
     void lastFPS(QString fps);
     void formatSaveSuccess(bool burstFlag);
     void updateFrameInterval(QString pixelFormat, QString frameSize);
- 
+
     /**
      * @brief frameIntervalChanged
      * @param idx
      */
-    void frameIntervalChanged(int idx);
+    void frameIntervalChanged(int idx ,uint fpsSetForHyperyon);
 
     void recordVideo();
       /**
@@ -616,9 +628,6 @@ public slots:
 
 signals:
 
-    // signal to qml that ubuntu version selected is less than 16.04
-    void ubuntuVersionSelectedLessThan16();
-
     // from qml file , rendering animation duration t changed
     void tChanged();
 
@@ -643,6 +652,7 @@ signals:
     void refreshDevice();
     void addControls();
     void rcdStop(QString recordFail);
+    void videoRecordInvalid(QString noVideo);
     void videoRecord(QString fileName);
     void enableRfRectBackInPreview();
     void enableFactRectInPreview();
@@ -659,6 +669,7 @@ signals:
     // To get FPS list
     void sendFPSlist(QString fpsList);
      void signalTograbPreviewFrame(bool retrieveframe,bool InFailureCase);
+     void signalToSwitchResoln(bool switchResoln);
 };
 
 #endif // VIDEOSTREAMING_H

@@ -36,4 +36,3 @@ void See3CAM_CU50::getTorchLevel() {
     emit updateTorchCheckBox(tmpStr);
 }
 
-

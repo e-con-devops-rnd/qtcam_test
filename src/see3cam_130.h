@@ -281,6 +281,5 @@ public slots:
 
     bool enableDisableFaceRectangle(bool enableFaceRect);
 
-
 };
 #endif // SEE3CAM_130_H

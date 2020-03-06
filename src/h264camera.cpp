@@ -322,10 +322,9 @@ bool H264Camera::setROIAutoExposureMode(QString autoexpROIMode){
  */
 bool H264Camera::getROIAutoExposureMode(uint queryType){
     __u8 expROIMode;
-
+    sleep(1);
     if(getValueCmd(V4L2_CID_XU_EXPOSURE_ROI_MODE, queryType, expROIMode)){
         uint roiMode = expROIMode;
-
         emit roiModeReceived(queryType, roiMode);
         return true;
     }
@@ -353,6 +352,7 @@ bool H264Camera::getROIExposureWindowSize(uint queryType){
 
     if(getValueCmd(V4L2_CID_XU_EXPOSURE_ROI_WINSIZE, queryType, roiWinSize)){
         uint roiWindowSize = roiWinSize;
+
         emit roiWindowSizeReceived(queryType, roiWindowSize);
         return true;
     }

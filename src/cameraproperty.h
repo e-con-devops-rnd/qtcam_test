@@ -68,7 +68,6 @@ public:
     static bool saveLog;
     static int event_fd;
 
-
 private:
     QDir qDir;
     struct v4l2_capability m_querycap;
@@ -149,6 +148,7 @@ public slots:
 
      // open event node file path  - open device event path file Ex: /dev/input/by-path/pci-0000:00:1a.0-usb-0:1.4:1.0-event
     void openEventNode(QString businfo);
+
 
 signals:
 

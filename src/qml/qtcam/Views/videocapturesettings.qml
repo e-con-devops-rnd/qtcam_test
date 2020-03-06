@@ -232,11 +232,9 @@ Item {
                                     root.informVideoColorSpaceChanged()
                                     root.vidFormatChanged = true
                                     JS.videoCaptureFormat = color_comp_box_VideoPin.currentIndex.toString()
-
                                     root.updateVideoResolution(color_comp_box_VideoPin.currentIndex.toString(),frame_rate_box.currentIndex);
                                     root.updateFPS(currentText.toString(), output_size_box_Video.currentText.toString())
                                     root.vidFormatChanged = false
-
                                 }
                             }
                         }
@@ -297,7 +295,6 @@ Item {
                         onCurrentIndexChanged: {
                             if(output_size_box_Video.count > 0){
                                 JS.videoCaptureResolution = output_size_box_Video.currentText.toString();
-
                                 if(outputSizeBox) {
                                     root.updateFPS(color_comp_box_VideoPin.currentText.toString(), currentText.toString())
                                     root.updateScenePreview(output_size_box_Video.currentText.toString(), color_comp_box_VideoPin.currentIndex.toString(),frame_rate_box.currentIndex)      
