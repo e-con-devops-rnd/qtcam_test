@@ -173,7 +173,6 @@ void Cameraproperty::checkforDevice() {
                         deviceNodeMap.insert(deviceIndex,(char*)m_querycap.bus_info);
                         availableCam.append(cameraName);
                         metaCapture = false;
-<<<<<<< HEAD
                     }
 
                     // Added by Navya : 24th Jan 2020
@@ -182,17 +181,6 @@ void Cameraproperty::checkforDevice() {
                     if(!metaCapture){
                         deviceIndex++;
                     }
-=======
-                    }
-
-                    // Added by Navya : 24th Jan 2020
-                    // Increasing the deviceIndex only if the /dev/video node is VideoCapture Node.
-
-                    if(!metaCapture){
-                        deviceIndex++;
-                    }
-
->>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
                     metaCapture = true;
                     close();
 

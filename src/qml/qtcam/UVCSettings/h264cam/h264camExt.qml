@@ -780,16 +780,12 @@ Item {
 
     }
 
-<<<<<<< HEAD
 
-=======
->>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
     function queryForRoiMode(queryType, expMode){
         if(queryType == H264camera.UVC_GET_CUR){
             switch(expMode){
             case H264camera.ROI_FULL:
                 autoexpFull.checked = true
-<<<<<<< HEAD
                 autoexpFull.enabled = true
                 autoexpManual.enabled = true
                 autoexpFull.opacity = 1
@@ -809,20 +805,10 @@ Item {
                 autoexpManual.enabled = false
                 autoexpFull.opacity = 0.1
                 autoexpManual.opacity = 0.1
-=======
-                break
-            case H264camera.ROI_MANUAL:
-                autoexpManual.checked = true
-                break
->>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
             }
         }
     }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 713da3f0d5623e8a33e7a5fcb9e33996059bb1f6
     function queryForWindowSize(queryType, windowSize){
         switch(queryType){
         case H264camera.UVC_GET_CUR:
