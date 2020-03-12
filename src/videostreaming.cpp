@@ -60,6 +60,7 @@
 #define min(a,b) ((a)<(b)?(a):(b))
 #endif
 
+int h264DecodeRet;
 
 QStringListModel Videostreaming::resolution;
 QStringListModel Videostreaming::stillOutputFormat;
@@ -341,6 +342,8 @@ void FrameRenderer::drawRGBBUffer(){
     glTexParameteri(GL_TEXTURE_2D,        GL_TEXTURE_WRAP_S,            GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D,        GL_TEXTURE_WRAP_T,            GL_CLAMP_TO_EDGE);
 
+    glViewport(glViewPortX, glViewPortY, glViewPortWidth, glViewPortHeight);
+
     if(renderyuyvMutex.tryLock()){
         if(rgbaDestBuffer){
             glTexImage2D(GL_TEXTURE_2D, 0,  GL_RGBA, videoResolutionwidth, videoResolutionHeight, 0,GL_RGBA , GL_UNSIGNED_BYTE, rgbaDestBuffer);
@@ -358,6 +361,7 @@ void FrameRenderer::drawRGBBUffer(){
     // Not strictly needed for this example, but generally useful for when
     // mixing with raw OpenGL.
     m_window->resetOpenGLState();
+
 }
 
 /**
@@ -380,13 +384,18 @@ void FrameRenderer::drawYUYVBUffer(){
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
+    glViewport(glViewPortX, glViewPortY, glViewPortWidth, glViewPortHeight);
+
     if(renderyuyvMutex.tryLock()){
 
         // Added by Navya -- 18 Sep 2019
         // Skipped frames inorder to avoid green strips in streaming while switching resolution or capturing images continuosly.
         if((currentlySelectedEnumValue == CommonEnums::SEE3CAM_20CUG)){
             skipFrames = frame;
-        }else{
+        }
+        else if(currentlySelectedEnumValue == CommonEnums::ECAM22_USB && h264DecodeRet<0 )
+             goto skip;
+        else{
             skipFrames = 4;
         }
         if (yuvBuffer != NULL){
@@ -399,6 +408,7 @@ void FrameRenderer::drawYUYVBUffer(){
     }
     else{
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, mIndicesData);
+skip:   renderyuyvMutex.unlock();
     }
     m_shaderProgram->disableAttributeArray(0);
     m_shaderProgram->disableAttributeArray(1);
@@ -427,6 +437,8 @@ void FrameRenderer::drawUYVYBUffer(){
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glViewport(glViewPortX, glViewPortY, glViewPortWidth, glViewPortHeight);
 
     if(renderyuyvMutex.tryLock()){
 
@@ -475,6 +487,8 @@ void FrameRenderer::drawY8BUffer(){
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glViewport(glViewPortX, glViewPortY, glViewPortWidth, glViewPortHeight);
 
     if(renderyuyvMutex.tryLock()){
         if (greyBuffer != NULL){
@@ -850,7 +864,7 @@ void FrameRenderer::paint()
                 windowStatusChanged = false;
             }
         }
-        glViewport(glViewPortX, glViewPortY, glViewPortWidth, glViewPortHeight);
+//        glViewport(glViewPortX, glViewPortY, glViewPortWidth, glViewPortHeight);
         if(renderBufferFormat == CommonEnums::RGB_BUFFER_RENDER){ // RGBA
             drawRGBBUffer();
         }else if(renderBufferFormat == CommonEnums::YUYV_BUFFER_RENDER){ // YUYV
@@ -2047,8 +2061,7 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
             case V4L2_PIX_FMT_H264:{
                 m_renderer->renderBufferFormat = CommonEnums::YUYV_BUFFER_RENDER;
                 // check - decode h264 to yuyv available
-
-                h264Decode->decodeH264(yuv420pdestBuffer, (uint8_t *) inputbuffer, bytesUsed); /* decode h264 to yuv420p */
+                h264DecodeRet = h264Decode->decodeH264(yuv420pdestBuffer, (uint8_t *) inputbuffer, bytesUsed); /* decode h264 to yuv420p */
                 h264Decode->yu12_to_yuyv(yuyvBuffer, yuv420pdestBuffer, width, height); /*yuv420p to yuyv conversion */
                 memcpy(m_renderer->yuvBuffer, yuyvBuffer, width*height*2);
             }

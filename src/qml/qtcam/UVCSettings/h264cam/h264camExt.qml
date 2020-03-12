@@ -38,6 +38,7 @@ Item {
                 h264camId.setROIExposureCoordinates(previewwindowWidth, previewwindowHeight, videoStreamWidth, videoStreamHeight, x, y)
             }
         }
+        //Added by M.VISHNUMURALI :Inorder to enable/disable roiAutoExpoUI according to AutoExpo settings.
         onAutoExposureSelected:
         {
             h264camId.getROIAutoExposureMode(H264camera.UVC_GET_CUR)
@@ -246,6 +247,7 @@ Item {
                             h264camId.setHDRMode(currentIndex)
                         }
                         skipUpdateUIOnHDR = true
+                        //Added by M.VISHNUMURALI :Inorder to enable/disable roiAutoExpoUI according to HDR settings.
                         h264camId.getROIAutoExposureMode(H264camera.UVC_GET_CUR)
                     }
                 }
@@ -780,7 +782,7 @@ Item {
 
     }
 
-
+//Function edited by M.Vishnumurali :For enabling/disabling ui according to AutoExpo and HDR mode
     function queryForRoiMode(queryType, expMode){
         if(queryType == H264camera.UVC_GET_CUR){
             switch(expMode){
@@ -788,24 +790,21 @@ Item {
                 autoexpFull.checked = true
                 autoexpFull.enabled = true
                 autoexpManual.enabled = true
-                autoexpFull.opacity = 1
-                autoexpManual.opacity = 1
                 break
             case H264camera.ROI_MANUAL:
                 autoexpManual.checked = true
                 autoexpFull.enabled = true
                 autoexpManual.enabled = true
-                autoexpFull.opacity = 1
-                autoexpManual.opacity = 1
                 break
             case H264camera.ROI_DISABLE:
                 autoexpFull.checked = false
                 autoexpManual.checked = false
                 autoexpFull.enabled = false
                 autoexpManual.enabled = false
-                autoexpFull.opacity = 0.1
-                autoexpManual.opacity = 0.1
             }
+            //Added by M.Vishnumurali: to reduce opacity when roiui is enabled/disabled
+            autoexpManual.opacity = autoexpManual.enabled ? 1:0.1
+            autoexpFull.opacity = autoexpFull.enabled ? 1:0.1
         }
     }
 
