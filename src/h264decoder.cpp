@@ -20,7 +20,7 @@
 
 #include <QPainter>
 #include "h264decoder.h"
-#include <qdebug.h>
+
 using namespace std;
 
 

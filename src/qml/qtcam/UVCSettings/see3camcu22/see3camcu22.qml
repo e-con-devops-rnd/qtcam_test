@@ -625,6 +625,9 @@ Item {
                         skipUpdateUIOnAntiFlickerMode = true
                     }
                 }
+
+    //Edited by M.Vishnu Murali: Removed Default button due to some issues in See3CAM_CU22
+
                 Row{
                     Button {
                         id: f_wversion_selected130

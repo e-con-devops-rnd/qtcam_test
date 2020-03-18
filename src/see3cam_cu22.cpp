@@ -592,6 +592,12 @@ bool See3CAM_CU22::getAntiFlickerMode()
 }
 
 /**
+ * @brief See3CAM_CU22::setToDefaultValues - set the extension control values to default
+ * @return  true/false
+ */
+//Edited by M.Vishnu Murali(09/03/2020) : Removed function due to some issues in See3CAM_CU22
+
+/**
  * @brief See3CAM_CU22::setDenoiseCtrlMode - set denoise mode into the camera
  * @param deNoiseMode - denoise mode value to set
  * @return true/false
