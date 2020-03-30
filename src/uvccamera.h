@@ -49,7 +49,7 @@
 #define ENABLE_CROPPED_VGA_MODE	0x52
 #define ENABLE_BINNED_VGA_MODE	0x53
 #define GRAB_PREVIEW_FRAME                        0x1A
-#define CAMERA_CONTROL_See3CAM_CU1317       0x95
+#define CAMERA_CONTROL_FSCAM_CU135      0x95
 #define QUERY_NEXT_FRAME                          0x01
 
 
@@ -143,6 +143,7 @@
 
 #define GET_FAIL		0x00
 #define GET_SUCCESS		0x01
+#define GET_INVALID     0x02
 
 /* Ascella camera */
 #define ASCELLA_VID 0x04b4
@@ -247,6 +248,8 @@ signals:
      * @brief currentlySelectedCameraEnum - This signal is used to emit selected camera enum value to camera property.cpp
      */
     void currentlySelectedCameraEnum(CommonEnums::ECameraNames);
+    void serialNumberToCheckUsbSpeed(QString serialnumber);
+
 
 public slots:
 
@@ -285,6 +288,7 @@ public slots:
      * @
      */
     void exitExtensionUnit();
+    QString retrieveSerialNumber();
 
     /**
      * @brief initExtensionUnitAscella
@@ -380,7 +384,7 @@ private:
     uvccamera uvc;
 
 signals:
-    void gpioLevel(unsigned char level);
+    void gpioLevel(unsigned int level);
     void deviceStatus(QString title, QString message);
 
 public:

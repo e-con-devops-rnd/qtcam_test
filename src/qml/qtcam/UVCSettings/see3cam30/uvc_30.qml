@@ -118,7 +118,7 @@ Item {
                 RadioButton {
                     id: sceneNormal
                     style:  econRadioButtonStyle
-                    text:   qsTr("Normal")
+                    text:   qsTr("Normal")                  
                     exclusiveGroup: sceneInputGroup
                     activeFocusOnPress: true
                     onClicked: {
@@ -131,7 +131,7 @@ Item {
                 RadioButton {
                     id: sceneDoc
                     style:  econRadioButtonStyle
-                    text: qsTr("Document")
+                    text: qsTr("Document")                  
                     exclusiveGroup: sceneInputGroup
                     activeFocusOnPress: true
                     onClicked: {
@@ -162,7 +162,7 @@ Item {
                 RadioButton {
                     id: effectNormal
                     style:  econRadioButtonStyle
-                    text:   qsTr("Normal")
+                    text:   qsTr("Normal")                  
                     exclusiveGroup: effectInputGroup
                     activeFocusOnPress: true
                     onClicked: {
@@ -176,7 +176,7 @@ Item {
                 RadioButton {
                     id: effectBW
                     style:  econRadioButtonStyle
-                    text: qsTr("Black and White")
+                    text: qsTr("Black and White")                 
                     exclusiveGroup: effectInputGroup
                     activeFocusOnPress: true
                     onClicked: {
@@ -203,7 +203,7 @@ Item {
                 RadioButton {
                     id: effectGrayscale
                     style:  econRadioButtonStyle
-                    text: qsTr("Grayscale")
+                    text: qsTr("Grayscale")                   
                     exclusiveGroup: effectInputGroup
                     activeFocusOnPress: true
                     onClicked: {
@@ -216,7 +216,7 @@ Item {
                 RadioButton {
                     id: effectSketch
                     style:  econRadioButtonStyle
-                    text: qsTr("Sketch")
+                    text: qsTr("Sketch")                  
                     exclusiveGroup: effectInputGroup
                     activeFocusOnPress: true
                     onClicked: {
@@ -240,22 +240,22 @@ Item {
             }
 
             Row{
-              spacing:10
-              ExclusiveGroup { id: afgroup }
-              RadioButton {
-                  exclusiveGroup: afgroup
-                  id: radioContin
-                  text: "Continuous"
-                  activeFocusOnPress: true
-                  style: econRadioButtonStyle
-                  opacity: enabled ? 1 : 0.1
-                  onClicked: {
-                    see3cam30.setAutoFocusMode(See3Cam30.Continuous);
-                  }
-                  Keys.onReturnPressed: {
-                    see3cam30.setAutoFocusMode(See3Cam30.Continuous);
-                  }
-              }
+                spacing:10
+                ExclusiveGroup { id: afgroup }
+                RadioButton {
+                    exclusiveGroup: afgroup
+                    id: radioContin
+                    text: "Continuous"
+                    activeFocusOnPress: true
+                    style: econRadioButtonStyle
+                    opacity: enabled ? 1 : 0.1
+                    onClicked: {
+                        see3cam30.setAutoFocusMode(See3Cam30.Continuous);
+                    }
+                    Keys.onReturnPressed: {
+                        see3cam30.setAutoFocusMode(See3Cam30.Continuous);
+                    }
+                }
             }
             Row{
                 spacing:25
@@ -466,43 +466,43 @@ Item {
             }
 
             Row{
-                  spacing:90
-                  ExclusiveGroup { id: roiExpogroup }
-                  RadioButton {
-                      exclusiveGroup: roiExpogroup
-                      id: autoexpFull
-                      text: "Full"
-                      activeFocusOnPress: true
-                      style: econRadioButtonStyle
-                      opacity: enabled ? 1 : 0.1
-                      // setROIAutoExposure() args:  mode, videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord, WinSize]
-                      // videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord - these parameters are required only when click in preview]
-                      // winSize is required only for manual mode
-                      onClicked: {
-                          see3cam30.setROIAutoExposure(See3Cam30.AutoExpFull, 0, 0, 0, 0, 0);
-                          autoExpoWinSizeCombo.enabled = false
-                      }
-                      Keys.onReturnPressed: {
-                          see3cam30.setROIAutoExposure(See3Cam30.AutoExpFull, 0, 0, 0, 0, 0);
-                          autoExpoWinSizeCombo.enabled = false
-                      }
-                  }
-                  RadioButton {
-                      exclusiveGroup: roiExpogroup
-                      id: autoexpManual
-                      text: "Manual"
-                      activeFocusOnPress: true
-                      style: econRadioButtonStyle
-                      opacity: enabled ? 1 : 0.1
-                      onClicked: {
-                          see3cam30.setROIAutoExposure(See3Cam30.AutoExpManual, 0, 0, 0, 0, 0);
-                          autoExpoWinSizeCombo.enabled = true
-                      }
-                      Keys.onReturnPressed: {
-                          see3cam30.setROIAutoExposure(See3Cam30.AutoExpManual, 0, 0, 0, 0, 0);
-                          autoExpoWinSizeCombo.enabled = true
-                      }
-                  }
+                spacing:90
+                ExclusiveGroup { id: roiExpogroup }
+                RadioButton {
+                    exclusiveGroup: roiExpogroup
+                    id: autoexpFull
+                    text: "Full"
+                    activeFocusOnPress: true
+                    style: econRadioButtonStyle
+                    opacity: enabled ? 1 : 0.1
+                    // setROIAutoExposure() args:  mode, videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord, WinSize]
+                    // videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord - these parameters are required only when click in preview]
+                    // winSize is required only for manual mode
+                    onClicked: {
+                        see3cam30.setROIAutoExposure(See3Cam30.AutoExpFull, 0, 0, 0, 0, 0);
+                        autoExpoWinSizeCombo.enabled = false
+                    }
+                    Keys.onReturnPressed: {
+                        see3cam30.setROIAutoExposure(See3Cam30.AutoExpFull, 0, 0, 0, 0, 0);
+                        autoExpoWinSizeCombo.enabled = false
+                    }
+                }
+                RadioButton {
+                    exclusiveGroup: roiExpogroup
+                    id: autoexpManual
+                    text: "Manual"                
+                    activeFocusOnPress: true
+                    style: econRadioButtonStyle
+                    opacity: enabled ? 1 : 0.1
+                    onClicked: {
+                        see3cam30.setROIAutoExposure(See3Cam30.AutoExpManual, 0, 0, 0, 0, 0);
+                        autoExpoWinSizeCombo.enabled = true
+                    }
+                    Keys.onReturnPressed: {
+                        see3cam30.setROIAutoExposure(See3Cam30.AutoExpManual, 0, 0, 0, 0, 0);
+                        autoExpoWinSizeCombo.enabled = true
+                    }
+                }
             }
 
             ComboBox
@@ -755,7 +755,7 @@ Item {
                 CheckBox {
                     id: faceDetectEmbedData
                     activeFocusOnPress : true
-                    text: "Embed \nData"
+                    text: "Embed \nData"                
                     style: econCheckBoxTextWrapModeStyle
                     enabled: faceRectEnable.checked ? true : false
                     opacity: enabled ? 1 : 0.1
@@ -827,7 +827,7 @@ Item {
                 CheckBox {
                     id: smileDetectEmbedData
                     activeFocusOnPress : true
-                    text: "Embed Data"
+                    text: "Embed Data"                  
                     style: econCheckBoxStyle
                     enabled: smileDetectEnable.checked ? true : false
                     opacity: enabled ? 1 : 0.1
@@ -893,7 +893,7 @@ Item {
                     opacity: 1
                     activeFocusOnPress : true
                     text: "Default"
-                    tooltip: "Click to set default values in extension controls"                    
+                    tooltip: "Click to set default values in extension controls"
                     style: econButtonStyle
                     onClicked: {
                         setToDefaultValues()

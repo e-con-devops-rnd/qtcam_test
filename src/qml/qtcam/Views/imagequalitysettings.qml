@@ -77,6 +77,7 @@ Item {
     property bool focusValueChangeProperty
     property bool focusAutoChangeProperty
     property bool usb3speed: false
+    property bool enablePowerLineFreq : true
 
     property bool powerLineComboEnable
     // Skip doing things when exposure combo index changed calls when no selection of any camera
@@ -85,19 +86,19 @@ Item {
     property variant exposureOrigAscella: [10, 20, 39, 78, 156, 312, 625, 1250, 2500, 5000, 10000, 20000]
     property int expAscellaTxtFiledValue;
     property bool exposureSliderSetEnable;
+    property bool exposureAutoAvailable: false
     property var menuitems:[]
 
     // It needs some time to get exposure control correct index value recently set in image quality settings when selecting camera in UI.
     Timer {
         id: queryctrlTimer
+        repeat :false
         interval: 500
         onTriggered: {
         // Adding flag to skip setting exposure auto and manual value when getting exposure value and update UI and enable back after getting all control values.       
             exposureSliderSetEnable = false
-	    exposureComboEnable = false
-
+            exposureComboEnable = false
             root.cameraFilterControls(true)
-
             exposureComboEnable = true
             exposureSliderSetEnable = true
             stop()
@@ -481,10 +482,10 @@ Item {
                         smooth: true
                         horizontalAlignment: TextInput.AlignHCenter
                         validator: IntValidator {bottom: white_balance_Slider.minimumValue; top: white_balance_Slider.maximumValue;}
-                        opacity: autoSelect_wb.checked ? 0: 1
+                        opacity:  white_balance_Slider.enabled ? 1: 0
                         enabled: false
                         style: econTextFieldStyle
-                        maximumLength: (white_balance_Slider.maximumValue.toString().length > white_balance_Slider.minimumValue.toString().length) ? white_balance_Slider.maximumValue.toString().length : white_balance_Slider.minimumValue.toString().length                        
+                        maximumLength: (white_balance_Slider.maximumValue.toString().length > white_balance_Slider.minimumValue.toString().length) ? white_balance_Slider.maximumValue.toString().length : white_balance_Slider.minimumValue.toString().length
                     }
                     Text {
                         id: gamma
@@ -722,27 +723,27 @@ Item {
                             }
                         }
                         onCurrentIndexChanged: {
-    				// Skip doing things when exposure combo index changed calls when no selection of any camera
-				if(exposureComboEnable){
-					root.selectMenuIndex(exposureAutoControlId,currentIndex)
-		                        if(currentText.toString() != "Auto Mode") {
-		                            root.changeCameraSettings(exposurecontrolId,exposure_Slider.value.toString())					    
-		                            root.autoExposureSelected(false)
-		                            JS.autoExposureSelected = false
-		                            exposure_absolute.opacity = 1
-		                            exposure_Slider.opacity = 1
-		                            exposure_Slider.enabled = true
-		                            exposure_value.opacity = 1
-		                        } else {
-		                            root.autoExposureSelected(true)
-		                            JS.autoExposureSelected = true
-		                            exposure_absolute.opacity = 0.1
-		                            exposure_Slider.opacity = 0.1
-		                            exposure_Slider.enabled = false
-		                            exposure_value.opacity = 0
-		                            exposure_value.enabled = false
-		                        }
-			     }
+                            // Skip doing things when exposure combo index changed calls when no selection of any camera
+                            if(exposureComboEnable){
+                                root.selectMenuIndex(exposureAutoControlId,currentIndex)
+                                if(currentText.toString() != "Auto Mode") {
+                                    root.changeCameraSettings(exposurecontrolId,exposure_Slider.value.toString())
+                                    root.autoExposureSelected(false)
+                                    JS.autoExposureSelected = false
+                                    exposure_absolute.opacity = 1
+                                    exposure_Slider.opacity = 1
+                                    exposure_Slider.enabled = true
+                                    exposure_value.opacity = 1
+                                } else {
+                                    root.autoExposureSelected(true)
+                                    JS.autoExposureSelected = true
+                                    exposure_absolute.opacity = 0.1
+                                    exposure_Slider.opacity = 0.1
+                                    exposure_Slider.enabled = false
+                                    exposure_value.opacity = 0
+                                    exposure_value.enabled = false
+                                }
+                            }
                         }
                     }
                     Image {
@@ -773,11 +774,13 @@ Item {
                                 exposureValueAscella = exposureOrigAscella[value]
                                 exposure_value.text = exposureOrigAscella[value]
                                 root.changeCameraSettings(exposurecontrolId, exposureValueAscella)
+                            }else if(!exposureAutoAvailable){ // If a camera does not contain "exposure, auto" control, but having "exposure absolute" control, allow it change exposure value.
+                                root.changeCameraSettings(exposurecontrolId,value.toString())
                             }else{
-                                if((exposureCombo.currentText == "Shutter Priority Mode" || exposureCombo.currentText == "Manual Mode") || (root.selectedDeviceEnumValue == CommonEnums.ECON_CX3_RDX_V5680) || (root.selectedDeviceEnumValue == CommonEnums.ECON_CX3_RDX_T9P031) || (root.selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU40) || (root.selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU51)) {
-                                    if(exposureSliderSetEnable){                                        
-                                         root.changeCameraSettings(exposurecontrolId,value.toString())
-					}
+                                if((exposureCombo.currentText == "Shutter Priority Mode" || exposureCombo.currentText == "Manual Mode")) {
+                                    if(exposureSliderSetEnable){
+                                        root.changeCameraSettings(exposurecontrolId,value.toString())
+                                    }
                                 }
                             }
                         }
@@ -1287,10 +1290,10 @@ Item {
             ledFreqValueChangeProperty = false
             focusLogitechValueChangeProperty = false
             focusValueChangeProperty = false
-	    focusAutoChangeProperty = false
+            focusAutoChangeProperty = false
             powerLineComboEnable = false
 	    // Skip doing things when exposure combo index changed calls when no selection of any camera
-	    exposureComboEnable = false
+            exposureComboEnable = false
             ledModeComboEnable = false
         }
     }
@@ -1313,6 +1316,7 @@ Item {
         }
 
     }
+
     function setCameraControls(controlName,controlType,controlMinValue,controlMaxValue,controlStepSize,controlDefaultValue,controlID)
     {
         switch(controlType)
@@ -1403,6 +1407,7 @@ Item {
                 autoFocusUIUpdate(controlID,controlDefaultValue)
                 break;
             case "Exposure, Auto Priority":
+                exposureAutoAvailable = true; // Make it true if exposure auto control is available
                 if(root.selectedDeviceEnumValue != CommonEnums.CX3_UVC_CAM)
                 {
                     exposureAutoPriorityUIUpdate(controlID,controlDefaultValue)
@@ -1551,8 +1556,7 @@ Item {
     function exposureAbsoluteUIUpdate(controlID,controlMinValue,controlMaxValue,controlStepSize,controlDefaultValue)
     {
         exposure_absolute.opacity = 1
-        if((root.selectedDeviceEnumValue === CommonEnums.ECON_CX3_RDX_V5680) || (root.selectedDeviceEnumValue === CommonEnums.ECON_CX3_RDX_T9P031) || (root.selectedDeviceEnumValue === CommonEnums.SEE3CAM_CU40))
-        {
+        if(!exposureAutoAvailable){ // If a camera does not contain "exposure, auto" control, but having "exposure absolute" control, allow it change exposure value.
             exposure_Slider.opacity = 1
             exposure_Slider.enabled = true
             exposure_value.opacity = 1            
@@ -1688,20 +1692,30 @@ Item {
         menuitems.push(controlName)
         if(controlName === "Power Line Frequency")
         {
-            menuitems.pop() //Control Name should be removed
-            powerLine.opacity = 1
-            powerLineCombo.opacity = 1
-            powerLineComboEnable =  false	    // To avoid setting power line freq when get the control values
-            powerLineCombo.model = menuitems
-            powerLineCombo.currentIndex = controlDefaultValue
-            while(menuitems.pop()){}
-            powerLineComboControlId = controlID
-            powerLineComboEnable =  true
+            if(enablePowerLineFreq){
+                menuitems.pop() //Control Name should be removed
+                powerLine.opacity = 1
+                powerLineCombo.opacity = 1
+                powerLineComboEnable =  false	    // To avoid setting power line freq when get the control values
+                powerLineCombo.model = menuitems
+                powerLineCombo.currentIndex = controlDefaultValue;
+                while(menuitems.pop()){}
+                powerLineComboControlId = controlID
+                powerLineComboEnable =  true
+            }
+            else
+            {
+                menuitems.pop()
+                powerLineCombo.model = menuitems
+                  while(menuitems.pop()){}
+                powerLineCombo.enabled = false
+            }
 
         }
         else if(controlName === "Exposure, Auto")
         {
             menuitems.pop()
+            exposureAutoAvailable = true;
             if(root.selectedDeviceEnumValue == CommonEnums.CX3_UVC_CAM && !usb3speed){
                 while(menuitems.pop()){}
             }
@@ -1724,6 +1738,11 @@ Item {
                 exposure_value.opacity = 0                
             }
         }
+    }
+
+    function controlPowerLineFreq()
+    {
+        enablePowerLineFreq = false
     }
 
     function setOpacityFalse(){
@@ -1875,7 +1894,7 @@ Item {
             ledFreqValueChangeProperty = true
             focusLogitechValueChangeProperty = true
             focusValueChangeProperty = true
-	    focusAutoChangeProperty = true
+            focusAutoChangeProperty = true
             video_capture_filter_Child.visible = true
 	    // To avoid setting exposure when get the control values 
 	    exposureComboEnable = false

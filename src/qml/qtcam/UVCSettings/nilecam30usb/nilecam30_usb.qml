@@ -286,40 +286,40 @@ Item {
                 ExclusiveGroup { id: roiExpogroup }
 
                 RadioButton {
-                      exclusiveGroup: roiExpogroup
-                      id: autoexpFull
-                      text: "Full"
-                      activeFocusOnPress: true
-                      style: econRadioButtonStyle
-                      opacity: enabled ? 1 : 0.1
-                      // setExpRoiModeNileCam30USB() args:  mode, videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord, WinSize]
-                      // videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord - these parameters are required only when click in preview]
-                      // winSize is required only for manual mode
-                      onClicked: {
-                          nilecam30usb.setExpRoiModeNileCam30USB(NileCam30usb.AutoExpFull, 0, 0, 0, 0, 0);
-                          autoExpoWinSizeCombo.enabled = false
-                      }
-                      Keys.onReturnPressed: {
-                          nilecam30usb.setExpRoiModeNileCam30USB(NileCam30usb.AutoExpFull, 0, 0, 0, 0, 0);
-                          autoExpoWinSizeCombo.enabled = false
-                      }
-                  }
-                  RadioButton {
-                      exclusiveGroup: roiExpogroup
-                      id: autoexpManual
-                      text: "Manual"
-                      activeFocusOnPress: true
-                      style: econRadioButtonStyle
-                      opacity: enabled ? 1 : 0.1
-                      onClicked: {                          
-                          nilecam30usb.setExpRoiModeNileCam30USB(NileCam30usb.AutoExpManual, 0, 0, 0, 0, 0);
-                          autoExpoWinSizeCombo.enabled = true
-                      }
-                      Keys.onReturnPressed: {                          
-                          nilecam30usb.setExpRoiModeNileCam30USB(NileCam30usb.AutoExpManual, 0, 0, 0, 0, 0);
-                          autoExpoWinSizeCombo.enabled = true
-                      }
-                  }
+                    exclusiveGroup: roiExpogroup
+                    id: autoexpFull
+                    text: "Full"
+                    activeFocusOnPress: true
+                    style: econRadioButtonStyle
+                    opacity: enabled ? 1 : 0.1
+                    // setExpRoiModeNileCam30USB() args:  mode, videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord, WinSize]
+                    // videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord - these parameters are required only when click in preview]
+                    // winSize is required only for manual mode
+                    onClicked: {
+                        nilecam30usb.setExpRoiModeNileCam30USB(NileCam30usb.AutoExpFull, 0, 0, 0, 0, 0);
+                        autoExpoWinSizeCombo.enabled = false
+                    }
+                    Keys.onReturnPressed: {
+                        nilecam30usb.setExpRoiModeNileCam30USB(NileCam30usb.AutoExpFull, 0, 0, 0, 0, 0);
+                        autoExpoWinSizeCombo.enabled = false
+                    }
+                }
+                RadioButton {
+                    exclusiveGroup: roiExpogroup
+                    id: autoexpManual
+                    text: "Manual"
+                    activeFocusOnPress: true
+                    style: econRadioButtonStyle
+                    opacity: enabled ? 1 : 0.1
+                    onClicked: {
+                        nilecam30usb.setExpRoiModeNileCam30USB(NileCam30usb.AutoExpManual, 0, 0, 0, 0, 0);
+                        autoExpoWinSizeCombo.enabled = true
+                    }
+                    Keys.onReturnPressed: {
+                        nilecam30usb.setExpRoiModeNileCam30USB(NileCam30usb.AutoExpManual, 0, 0, 0, 0, 0);
+                        autoExpoWinSizeCombo.enabled = true
+                    }
+                }
             }
 
             ComboBox
@@ -388,6 +388,8 @@ Item {
                         text: "Set"
                         style: econButtonStyle
                         enabled: true
+                        tooltip: "You can set the required exposure compensation value by changing the
+value in the text box and click the Set button"
                         opacity: 1
                         implicitHeight: 25
                         implicitWidth: 60

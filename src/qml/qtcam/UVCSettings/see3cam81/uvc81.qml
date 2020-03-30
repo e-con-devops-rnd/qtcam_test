@@ -183,7 +183,7 @@ Item {
                     exclusiveGroup: specialEffectsGrp
                     checked: false
                     id: radioGreyscale
-                    text: "Greyscale"
+                    text: "Greyscale"                  
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked: {
@@ -452,6 +452,7 @@ Item {
                     id: focusPos
                     activeFocusOnPress : true
                     text: "Focus Position"
+                    tooltip: "Display the focus position in numerical value."
                     style: econButtonStyle
                     enabled: true
                     opacity: 1

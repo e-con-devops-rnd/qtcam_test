@@ -143,7 +143,7 @@ Item {
                 RadioButton {
                     id: sceneNormal
                     style:  econRadioButtonStyle
-                    text:   qsTr("Normal")
+                    text:   qsTr("Normal")                   
                     exclusiveGroup: sceneInputGroup
                     activeFocusOnPress: true
                     onClicked: {
@@ -156,7 +156,7 @@ Item {
                 RadioButton {
                     id: sceneDoc
                     style:  econRadioButtonStyle
-                    text: qsTr("Document")
+                    text: qsTr("Document")                 
                     exclusiveGroup: sceneInputGroup
                     activeFocusOnPress: true
                     onClicked: {                        
@@ -205,7 +205,7 @@ Item {
                 RadioButton {
                     id: rdoEffectBW
                     style:  econRadioButtonStyle
-                    text: qsTr("Black and White")
+                    text: qsTr("Black and White")                  
                     exclusiveGroup: effectInputGroup
                     activeFocusOnPress: true
                     onClicked: {                        
@@ -218,7 +218,7 @@ Item {
                 RadioButton {
                     id: rdoEffectGreyScale
                     style:  econRadioButtonStyle
-                    text: qsTr("GreyScale")
+                    text: qsTr("GreyScale")                  
                     exclusiveGroup: effectInputGroup
                     activeFocusOnPress: true
                     onClicked: {                        
@@ -231,7 +231,7 @@ Item {
                 RadioButton {
                     id: rdoEffectSketch
                     style:  econRadioButtonStyle
-                    text: qsTr("Sketch")
+                    text: qsTr("Sketch")                  
                     exclusiveGroup: effectInputGroup
                     activeFocusOnPress: true
                     onClicked: {                        
@@ -659,7 +659,7 @@ Item {
                 CheckBox {
                     id: faceDetectEmbedData
                     activeFocusOnPress : true
-                    text: "Embed Data"
+                    text: "Embed Data"                  
                     style: econCheckBoxTextWrapModeStyle
                     enabled: faceRectEnable.checked ? true : false
                     opacity: enabled ? 1 : 0.1
@@ -730,7 +730,7 @@ Item {
                 CheckBox {
                     id: smileDetectEmbedData
                     activeFocusOnPress : true
-                    text: "Embed Data"
+                    text: "Embed Data"                  
                     style: econCheckBoxStyle
                     enabled: smileDetectEnable.checked ? true : false
                     opacity: enabled ? 1 : 0.1

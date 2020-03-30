@@ -42,10 +42,17 @@
 #include "videostreaming.h"
 #include "logger.h"
 #include "libudev.h"
+#define V4L2_CAP_META_CAPTURE     0x00800000
+
 class Cameraproperty : public QObject, public v4l2
 {
     Q_OBJECT
 public:
+    enum usbPort{
+        USB2_0 = 1,
+        USB3_0 = 2
+    };
+
     Cameraproperty();
     Cameraproperty(bool enableLog);
     ~Cameraproperty();
@@ -53,13 +60,13 @@ public:
 
     uvccamera uvccam;
     Videostreaming vidStr;
+    FrameRenderer frmrend;
     logger log;
     void checkforEconDevice(QStringList*);
 
     static QStringListModel modelCam;
     static bool saveLog;
     static int event_fd;
-     QString usbhex;
 
 private:
     QDir qDir;
@@ -71,7 +78,7 @@ private:
 
 public slots:
 
-    QString  getUsbSpeed(QString busInfo);
+    int  getUsbSpeed(QString serialNumber);
     /**
      * @brief Check e-con Cameras
      *  - List all the camera devices detected in the system
@@ -141,14 +148,14 @@ public slots:
 
      // open event node file path  - open device event path file Ex: /dev/input/by-path/pci-0000:00:1a.0-usb-0:1.4:1.0-event
     void openEventNode(QString businfo);
-    void getPort();
+
 
 signals:
 
     void setFirstCamDevice(int);
     void setCamName(QString);
     void logHandle(QtMsgType,QString);
-    void signalForUsbSpeed(QString bcdusb);
+
     /**
      * @brief currentlySelectedCameraEnum - This signal is used to emit selected camera enum value to
      * qtcam.qml file
@@ -164,6 +171,7 @@ signals:
     // Added by Sankari: To notify user about warning[Ex: hid access from uvccamera.cpp]
     // 07 Dec 2017
     void notifyUserInfo(QString title, QString text);
+
 };
 
 

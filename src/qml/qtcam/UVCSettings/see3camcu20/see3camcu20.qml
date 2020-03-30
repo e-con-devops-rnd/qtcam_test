@@ -61,29 +61,12 @@ Item {
             see3camcu20.getExposureCompensation()
         }
     }
-
-    Timer {
-        id: enableSettings
-        interval: 3000
-        onTriggered: {
-            root.enableAllSettingsTab()
-            stop()
-        }
-    }
-
     Connections
     {
         target: root
         onTakeScreenShot:
         {
             root.imageCapture(CommonEnums.BURST_SHOT);
-            // Added by Sankari: 16 Mar 2018
-            // Disable saving image when trigger mode is selected initially and capturing image then switch to master mode
-            if(cameraModeSlave.checked){
-               root.disableSaveImage()
-               // In trigger mode, if frames are not coming then after 3 seconds enable all settings
-               enableSettings.start()
-            }
         }
         onGetVideoPinStatus:
         {
@@ -154,7 +137,7 @@ Item {
         height: 500
         style: econscrollViewStyle
         Item {
-            height: 1350
+            height: 1500
             ColumnLayout{
                 x:2
                 y:5
@@ -189,7 +172,7 @@ Item {
                     RadioButton {
                         id: sensorHdrDlo
                         style:  econRadioButtonStyle
-                        text: qsTr("HDR")
+                        text: qsTr("HDR")                     
                         exclusiveGroup: sensorInputGroup
                         activeFocusOnPress: true
                         onClicked: {
@@ -216,29 +199,27 @@ Item {
                     RadioButton {
                         id: cameraModeMaster
                         style:  econRadioButtonStyle
-                        text:   qsTr("Master")
+                        text:   qsTr("Master")                       
                         exclusiveGroup: cameraModeGroup
                         activeFocusOnPress: true
                         onClicked: {
-                            see3camcu20.setCameraMode(See3Camcu20.CAMERA_MASTER)
+                            setMasterMode()
                         }
                         Keys.onReturnPressed: {
-                            see3camcu20.setCameraMode(See3Camcu20.CAMERA_MASTER)
+                            setMasterMode()
                         }
                     }
                     RadioButton {
                         id: cameraModeSlave
                         style:  econRadioButtonStyle
-                        text: qsTr("Trigger")
+                        text: qsTr("Trigger")                    
                         exclusiveGroup: cameraModeGroup
                         activeFocusOnPress: true
                         onClicked: {
-                            defaultValue.enabled = true
-                            see3camcu20.setCameraMode(See3Camcu20.CAMERA_SLAVE)
+                             setTriggerMode()
                         }
                         Keys.onReturnPressed: {
-                            defaultValue.enabled = true
-                            see3camcu20.setCameraMode(See3Camcu20.CAMERA_SLAVE)
+                              setTriggerMode()
                         }
                     }
                 }
@@ -258,7 +239,7 @@ Item {
                     RadioButton {
                         id: specialModeNormal
                         style:  econRadioButtonStyle
-                        text:   qsTr("Normal")
+                        text:   qsTr("Normal")                     
                         exclusiveGroup: specialModeGroup
                         activeFocusOnPress: true
                         onClicked: {
@@ -271,7 +252,7 @@ Item {
                     RadioButton {
                         id: specialModeGreyscale
                         style:  econRadioButtonStyle
-                        text: qsTr("Greyscale")
+                        text: qsTr("Greyscale")                     
                         exclusiveGroup: specialModeGroup
                         activeFocusOnPress: true
                         onClicked: {
@@ -407,7 +388,7 @@ Item {
                       RadioButton {
                           exclusiveGroup: roiExpogroup
                           id: autoexpCentered
-                          text: "Centered"
+                          text: "Centered"                        
                           activeFocusOnPress: true
                           style: econRadioButtonStyle
                           opacity: enabled ? 1 : 0.1
@@ -426,7 +407,7 @@ Item {
                       RadioButton {
                           exclusiveGroup: roiExpogroup
                           id: autoexpManual
-                          text: "Manual"
+                          text: "Manual"                        
                           activeFocusOnPress: true
                           style: econRadioButtonStyle
                           opacity: enabled ? 1 : 0.1
@@ -658,7 +639,7 @@ Item {
                     RadioButton {
                         id: lscModeAuto
                         style:  econRadioButtonStyle
-                        text:   qsTr("Auto")
+                        text:   qsTr("Auto")                      
                         exclusiveGroup: lscModeControlGroup
                         activeFocusOnPress: true
                         onClicked: {                            
@@ -671,7 +652,7 @@ Item {
                     RadioButton {
                         id: lscModeManual
                         style:  econRadioButtonStyle
-                        text: qsTr("Manual")
+                        text: qsTr("Manual")                       
                         exclusiveGroup: lscModeControlGroup
                         activeFocusOnPress: true
                         onClicked: {
@@ -728,7 +709,7 @@ Item {
                       RadioButton {
                           exclusiveGroup: antiFlickerModegroup
                           id: antiFlickerModeAuto
-                          text: "Auto"
+                          text: "Auto"                       
                           activeFocusOnPress: true
                           style: econRadioButtonStyle
                           opacity: enabled ? 1 : 0.1
@@ -742,7 +723,7 @@ Item {
                       RadioButton {
                           exclusiveGroup: antiFlickerModegroup
                           id: antiFlickerModeManual
-                          text: "Manual"
+                          text: "Manual"                       
                           activeFocusOnPress: true
                           style: econRadioButtonStyle
                           opacity: enabled ? 1 : 0.1
@@ -977,9 +958,6 @@ Item {
         }
     }
 
-
-
-
     Uvccamera {
         id: uvccamera
         onTitleTextChanged: {
@@ -992,8 +970,6 @@ Item {
             messageDialog.text = serialNumber;
         }
     }
-
-
 
     See3Camcu20 {
         id: see3camcu20
@@ -1105,9 +1081,6 @@ Item {
         exposureCompSlider.opacity = 0.1
         exposureCompTextValue.opacity = 0.1
     }
-
-
-
 
     function currentLSCMode(Mode){
         skipUpdateUIOnLSCMode = false
@@ -1221,7 +1194,25 @@ Item {
         }
     }
 
+    function setMasterMode(){
+        see3camcu20.setCameraMode(See3Camcu20.CAMERA_MASTER)
+        root.checkForTriggerMode(false)
+        root.captureBtnEnable(true)
+        root.videoRecordBtnEnable(true)
+    }
+
+    function setTriggerMode(){
+        defaultValue.enabled = true
+        see3camcu20.setCameraMode(See3Camcu20.CAMERA_SLAVE)
+        root.checkForTriggerMode(true)
+        root.captureBtnEnable(false)
+        root.videoRecordBtnEnable(false)
+    }
+
     function setToDefaultValues(){
+        root.checkForTriggerMode(false)
+        root.captureBtnEnable(true)
+        root.videoRecordBtnEnable(true)
         defaultValue.enabled = false
         if(see3camcu20.setToDefaultValues()){
             see3camcu20.getAutoExpROIModeAndWindowSize()

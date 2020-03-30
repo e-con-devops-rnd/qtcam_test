@@ -170,7 +170,7 @@ Item {
                 RadioButton {
                     id: sceneNormal
                     style:  econRadioButtonStyle
-                    text:   qsTr("Normal")
+                    text:   qsTr("Normal")                   
                     exclusiveGroup: sceneInputGroup
                     activeFocusOnPress: true                    
                     onClicked: {
@@ -183,7 +183,7 @@ Item {
                 RadioButton {
                     id: sceneDoc
                     style:  econRadioButtonStyle
-                    text: qsTr("Document")
+                    text: qsTr("Document")               
                     exclusiveGroup: sceneInputGroup
                     activeFocusOnPress: true
                     onClicked: {
@@ -216,7 +216,7 @@ Item {
                 RadioButton {
                     id: effectNormal
                     style:  econRadioButtonStyle
-                    text:   qsTr("Normal")
+                    text:   qsTr("Normal")                 
                     exclusiveGroup: effectInputGroup
                     activeFocusOnPress: true
                     //checked: true
@@ -231,7 +231,7 @@ Item {
                 RadioButton {
                     id: effectBW
                     style:  econRadioButtonStyle
-                    text: qsTr("Black and White")
+                    text: qsTr("Black and White")                  
                     exclusiveGroup: effectInputGroup
                     activeFocusOnPress: true
                     onClicked: {
@@ -258,7 +258,7 @@ Item {
                 RadioButton {
                     id: effectGrayscale
                     style:  econRadioButtonStyle
-                    text: qsTr("Grayscale")
+                    text: qsTr("Grayscale")                 
                     exclusiveGroup: effectInputGroup
                     activeFocusOnPress: true
                     onClicked: {
@@ -271,7 +271,7 @@ Item {
                 RadioButton {
                     id: effectSketch
                     style:  econRadioButtonStyle
-                    text: qsTr("Sketch")
+                    text: qsTr("Sketch")                
                     exclusiveGroup: effectInputGroup
                     activeFocusOnPress: true
                     onClicked: {
@@ -295,16 +295,16 @@ Item {
             }
 
             Row{
-                  spacing:10
-                  ExclusiveGroup { id: afgroup }
-                  RadioButton {
-                      exclusiveGroup: afgroup
-                      id: radioContin
-                      text: "Continuous"
-                      activeFocusOnPress: true
-                      style: econRadioButtonStyle                      
-                      opacity: enabled ? 1 : 0.1
-                      onClicked: {
+                spacing:10
+                ExclusiveGroup { id: afgroup }
+                RadioButton {
+                    exclusiveGroup: afgroup
+                    id: radioContin
+                    text: "Continuous"
+                    activeFocusOnPress: true
+                    style: econRadioButtonStyle
+                    opacity: enabled ? 1 : 0.1
+                    onClicked: {
                         seecam130A.setAutoFocusMode(See3Cam130A.Continuous);
                       }
                       Keys.onReturnPressed: {
@@ -396,43 +396,43 @@ Item {
             }
 
             Row{
-                  spacing:55
-                  ExclusiveGroup { id: roiAfgroup }
-                  RadioButton {
-                      exclusiveGroup: roiAfgroup
-                      id: afCentered
-                      text: "Centered"
-                      activeFocusOnPress: true
-                      style: econRadioButtonStyle
-                      opacity: afCentered.enabled ? 1 : 0.1
-                      // setROIAutoFoucs() args:  mode, videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord, WinSize]
-                      // videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord - these parameters are required only when click in preview]
-                      // winSize is required only for manual mode
-                      onClicked: {
-                            seecam130A.setROIAutoFoucs(See3Cam130A.AFCentered, 0, 0, 0, 0, 0);
-                            afWindowSizeCombo.enabled = false
-                      }                      
-                      Keys.onReturnPressed: {
-                            seecam130A.setROIAutoFoucs(See3Cam130A.AFCentered, 0, 0, 0, 0, 0);
-                            afWindowSizeCombo.enabled = false
-                      }
-                  }
-                  RadioButton {
-                      exclusiveGroup: roiAfgroup
-                      id: afManual
-                      text: "Manual"
-                      activeFocusOnPress: true
-                      style: econRadioButtonStyle
-                      opacity: afManual.enabled ? 1 : 0.1
-                      onClicked: {
-                            seecam130A.setROIAutoFoucs(See3Cam130A.AFManual, 0, 0, 0, 0, afWindowSizeCombo.currentText)
-                            afWindowSizeCombo.enabled = true
-                      }
-                      Keys.onReturnPressed: {
-                            seecam130A.setROIAutoFoucs(See3Cam130A.AFManual, 0, 0, 0, 0, afWindowSizeCombo.currentText);
-                            afWindowSizeCombo.enabled = true
-                      }
-                  }
+                spacing:55
+                ExclusiveGroup { id: roiAfgroup }
+                RadioButton {
+                    exclusiveGroup: roiAfgroup
+                    id: afCentered
+                    text: "Centered"
+                    activeFocusOnPress: true
+                    style: econRadioButtonStyle
+                    opacity: afCentered.enabled ? 1 : 0.1
+                    // setROIAutoFoucs() args:  mode, videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord, WinSize]
+                    // videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord - these parameters are required only when click in preview]
+                    // winSize is required only for manual mode
+                    onClicked: {
+                        seecam130A.setROIAutoFoucs(See3Cam130A.AFCentered, 0, 0, 0, 0, 0);
+                        afWindowSizeCombo.enabled = false
+                    }
+                    Keys.onReturnPressed: {
+                        seecam130A.setROIAutoFoucs(See3Cam130A.AFCentered, 0, 0, 0, 0, 0);
+                        afWindowSizeCombo.enabled = false
+                    }
+                }
+                RadioButton {
+                    exclusiveGroup: roiAfgroup
+                    id: afManual
+                    text: "Manual"
+                    activeFocusOnPress: true
+                    style: econRadioButtonStyle
+                    opacity: afManual.enabled ? 1 : 0.1
+                    onClicked: {
+                        seecam130A.setROIAutoFoucs(See3Cam130A.AFManual, 0, 0, 0, 0, afWindowSizeCombo.currentText)
+                        afWindowSizeCombo.enabled = true
+                    }
+                    Keys.onReturnPressed: {
+                        seecam130A.setROIAutoFoucs(See3Cam130A.AFManual, 0, 0, 0, 0, afWindowSizeCombo.currentText);
+                        afWindowSizeCombo.enabled = true
+                    }
+                }
             }
 
             ComboBox
@@ -759,6 +759,8 @@ Item {
                     id: exposureCompSet
                     activeFocusOnPress : true
                     text: "Set"
+                    tooltip: "You can set the required exposure compensation value by changing the
+value in the text box and click the Set button"
                     style: econButtonStyle
                     enabled: true
                     opacity: 1
@@ -951,7 +953,7 @@ Item {
                 CheckBox {
                     id: faceDetectEmbedData
                     activeFocusOnPress : true
-                    text: "Embed \nData"
+                    text: "Embed \nData"                  
                     style: econCheckBoxTextWrapModeStyle
                     enabled: faceRectEnable.checked ? true : false
                     opacity: enabled ? 1 : 0.1
@@ -1024,7 +1026,7 @@ Item {
                 CheckBox {
                     id: smileDetectEmbedData
                     activeFocusOnPress : true
-                    text: "Embed Data"
+                    text: "Embed Data"                  
                     style: econCheckBoxStyle
                     enabled: smileDetectEnable.checked ? true : false
                     opacity: enabled ? 1 : 0.1
@@ -1556,9 +1558,11 @@ Item {
         seecam130A.setStreamMode(See3Cam130A.STREAM_MASTER)
         root.captureBtnEnable(true)
         root.videoRecordBtnEnable(true)
+        root.checkForTriggerMode(false)
     }
 
     function setTriggerMode(){
+        root.checkForTriggerMode(true)
         root.captureBtnEnable(false)
         root.videoRecordBtnEnable(false)
         seecam130A.setStreamMode(See3Cam130A.STREAM_TRIGGER)
@@ -1575,6 +1579,7 @@ Item {
         messageDialog.open()
     }
     function setToDefaultValues(){
+        root.checkForTriggerMode(false)
         seecam130A.setToDefault()
         seecam130A.getSceneMode()
         seecam130A.getEffectMode()

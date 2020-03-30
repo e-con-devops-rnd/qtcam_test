@@ -41,6 +41,7 @@ Cameraproperty::Cameraproperty()
     connect(this,SIGNAL(setCamName(QString)),&uvccam,SLOT(currentlySelectedDevice(QString)));
     connect(this,SIGNAL(logHandle(QtMsgType,QString)),this,SLOT(logWriter(QtMsgType,QString)));
     connect(&uvccam,SIGNAL(logHandle(QtMsgType,QString)),this,SLOT(logWriter(QtMsgType,QString)));
+    connect(&uvccam,SIGNAL(currentlySelectedCameraEnum(CommonEnums::ECameraNames)),&frmrend,SLOT(selectedCameraEnum(CommonEnums::ECameraNames)));
     //Added by Dhurka - 13th Oct 2016
     /**
      * @brief connect - This signal is used to send the currently selected camera enum to videostreaming.cpp
@@ -51,13 +52,13 @@ Cameraproperty::Cameraproperty()
      * @brief connect - This signal is used to send the selected camera enum value to QML for commparision instead of camera name
      */
     connect(&uvccam,SIGNAL(currentlySelectedCameraEnum(CommonEnums::ECameraNames)),this,SLOT(selectedDeviceEnum(CommonEnums::ECameraNames)));
-    // Added by Sankari: To notify user about hid access 
+    // Added by Sankari: To notify user about hid access
     // 07 Dec 2017
     connect(&uvccam,SIGNAL(hidWarningReceived(QString, QString)),this,SLOT(notifyUser(QString, QString)));
 }
 
 Cameraproperty::Cameraproperty(bool enableLog) {
-	saveLog	= enableLog;
+    saveLog	= enableLog;
 }
 
 Cameraproperty::~Cameraproperty() {
@@ -121,7 +122,7 @@ void Cameraproperty::openEventNode(QString businfo){ //open device event path fi
                     {  // camera device is present
                         break;
                     }else{
-            	// close event file opened not related to camera device
+                        // close event file opened not related to camera device
                         ::close(event_fd);
                         event_fd = -1;
                     }
@@ -147,13 +148,14 @@ void Cameraproperty::checkforDevice() {
     cameraMap.clear();
     deviceNodeMap.clear();
     int deviceIndex = 1;
+    bool metaCapture = false;
     availableCam.clear();
     if(qDir.cd("/sys/class/video4linux/")) {
         QStringList filters,list;
         filters << "video*";
         qDir.setNameFilters(filters);
         list << qDir.entryList(filters,QDir::Dirs ,QDir::Name);
-        qSort(list.begin(), list.end());        
+        qSort(list.begin(), list.end());
         deviceBeginNumber = list.value(0).mid(5).toInt();   //Fetching all values after "video"
         deviceEndNumber = list.value(list.count()-1).mid(5).toInt();
         for(int qDevCount=deviceBeginNumber;qDevCount<=deviceEndNumber;qDevCount++) {
@@ -164,14 +166,24 @@ void Cameraproperty::checkforDevice() {
                     if(cameraName.length()>22){
                         cameraName.insert(22,"\n");
                     }
-                    //Removed the commented code by Dhurka - 13th Oct 2016
-                    cameraMap.insert(qDevCount,QString::number(deviceIndex,10));
-                    deviceNodeMap.insert(deviceIndex,(char*)m_querycap.bus_info);
-                    qDebug()<<"busInfo"<<(char*)m_querycap.bus_info;
+                    // Added by Navya: 12-Dec-2019
+                    // For Kernal Version >= 4.15 ,single device is detecting as two Nodes ,one as VideoCapture and other as MetaData Capture.Enumerating the Node which is VideoCapture.
+                    if(!(m_querycap.device_caps & V4L2_CAP_META_CAPTURE)){
+                        cameraMap.insert(qDevCount,QString::number(deviceIndex,10));
+                        deviceNodeMap.insert(deviceIndex,(char*)m_querycap.bus_info);
+                        availableCam.append(cameraName);
+                        metaCapture = false;
+                    }
 
-                    availableCam.append(cameraName);
-                    deviceIndex++;
+                    // Added by Navya : 24th Jan 2020
+                    // Increasing the deviceIndex only if the /dev/video node is VideoCapture Node.
+
+                    if(!metaCapture){
+                        deviceIndex++;
+                    }
+                    metaCapture = true;
                     close();
+
                 } else {
                     emit logWriter(QtCriticalMsg, "Cannot open device: /dev/video"+qDevCount);
                     return void();
@@ -201,8 +213,16 @@ void Cameraproperty::checkforDevice() {
      */
     uvccam.findEconDevice("hidraw");
 }
-QString  Cameraproperty::getUsbSpeed(QString busInfo){
 
+//Modified by Navya :14 May 2019
+/*
+ *Inorder to getUsbSpeed for all 3 OS's in See3cam_cu50 camera
+ *Removed libusb_get_port_numbers api as it is not working in 12.04 OS
+ */
+
+int Cameraproperty::getUsbSpeed(QString serialNumber){
+
+    QString usbType;
     int retVal, r;
     uint16_t usb;
     libusb_device **list = NULL;
@@ -212,51 +232,43 @@ QString  Cameraproperty::getUsbSpeed(QString busInfo){
     r = libusb_init(&context);
     if (r < 0 ) {
         printf("Error in initializing libusb library...\n");
-        return NULL;
+        return -1;
     }
 
     size_t count = libusb_get_device_list(context, &list);
 
     for (size_t idx = 0; idx < count; idx++) {
         libusb_device *device = list[idx];
-        struct libusb_device_descriptor devDesc = {0};
+        struct libusb_device_descriptor devDesc = {0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
         retVal = libusb_get_device_descriptor (device, &devDesc);
 
         if (retVal != LIBUSB_SUCCESS) {
             printf("libusb_get_device_descriptor return %d\n", retVal);
-            return NULL;
+            return -1;
         }
-
-
         retVal = libusb_open(device, &h_handle);
 
         if(retVal < 0) {
             printf("Problem acquiring device handle in %s \n", __func__);
-            return NULL;
+            return -1;
         }
 
-        if(devDesc.idVendor == 0x2560 ){
-            uint8_t path[8];
-
-            QString busPath;
-
-            int r = libusb_get_port_numbers(device, path, sizeof(path));
-
-            if (r > 0) {
-
-                busPath.append(QString::number(path[0]));
-                for (int j = 1; j < r; j++){
-
-                    busPath.append(".");
-                    busPath.append(QString::number(path[j]));
-                }
+        if(devDesc.idVendor == 0x2560) {
+            unsigned char data[100];
+            memset(data,0,sizeof(data));
+            libusb_get_string_descriptor_ascii(h_handle,devDesc.iSerialNumber,data,sizeof(data));
+            QString serialNo = QString::fromLocal8Bit((const char *)data);
+            int ret = QString::compare(serialNo, serialNumber, Qt::CaseInsensitive);
+            if(ret == 0){
+                usb = devDesc.bcdUSB;
+                usbType.setNum(usb,16);
+                int usbValue = usbType.toInt();
+                if(usbValue < 300)
+                    return USB2_0;
+                else
+                    return USB3_0;
             }
-            usb = devDesc.bcdUSB;
-            usbhex.setNum(usb,16);
-
-            qDebug()<<"usb after process:"<<usbhex;
-
         }
         if(h_handle) {
             libusb_close(h_handle);
@@ -268,7 +280,6 @@ QString  Cameraproperty::getUsbSpeed(QString busInfo){
     libusb_exit(context);
 
 }
-
 
 void Cameraproperty::setCurrentDevice(QString deviceIndex,QString deviceName) {
 
@@ -294,8 +305,8 @@ void Cameraproperty::setCurrentDevice(QString deviceIndex,QString deviceName) {
 
 void Cameraproperty::createLogger() {
     if (saveLog){
-	log.close();
-	log.logFileCreation();
+        log.close();
+        log.logFileCreation();
     }
 }
 
@@ -315,7 +326,7 @@ void Cameraproperty::openHIDDevice(QString deviceName)
 {
     uvccam.exitExtensionUnit();
     deviceName.remove(QRegExp("[\n\t\r]"));
-    bool hidInit = uvccam.initExtensionUnit(deviceName);    
+    bool hidInit = uvccam.initExtensionUnit(deviceName);
     if(hidInit)
     {
         emit initExtensionUnitSuccess();
@@ -332,10 +343,4 @@ void Cameraproperty::notifyUser(QString title, QString text){
     emit notifyUserInfo(title, text);
 }
 
-// Added by Navya: 30 Apr 2019
-// To emit signal to assign frametoskip according to the port used
-void Cameraproperty::getPort()
-{
-    qDebug()<<"hex:"<<usbhex;
-    emit signalForUsbSpeed(usbhex);
-}
+

@@ -29,6 +29,8 @@ Item {
     property bool skipUpdateUIOnBurstLength: false
     property bool skipUpdateUIOnExpWindowSize: false
     property bool setButtonClicked: false
+    property bool skipUpdateUIFlickerCtrl:false
+    property int  flickerCtrl
 
     // Used when selecting auto exposure in image Quality settings menu
     Timer {
@@ -37,6 +39,15 @@ Item {
         onTriggered: {
             seecamcu135.getAutoExpROIModeAndWindowSize()
             stop()
+        }
+    }
+
+    Timer {
+        id:scenemodeTimer
+        interval:1000
+        repeat:false
+        onTriggered:{
+            seecamcu135.getSceneMode()
         }
     }
 
@@ -134,16 +145,15 @@ Item {
     }
 
     ScrollView{
-            id: scrollview
-            x: 10
-            y: 189.5
-            width: 257
-            height: 500
-            style: econscrollViewStyle
-            Item{
-                height:1500
-
-                ColumnLayout{
+        id: scrollview
+        x: 10
+        y: 189.5
+        width: 257
+        height: 500
+        style: econscrollViewStyle
+        Item{
+            height:1600
+            ColumnLayout{
                 x:2
                 y:5
                 spacing:20
@@ -178,7 +188,7 @@ Item {
                     RadioButton {
                         id: effectBW
                         style:  econRadioButtonStyle
-                        text: qsTr("Black and White")
+                        text: qsTr("Black and White")                     
                         exclusiveGroup: effectInputGroup
                         activeFocusOnPress: true
                         onClicked: {
@@ -205,7 +215,7 @@ Item {
                     RadioButton {
                         id: effectGrayscale
                         style:  econRadioButtonStyle
-                        text: qsTr("Grayscale")
+                        text: qsTr("Grayscale")                      
                         exclusiveGroup: effectInputGroup
                         activeFocusOnPress: true
                         onClicked: {
@@ -218,7 +228,7 @@ Item {
                     RadioButton {
                         id: effectSketch
                         style:  econRadioButtonStyle
-                        text: qsTr("Sketch")
+                        text: qsTr("Sketch")                      
                         exclusiveGroup: effectInputGroup
                         activeFocusOnPress: true
                         onClicked: {
@@ -246,7 +256,7 @@ Item {
                     RadioButton {
                         id: sceneNormal
                         style:  econRadioButtonStyle
-                        text:   qsTr("Normal")
+                        text:   qsTr("Normal")                    
                         exclusiveGroup: sceneInputGroup
                         activeFocusOnPress: true
                         onClicked: {
@@ -259,7 +269,7 @@ Item {
                     RadioButton {
                         id: sceneDoc
                         style:  econRadioButtonStyle
-                        text: qsTr("Document")
+                        text: qsTr("Document")                     
                         exclusiveGroup: sceneInputGroup
                         activeFocusOnPress: true
                         onClicked: {
@@ -591,44 +601,43 @@ Item {
                 }
 
                 Row{
-                      spacing:38
-                      ExclusiveGroup { id: roiExpogroup }
-
-                      RadioButton {
-                          exclusiveGroup: roiExpogroup
-                          id: autoexpFull
-                          text: "Full"
-                          activeFocusOnPress: true
-                          style: econRadioButtonStyle
-                          opacity: enabled ? 1 : 0.1
-                          // setROIAutoExposure() args:  mode, videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord, WinSize]
-                          // videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord - these parameters are required only when click in preview]
-                          // winSize is required only for manual mode
-                          onClicked: {
-                              seecamcu135.setROIAutoExposure(See3CamCu135.AutoExpFull, 0, 0, 0, 0, 0);
-                              autoExpoWinSizeCombo.enabled = false
-                          }
-                          Keys.onReturnPressed: {
-                              seecamcu135.setROIAutoExposure(See3CamCu135.AutoExpFull, 0, 0, 0, 0, 0);
-                              autoExpoWinSizeCombo.enabled = false
-                          }
-                      }
-                      RadioButton {
-                          exclusiveGroup: roiExpogroup
-                          id: autoexpManual
-                          text: "Manual"
-                          activeFocusOnPress: true
-                          style: econRadioButtonStyle
-                          opacity: enabled ? 1 : 0.1
-                          onClicked: {
-                              seecamcu135.setROIAutoExposure(See3CamCu135.AutoExpManual, 0, 0, 0, 0, 0);
-                              autoExpoWinSizeCombo.enabled = true
-                          }
-                          Keys.onReturnPressed: {
-                              seecamcu135.setROIAutoExposure(See3CamCu135.AutoExpManual, 0, 0, 0, 0, 0);
-                              autoExpoWinSizeCombo.enabled = true
-                          }
-                      }
+                    spacing:38
+                    ExclusiveGroup { id: roiExpogroup }
+                    RadioButton {
+                        exclusiveGroup: roiExpogroup
+                        id: autoexpFull
+                        text: "Full"                     
+                        activeFocusOnPress: true
+                        style: econRadioButtonStyle
+                        opacity: enabled ? 1 : 0.1
+                        // setROIAutoExposure() args:  mode, videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord, WinSize]
+                        // videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord - these parameters are required only when click in preview]
+                        // winSize is required only for manual mode
+                        onClicked: {
+                            seecamcu135.setROIAutoExposure(See3CamCu135.AutoExpFull, 0, 0, 0, 0, 0);
+                            autoExpoWinSizeCombo.enabled = false
+                        }
+                        Keys.onReturnPressed: {
+                            seecamcu135.setROIAutoExposure(See3CamCu135.AutoExpFull, 0, 0, 0, 0, 0);
+                            autoExpoWinSizeCombo.enabled = false
+                        }
+                    }
+                    RadioButton {
+                        exclusiveGroup: roiExpogroup
+                        id: autoexpManual
+                        text: "Manual"                      
+                        activeFocusOnPress: true
+                        style: econRadioButtonStyle
+                        opacity: enabled ? 1 : 0.1
+                        onClicked: {
+                            seecamcu135.setROIAutoExposure(See3CamCu135.AutoExpManual, 0, 0, 0, 0, 0);
+                            autoExpoWinSizeCombo.enabled = true
+                        }
+                        Keys.onReturnPressed: {
+                            seecamcu135.setROIAutoExposure(See3CamCu135.AutoExpManual, 0, 0, 0, 0, 0);
+                            autoExpoWinSizeCombo.enabled = true
+                        }
+                    }
                 }
                 ComboBox
                 {
@@ -698,7 +707,7 @@ Item {
                         enabled: true
                         opacity: 1
                         implicitHeight: 25
-                        implicitWidth: 60
+                        implicitWidth: 60                     
                         onClicked: {
                             exposureCompSet.enabled = false
                             setButtonClicked = true
@@ -807,7 +816,7 @@ Item {
                     CheckBox {
                         id: faceDetectEmbedData
                         activeFocusOnPress : true
-                        text: "Embed \nData"
+                        text: "Embed \nData"                       
                         style: econCheckBoxTextWrapModeStyle
                         enabled: faceRectEnable.checked ? true : false
                         opacity: enabled ? 1 : 0.1
@@ -878,7 +887,7 @@ Item {
                     CheckBox {
                         id: smileDetectEmbedData
                         activeFocusOnPress : true
-                        text: "Embed Data"
+                        text: "Embed Data"                      
                         style: econCheckBoxStyle
                         enabled: smileDetectEnable.checked ? true : false
                         opacity: enabled ? 1 : 0.1
@@ -887,6 +896,37 @@ Item {
                         }
                         Keys.onReturnPressed: {
                             enableSmileDetectEmbedData()
+                        }
+                    }
+                }
+
+                Text {
+                    id: flickerctrlField
+                    text: "-- Flicker Detection Control --"
+                    font.pixelSize: 14
+                    font.family: "Ubuntu"
+                    color: "#ffffff"
+                    smooth: true
+                    Layout.alignment: Qt.AlignCenter
+                    opacity: 0.50196078431373
+                }
+
+                ComboBox
+                {
+                    id: flickercombo
+                    opacity: 1
+                    enabled: true
+                    model: ListModel {
+                        ListElement { text: "AUTO" }
+                        ListElement { text: "50Hz" }
+                        ListElement { text: "60Hz" }
+                        ListElement { text: "DISABLE" }
+                    }
+                    activeFocusOnPress: true
+                    style: econComboBoxStyle
+                    onCurrentIndexChanged: {
+                        if(skipUpdateUIFlickerCtrl){
+                           setFlickerDetectionFn();
                         }
                     }
                 }
@@ -954,6 +994,20 @@ Item {
         }
     }
 
+    Component {
+        id: econTextFieldStyle
+        TextFieldStyle {
+            textColor: "black"
+            background: Rectangle {
+                radius: 2
+                implicitWidth: 50
+                implicitHeight: 20
+                border.color: "#333"
+                border.width: 2
+                y: 1
+            }
+        }
+    }
     function displayMessageBox(title, text){
         messageDialog.title = qsTr(title)
         messageDialog.text = qsTr(text)
@@ -961,6 +1015,7 @@ Item {
     }
 
     function setMasterMode(){
+        root.checkForTriggerMode(false)
         seecamcu135.setStreamMode(See3CamCu135.STREAM_MASTER)
         root.captureBtnEnable(true)
         root.videoRecordBtnEnable(true)
@@ -968,8 +1023,9 @@ Item {
 
     // set to default values
     function setToDefaultValues(){
+        root.checkForTriggerMode(false)
         seecamcu135.setToDefault()
-        getValuesFromCamera()        
+        getValuesFromCamera()
     }
 
     // Enable Face detect embed data
@@ -1082,14 +1138,16 @@ Item {
 
     // set trigger stream mode
     function setTriggerMode(){
+        root.checkForTriggerMode(true)
         root.captureBtnEnable(false)
         root.videoRecordBtnEnable(false)
-        seecamcu135.setStreamMode(See3CamCu135.STREAM_TRIGGER)        
+        seecamcu135.setStreamMode(See3CamCu135.STREAM_TRIGGER)
         displayMessageBox(qsTr("Trigger Mode"), qsTr("Frames will be out only when external hardware pulses are given to PIN 5 of CN3. Refer the document See3CAM_CU135_Trigger_Mode"))
     }
 
     // Get the control values in extension settings
     function getValuesFromCamera(){
+        scenemodeTimer.start()       // To call getSceneMode API after some delay
         seecamcu135.getEffectMode()
         seecamcu135.getSceneMode()
         seecamcu135.getDenoiseValue()
@@ -1097,6 +1155,7 @@ Item {
         seecamcu135.getiHDRMode()
         seecamcu135.getStreamMode()
         seecamcu135.getBurstLength()
+        seecamcu135.getFlickerDetection();
         seecamcu135.getAutoExpROIModeAndWindowSize()        
         seecamcu135.getFaceDetectMode()
         seecamcu135.getSmileDetectMode()
@@ -1150,6 +1209,25 @@ Item {
             autoExpoWinSizeCombo.enabled = false
             break
         }
+    }
+
+    function setFlickerDetectionFn()
+    {
+        switch(flickercombo.currentIndex){
+        case 0:
+            flickerCtrl = See3CamCu135.MODE_AUTO
+            break
+        case 1:
+            flickerCtrl = See3CamCu135.MODE_50Hz
+            break
+        case 2:
+            flickerCtrl = See3CamCu135.MODE_60Hz
+            break
+        case 3:
+            flickerCtrl = See3CamCu135.MODE_DISABLE
+            break
+        }
+        seecamcu135.setFlickerDetection(flickerCtrl)
     }
 
     Uvccamera {
@@ -1209,6 +1287,21 @@ Item {
             }
 
         }
+        onFlickerDetectionMode:{
+
+            skipUpdateUIFlickerCtrl = false
+            if(flickerMode == See3CamCu135.MODE_AUTO){
+                flickercombo.currentIndex = 0
+            }else if(flickerMode == See3CamCu135.MODE_50Hz){
+                flickercombo.currentIndex  = 1
+            }else if(flickerMode == See3CamCu135.MODE_60Hz){
+                flickercombo.currentIndex  = 2
+            }else if(flickerMode == See3CamCu135.MODE_DISABLE){
+                flickercombo.currentIndex  = 3
+            }else{ }
+            skipUpdateUIFlickerCtrl = true;
+        }
+
         onFlipMirrorModeChanged:{
             currentFlipMirrorMode(flipMirrorMode)
         }
@@ -1412,5 +1505,6 @@ Item {
 
     Component.onCompleted: {
         getValuesFromCamera()
+        root.disablePowerLineFreq()
     }
 }

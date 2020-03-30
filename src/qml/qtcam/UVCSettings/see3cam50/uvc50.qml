@@ -27,10 +27,15 @@ import econ.camera.see3cam50 1.0
 import econ.camera.see3camControl 1.0
 import econ.camera.see3camGpioControl 1.0
 import cameraenum 1.0
+import econ.camera.stream 1.0
+import econ.camera.property 1.0
 Item {
     width:268
     height:720
     property bool outputPinFlag
+    property var frameToSkip  
+    property variant uniqueSerialNumber
+    property int value_ret
     id: see3CAM_cu50Camera
 
     Connections
@@ -44,11 +49,6 @@ Item {
         {
             root.enableVideoPin(true);
         }
-        onUsbSpeed:{
-              console.log("usbport:"+ usbPort)
-              seecam50.setStillSkipCount(usbPort)
-        }
-
         onGetStillImageFormats:
         {
             var stillImageFormat = []
@@ -331,8 +331,8 @@ Item {
     }
 
     Text {
-        id: flash_controlsCU50
-        text: "--- Flash Controls ---"
+        id: torch_controlsCU50
+        text: "--- Torch Control ---"
         font.pixelSize: 14
         font.family: "Ubuntu"
         color: "#ffffff"
@@ -345,36 +345,7 @@ Item {
         x: 55
         y: 504.5
         spacing: 50
-        CheckBox {
-            id: flash_ctrl
-            text: "Flash"
-            checked: true
-            activeFocusOnPress : true
-            style: CheckBoxStyle {
-                label: Text {
-                    text: "Flash"
-                    font.pixelSize: 14
-                    font.family: "Ubuntu"
-                    color: "#ffffff"
-                    smooth: true
-                    opacity: 1
-                } background: Rectangle {
-                    border.width: control.activeFocus ? 1 :0
-                    color: "#222021"
-                    border.color: control.activeFocus ? "#ffffff" : "#222021"
-                }
-            }
-            onClicked: {
-                see3camctrl.setFlashControlState(checked)
-            }
-            Keys.onReturnPressed: {
-                if(checked)
-                    checked = false
-                else
-                    checked = true
-                see3camctrl.setFlashControlState(checked)
-            }
-        }
+
         CheckBox {
             id: torch_ctrl
             activeFocusOnPress : true
@@ -476,7 +447,10 @@ Item {
         }
     }
 
+    Camproperty{
+        id:camproperty
 
+    }
 
     Uvccamera {
         id: uvccamera
@@ -501,18 +475,8 @@ Item {
                 torch_ctrl.checked =  false;
             }
         }
-        onUpdateFlashCheckBox:  {
-            if(flash_Check_state === "1") {
-                flash_ctrl.checked = true;
-            }
-            else {
-                flash_ctrl.checked =  false;
-            }
-        }
-        onUpdateFrameToSkipFromCam50:{
-            root.updateFrametoSkip(stillSkip)
-        }
-    }
+       
+     }
 
     See3CamCtrl {
         id: see3camctrl
@@ -566,10 +530,25 @@ Item {
 
     Component.onCompleted:{
         gpioOutputBox.forceActiveFocus()
-        seecam50.getFlashLevel()
+        
         seecam50.getTorchLevel()
         outputPinFlag = true
         see3camGpio.getGpioLevel(See3CamGpio.OUT1)
+        uniqueSerialNumber = uvccamera.retrieveSerialNumber()
+
+         // Added by Navya : 07 May 2019 - To get usbspeed and assign skipframes accordingly
+        value_ret=camproperty.getUsbSpeed(uniqueSerialNumber)
+        if(value_ret > 0){
+            if(value_ret == 1)
+                frameToSkip = 8
+            else
+                frameToSkip = 5
+            root.updateFrametoSkip(frameToSkip);
+        }
     }
 
+    Component.onDestruction:{
+        frameToSkip = 3
+        root.updateFrametoSkip(frameToSkip);
+    }
 }

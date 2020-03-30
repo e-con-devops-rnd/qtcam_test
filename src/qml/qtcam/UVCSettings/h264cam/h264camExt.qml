@@ -17,6 +17,10 @@ Item {
     property bool skipUpdateInCamOnh264Quality: false
     property bool skipUpdateUIOnHDR: false
     property bool skipUpdateUIOnDewarp: false
+    property int minWindowValue
+    property int maxWindowValue
+    property bool hFlipClick :true
+    property bool vFlipClick :true
 
     Connections
     {
@@ -34,18 +38,23 @@ Item {
                 h264camId.setROIExposureCoordinates(previewwindowWidth, previewwindowHeight, videoStreamWidth, videoStreamHeight, x, y)
             }
         }
+        //Added by M.VISHNUMURALI :Inorder to enable/disable roiAutoExpoUI according to AutoExpo settings.
+        onAutoExposureSelected:
+        {
+            h264camId.runGetROIAutoExposureMode(H264camera.UVC_GET_CUR)
+        }
     }
 
     ScrollView{
-            id: scrollview
-            x: 10
-            y: 189.5
-            width: 257
-            height: 450
-            style: econscrollViewStyle
-            Item{
-                height:850
-                ColumnLayout{
+        id: scrollview
+        x: 10
+        y: 189.5
+        width: 257
+        height: 450
+        style: econscrollViewStyle
+        Item{
+            height:1000
+            ColumnLayout{
                 x:5
                 y:5
                 spacing:20
@@ -70,7 +79,7 @@ Item {
                         width: 150
                         stepSize: 1
                         style:econSliderStyle
-                        onValueChanged:{                            
+                        onValueChanged:{
                             if(skipUpdateInCamOnQFactor){
                                 h264camId.setQFactor(qFactorSlider.value)
                             }
@@ -229,19 +238,21 @@ Item {
                     model: ListModel {
                         ListElement { text: "OFF" }
                         ListElement { text: "HDR 1X" }
-                        ListElement { text: "HDR 2X" }                        
+                        ListElement { text: "HDR 2X" }
                     }
                     activeFocusOnPress: true
                     style: econComboBoxStyle
                     onCurrentIndexChanged: {
                         if(skipUpdateUIOnHDR){
-			    h264camId.setHDRMode(currentIndex)
+                            h264camId.setHDRMode(currentIndex)
                         }
                         skipUpdateUIOnHDR = true
+                        //Added by M.VISHNUMURALI :Inorder to enable/disable roiAutoExpoUI according to HDR settings.
+                        h264camId.runGetROIAutoExposureMode(H264camera.UVC_GET_CUR)
                     }
                 }
 
-		Text {
+                Text {
                     id: dewarpMode
                     text: "--- Dewarp Mode ---"
                     font.pixelSize: 14
@@ -265,9 +276,9 @@ Item {
                     style: econComboBoxStyle
                     onCurrentIndexChanged: {
                         if(skipUpdateUIOnDewarp){
-			    h264camId.setDewarpMode(currentIndex)
+                            h264camId.setDewarpMode(currentIndex)
                         }
-                        skipUpdateUIOnDewarp = true
+
                     }
                 }
 
@@ -289,16 +300,16 @@ Item {
                         exclusiveGroup: roiExpogroup
                         id: autoexpFull
                         text: "Full"
-                        checked:true
                         activeFocusOnPress: true
                         style: econRadioButtonStyle
-                        opacity: enabled ? 1 : 0.1
-
+                        opacity: 1
                         onClicked: {
                             h264camId.setROIAutoExposureMode(H264camera.ROI_FULL)
+
                         }
                         Keys.onReturnPressed: {
                             h264camId.setROIAutoExposureMode(H264camera.ROI_FULL)
+
                         }
                     }
                     RadioButton {
@@ -307,46 +318,42 @@ Item {
                         text: "Manual"
                         activeFocusOnPress: true
                         style: econRadioButtonStyle
-                        opacity: enabled ? 1 : 0.1
+                        opacity: 1
                         onClicked: {
                             h264camId.setROIAutoExposureMode(H264camera.ROI_MANUAL)
+                            
                         }
                         Keys.onReturnPressed: {
                             h264camId.setROIAutoExposureMode(H264camera.ROI_MANUAL)
+                            
                         }
                     }
                 }
 
                 Text {
-                            id: windowsize
-                            text: "--- ROI Window Size ---"
-                            font.pixelSize: 14
-                            font.family: "Ubuntu"
-                            color: "#ffffff"
-                            smooth: true
-                            Layout.alignment: Qt.AlignCenter
-                            opacity: 0.50196078431373
-                        }
+                    id: windowsize
+                    text: "--- ROI Window Size ---"
+                    font.pixelSize: 14
+                    enabled:hdrCombo.currentIndex == 0 ?1 :0
+                    font.family: "Ubuntu"
+                    color: "#ffffff"
+                    smooth: true
+                    Layout.alignment: Qt.AlignCenter
+                    opacity: 0.50196078431373
+                }
 
                 ComboBox
                 {
-                    id:roiwindowsize
-                    enabled: (autoexpManual.enabled && autoexpManual.checked) ? true : false
-                    opacity: (autoexpManual.enabled && autoexpManual.checked) ? 1 : 0.1
+                    id: autoExpoWinSizeCombo
+                    enabled: (autoexpManual.enabled && autoexpManual.checked ) ? true : false
+                    opacity: (autoexpManual.enabled && autoexpManual.checked ) ? 1 : 0.1
                     model: ListModel{
-                        ListElement {text : "1"}
-                        ListElement {text : "2"}
-                        ListElement {text : "3"}
-                        ListElement {text : "4"}
-                        ListElement {text : "5"}
-                        ListElement {text : "6"}
-                        ListElement {text : "7"}
-                        ListElement {text : "8"}
+                        id:roiwinsize
                     }
                     activeFocusOnPress: true
                     style: econComboBoxStyle
                     onCurrentIndexChanged: {
-                        h264camId.setROIExposureWindowSize(currentText)
+                        h264camId.setROIExposureWindowSize(autoExpoWinSizeCombo.currentText)
                     }
                 }
 
@@ -394,13 +401,53 @@ Item {
                     }
                 }
 
+                Text {
+                    id: flipText
+                    text: "--- Flip Control ---"
+                    font.pixelSize: 14
+                    font.family: "Ubuntu"
+                    color: "#ffffff"
+                    smooth: true
+                    Layout.alignment: Qt.AlignCenter
+                    opacity: 0.50196078431373
+                }
 
+                Row{
+                    spacing: 55
+                    CheckBox {
+                        id: flipCtrlHorizotal
+                        activeFocusOnPress : true
+                        text: "Horizontal"
+                        style: econCheckBoxStyle
+                        opacity: enabled ? 1 :0.1
+                        onClicked:{
+                            h264camId.setHorizontalFlip(flipCtrlHorizotal.checked)
+                        }
+                        Keys.onReturnPressed: {
+                            h264camId.setHorizontalFlip(flipCtrlHorizotal.checked)
+                        }
+                    }
+                    CheckBox {
+                        id: flipCtrlVertical
+                        activeFocusOnPress : true
+                        text: "Vertical"
+                        style: econCheckBoxStyle
+                        opacity: enabled ? 1 :0.1
+                        onClicked:{
+                              h264camId.setVerticalFlip(flipCtrlVertical.checked)
+                        }
+                        Keys.onReturnPressed: {
+                             h264camId.setVerticalFlip(flipCtrlVertical.checked)
+                        }
+                    }
+                }
                 Row{
                     Layout.alignment: Qt.AlignCenter
                     Button {
                         id: defaultValue
                         activeFocusOnPress : true
                         text: "Default"
+                        tooltip: "Click here to get the Default Values of available controls"
                         style: econButtonStyle
                         opacity: 1
                         implicitHeight: 35
@@ -414,11 +461,11 @@ Item {
                     }
                 }
 
-              
-		 Row{
+
+                Row{
                     Layout.alignment: Qt.AlignCenter
 
-		 Button {
+                    Button {
                         id: f_wversion_selected
                         opacity: 1
                         activeFocusOnPress : true
@@ -434,15 +481,15 @@ Item {
                                 source: "images/f_wversion_selected.png"
                             }
                         }
-			onClicked: {
+                        onClicked: {
                             getFirmwareVer()
                         }
 
                         Keys.onReturnPressed: {
                             getFirmwareVer()
                         }
-		    }
-                 }
+                    }
+                }
             }
         }
     }
@@ -465,6 +512,23 @@ Item {
                 font.family: "Ubuntu"
                 font.pointSize: 10
                 text: control.text
+            }
+        }
+    }
+    Component {
+        id: econCheckBoxStyle
+        CheckBoxStyle {
+            label: Text {
+                text: control.text
+                font.pixelSize: 14
+                font.family: "Ubuntu"
+                color: "#ffffff"
+                smooth: true
+                opacity: 1
+            }
+            background: Rectangle {
+                color: "#222021"
+                border.color: control.activeFocus ? "#ffffff" : "#222021"
             }
         }
     }
@@ -503,7 +567,19 @@ Item {
         onHdrModeReceived:{
             queryForHDRControl(queryType, hdrValue)
         }
+        onFlipHorizontalValue:{
+            queryForHFlipControl(queryType, flipValue)
+        }
 
+        onFlipVerticalValue:{
+            queryForVFlipControl(queryType, flipValue)
+        }
+        onDisableHFlipControl:{
+            flipCtrlHorizotal.enabled = false;
+        }
+        onDisableVFlipControl:{
+            flipCtrlVertical.enabled = false;
+        }
         onGainModeReceived:{
             queryForGainControl(queryType, gainValue)
         }
@@ -523,7 +599,7 @@ Item {
         onNoiseReductionValueReceived:{
             queryForNoiseReductionControl(queryType, noiseReductionValue)
         }
-	
+
         onTitleTextChanged: {
             displayMessageBox(qsTr(_title), qsTr(_text))
         }
@@ -605,27 +681,27 @@ Item {
     }
 
     function displayMessageBox(title, text){
-        messageDialog.title = qsTr(title)        
+        messageDialog.title = qsTr(title)
         messageDialog.text = qsTr(text)
         messageDialog.open()
     }
 
     // Query for jpeg Q control - min, max, current values
-    function queryForQFactorControl(queryType, jpegQVal){        
+    function queryForQFactorControl(queryType, jpegQVal){
         skipUpdateInCamOnQFactor = false
         switch(queryType){
-            case H264camera.UVC_GET_CUR:
-                qFactorSlider.value = jpegQVal                
-                break;
-            case H264camera.UVC_GET_MIN:
-                qFactorSlider.minimumValue = jpegQVal
-                break;
-            case H264camera.UVC_GET_MAX:
-                qFactorSlider.maximumValue = jpegQVal
-                break;
-            case H264camera.UVC_GET_RES:
-                qFactorSlider.stepSize = jpegQVal
-                break;
+        case H264camera.UVC_GET_CUR:
+            qFactorSlider.value = jpegQVal
+            break;
+        case H264camera.UVC_GET_MIN:
+            qFactorSlider.minimumValue = jpegQVal
+            break;
+        case H264camera.UVC_GET_MAX:
+            qFactorSlider.maximumValue = jpegQVal
+            break;
+        case H264camera.UVC_GET_RES:
+            qFactorSlider.stepSize = jpegQVal
+            break;
         }
         skipUpdateInCamOnQFactor = true
 
@@ -634,23 +710,23 @@ Item {
     function queryForH264QualityControl(queryType, h264Quality){
         skipUpdateInCamOnh264Quality = false
         switch(queryType){
-            case H264camera.UVC_GET_CUR:
-                h264QualitySlider.value = h264Quality
-                break;
-            case H264camera.UVC_GET_MIN:
-                h264QualitySlider.minimumValue = h264Quality
-                break;
-            case H264camera.UVC_GET_MAX:
-                h264QualitySlider.maximumValue = h264Quality
-                break;
-            case H264camera.UVC_GET_RES:
-                h264QualitySlider.stepSize = h264Quality
-                break;
+        case H264camera.UVC_GET_CUR:
+            h264QualitySlider.value = h264Quality
+            break;
+        case H264camera.UVC_GET_MIN:
+            h264QualitySlider.minimumValue = h264Quality
+            break;
+        case H264camera.UVC_GET_MAX:
+            h264QualitySlider.maximumValue = h264Quality
+            break;
+        case H264camera.UVC_GET_RES:
+            h264QualitySlider.stepSize = h264Quality
+            break;
         }
         skipUpdateInCamOnh264Quality = true
     }
 
-   function queryForHDRControl(queryType, hdrVal){
+    function queryForHDRControl(queryType, hdrVal){
         if(queryType == H264camera.UVC_GET_CUR){
             switch(hdrVal){
             case H264camera.HDR_OFF:
@@ -658,79 +734,138 @@ Item {
                 break
             case H264camera.HDR_1X:
                 hdrCombo.currentIndex = 1
-               break
+                break
             case H264camera.HDR_2X:
                 hdrCombo.currentIndex = 2
-                break            
+                break
             }
         }
     }
 
-   function queryForGainControl(queryType, gainVal){
-       if(queryType == H264camera.UVC_GET_CUR){
-           switch(gainVal){
-           case H264camera.GAIN_MIN:
-               gainLcg.checked = true
-               break
-           case H264camera.GAIN_MAX:
-               gainHcg.checked = true
-               break
-           }
-       }
-
-   }
-
-
-   function queryForRoiMode(queryType, expMode){
-       if(queryType == H264camera.UVC_GET_CUR){
-           switch(expMode){
-           case H264camera.ROI_FULL:
-               autoexpFull.checked = true
-               break
-           case H264camera.ROI_MANUAL:
-               autoexpManual.checked = true
-               break
-           }
-       }
-   }
-
-
-   function queryForWindowSize(queryType, windowSize){
-       if(queryType == H264camera.UVC_GET_CUR){
-            roiwindowsize.currentIndex = windowSize-1
-       }
-   }
-
-
-    function queryForDewarpControl(queryType, dewarpValue){
-	if(queryType == H264camera.UVC_GET_CUR){
-            switch(dewarpValue){
-            case H264camera.DEWARP_OFF:
-               dewarpCombo.currentIndex = 0
-               break
-            case H264camera.DEWARP_ON:
-               dewarpCombo.currentIndex = 1
-               break
+    function queryForHFlipControl(queryType, HFlipVal){
+        if(queryType == H264camera.UVC_GET_CUR){
+            switch(HFlipVal){
+            case H264camera.HFLIP_MAX:
+                flipCtrlHorizotal.checked = true;
+                break
+            case H264camera.HFLIP_MIN:
+                flipCtrlHorizotal.checked = false;
+                break
             }
-        }	
+        }
+    }
+
+    function queryForVFlipControl(queryType, VFlipVal){
+        if(queryType == H264camera.UVC_GET_CUR){
+            switch(VFlipVal){
+            case H264camera.VFLIP_MAX:
+                flipCtrlVertical.checked = true;
+                break
+            case H264camera.VFLIP_MIN:
+                flipCtrlVertical.checked = false;
+                break
+            }
+        }
+    }
+
+    function queryForGainControl(queryType, gainVal){
+        if(queryType == H264camera.UVC_GET_CUR){
+            switch(gainVal){
+            case H264camera.GAIN_MIN:
+                gainLcg.checked = true
+                break
+            case H264camera.GAIN_MAX:
+                gainHcg.checked = true
+                break
+            }
+        }
+
+    }
+
+//Function edited by M.Vishnumurali :For enabling/disabling ui according to AutoExpo and HDR mode
+    function queryForRoiMode(queryType, expMode){
+        if(queryType == H264camera.UVC_GET_CUR){
+            switch(expMode){
+            case H264camera.ROI_FULL:
+                autoexpFull.checked = true
+                autoexpFull.enabled = true
+                autoexpManual.enabled = true
+                break
+            case H264camera.ROI_MANUAL:
+                autoexpManual.checked = true
+                autoexpFull.enabled = true
+                autoexpManual.enabled = true
+                break
+            case H264camera.ROI_DISABLE:
+                autoexpFull.checked = false
+                autoexpManual.checked = false
+                autoexpFull.enabled = false
+                autoexpManual.enabled = false
+            }
+            //Added by M.Vishnumurali: to reduce opacity when roiui is enabled/disabled
+            autoexpManual.opacity = autoexpManual.enabled ? 1:0.1
+            autoexpFull.opacity = autoexpFull.enabled ? 1:0.1
+        }
+    }
+
+    function queryForWindowSize(queryType, windowSize){
+        switch(queryType){
+        case H264camera.UVC_GET_CUR:
+            autoExpoWinSizeCombo.currentIndex = windowSize -1
+            break;
+        case H264camera.UVC_GET_MIN:
+            minWindowValue = windowSize
+            break;
+        case H264camera.UVC_GET_MAX:
+            maxWindowValue = windowSize
+            break;
+        case H264camera.UVC_GET_RES:
+            autoExpoWinSizeCombo.currentIndex = windowSize -1
+            break;
+        }
+
+        fillROIWindowSizeCombo(minWindowValue,maxWindowValue)
     }
 
 
+    function queryForDewarpControl(queryType, dewarpValue){
+        if(queryType == H264camera.UVC_GET_CUR){
+            switch(dewarpValue){
+            case H264camera.DEWARP_OFF:
+                dewarpCombo.currentIndex = 0
+                break
+            case H264camera.DEWARP_ON:
+                dewarpCombo.currentIndex = 1
+                break
+            }
+        }
+        skipUpdateUIOnDewarp = true
+    }
+
+
+    // Added by Navya - 07 June 2019 -- To get window Size dynamically from camera.
+    function fillROIWindowSizeCombo(minWindowValue,maxWindowValue){ // need to fill based on windowsize getting from camera
+        roiwinsize.clear()
+        for (var i=minWindowValue; i <=maxWindowValue; i++){
+            roiwinsize.append({"text": i})
+        }
+    }
+
     function queryForNoiseReductionControl(queryType, noiseReductionVal){
         skipUpdateInCamOnNoiseReduceChange = false
-        switch(queryType){            
-            case H264camera.UVC_GET_CUR:
-                noiseReduceSlider.value = noiseReductionVal                
-                break;
-            case H264camera.UVC_GET_MIN:
-                noiseReduceSlider.minimumValue = noiseReductionVal
-                break;
-            case H264camera.UVC_GET_MAX:
-                noiseReduceSlider.maximumValue = noiseReductionVal
-                break;
-            case H264camera.UVC_GET_RES:
-                noiseReduceSlider.stepSize = noiseReductionVal
-                break;
+        switch(queryType){
+        case H264camera.UVC_GET_CUR:
+            noiseReduceSlider.value = noiseReductionVal
+            break;
+        case H264camera.UVC_GET_MIN:
+            noiseReduceSlider.minimumValue = noiseReductionVal
+            break;
+        case H264camera.UVC_GET_MAX:
+            noiseReduceSlider.maximumValue = noiseReductionVal
+            break;
+        case H264camera.UVC_GET_RES:
+            noiseReduceSlider.stepSize = noiseReductionVal
+            break;
         }
 
     }
@@ -738,32 +873,35 @@ Item {
     function queryForBitrateControl(queryType, bitrateVal){
         skipUpdateInCamOnBitrateChange = false
         switch(queryType){
-            case H264camera.UVC_GET_CUR:
-                bitrateSlider.value = bitrateVal
-                break;
-            case H264camera.UVC_GET_MIN:
-                bitrateSlider.minimumValue = bitrateVal
-                break;
-            case H264camera.UVC_GET_MAX:
-                bitrateSlider.maximumValue = bitrateVal
-                break;
-            case H264camera.UVC_GET_RES:
-                bitrateSlider.stepSize = bitrateVal
-                break;
+        case H264camera.UVC_GET_CUR:
+            bitrateSlider.value = bitrateVal
+            break;
+        case H264camera.UVC_GET_MIN:
+            bitrateSlider.minimumValue = bitrateVal
+            break;
+        case H264camera.UVC_GET_MAX:
+            bitrateSlider.maximumValue = bitrateVal
+            break;
+        case H264camera.UVC_GET_RES:
+            bitrateSlider.stepSize = bitrateVal
+            break;
         }
 
     }
 
 
     function getValuesFromCamera(valueToGet){
+
         h264camId.getBitrate(valueToGet)
         h264camId.getQFactor(valueToGet)
         h264camId.getHDRMode(valueToGet)
         h264camId.getGainMode(valueToGet)
+        h264camId.getHorizontalFlip(valueToGet)
+        h264camId.getVerticalFlip(valueToGet)
         h264camId.getNoiseReductionValue(valueToGet)
         h264camId.getH264Quality(valueToGet)
         h264camId.getDewarpMode(valueToGet)
-        h264camId.getROIAutoExposureMode(valueToGet)
+        h264camId.runGetROIAutoExposureMode(valueToGet)
         h264camId.getROIExposureWindowSize(valueToGet)
     }
 
@@ -784,6 +922,10 @@ Item {
         h264camId.getNoiseReductionValue(H264camera.UVC_GET_MIN)
         h264camId.getNoiseReductionValue(H264camera.UVC_GET_MAX)
         h264camId.getNoiseReductionValue(H264camera.UVC_GET_RES)
+
+        h264camId.getROIExposureWindowSize(H264camera.UVC_GET_MIN)
+        h264camId.getROIExposureWindowSize(H264camera.UVC_GET_MAX)
+        h264camId.getROIExposureWindowSize(H264camera.UVC_GET_RES)
     }
 
     Component.onCompleted: {

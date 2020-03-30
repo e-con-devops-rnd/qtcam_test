@@ -32,8 +32,8 @@ SOURCES += main.cpp \
     ascella.cpp \
     seecam_cu30.cpp \
     see3cam_130.cpp \
-	see3cam_30.cpp \
-	seecam_81.cpp \
+    see3cam_30.cpp \
+    seecam_81.cpp \
     see3cam_cu135.cpp \
     see3cam_cu40.cpp\
     see3cam_cu20.cpp\
@@ -46,7 +46,10 @@ SOURCES += main.cpp \
     audioinput.cpp \
     see3cam_cu38.cpp \
     alsa.cpp\
-    see3cam_cu1317.cpp
+    fscam_cu135.cpp \
+    see3camcu55_mh.cpp \
+    see3cam_20cug.cpp \
+    see3cam_cu22.cpp
 
 # Installation path
 # target.path =
@@ -75,10 +78,10 @@ HEADERS += \
     see3cam_cu130.h \
     h264decoder.h \
     ascella.h \
-	seecam_cu30.h \
-	common.h \
+    seecam_cu30.h \
+    common.h \
     see3cam_130.h \
-	common_enums.h \
+    common_enums.h \
     see3cam_30.h \
     seecam_81.h \
     see3cam_cu135.h \
@@ -93,7 +96,10 @@ HEADERS += \
     audioinput.h \
     see3cam_cu38.h \
     alsa.h\
-    see3cam_cu1317.h
+    fscam_cu135.h\
+    see3camcu55_mh.h \
+    see3cam_20cug.h  \
+    see3cam_cu22.h
 
 
 INCLUDEPATH +=  $$PWD/v4l2headers/include \
@@ -104,6 +110,11 @@ UNAME_MACHINE_32BIT = $$system(dpkg --print-architecture | grep -o "i386")
 UNAME_MACHINE_64BIT = $$system(dpkg --print-architecture | grep -o "amd64")
 BOARD_ARM64 = $$system(dpkg --print-architecture | grep -o "arm64")
 
+DISTRIBUTION_NAME = $$system(lsb_release -a | grep -o "bionic")
+contains(DISTRIBUTION_NAME,bionic):{
+QMAKE_CXX = "g++-5"
+QMAKE_CXXFLAGS += -std=c++11
+}
 
 contains(UNAME_MACHINE_64BIT, amd64):{
     message("x86_64 bit libs")
@@ -115,7 +126,7 @@ contains(UNAME_MACHINE_64BIT, amd64):{
         -ludev \
         -lusb-1.0 \
         -lpulse \
-		-lasound\
+        -lasound\
         -L/usr/lib/ -lturbojpeg \        
         -L/usr/lib/x86_64-linux-gnu/ -levdev
 }
@@ -150,7 +161,7 @@ contains(BOARD_ARM64, arm64):{
         -L/usr/lib/aarch64-linux-gnu/ -levdev
 }
 
-QMAKE_CXX += -ggdb
+#QMAKE_CXX += -ggdb
 QMAKE_CFLAGS_THREAD = -D__STDC_CONSTANT_MACROS      #For Ubuntu 12.04 compilation
 QMAKE_CXXFLAGS_THREAD = -D__STDC_CONSTANT_MACROS    #For Ubuntu 12.04 compilation
 

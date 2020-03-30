@@ -43,15 +43,17 @@ Item {
     property bool skipUpdateUIQFactor : false
     property bool skipUpdateUIFrameRate: false
     property bool setButtonClicked: false
+    property bool skipUpdateUIFlickerCtrl:false
+    property int  flickerCtrl
 
     Connections
     {
         target: root
         onTakeScreenShot:
         {
-             if(see3camcu30.enableDisableFaceRectangle(false)) {
-		root.imageCapture(CommonEnums.BURST_SHOT);
-	     }
+            if(see3camcu30.enableDisableFaceRectangle(false)) {
+                root.imageCapture(CommonEnums.BURST_SHOT);
+            }
         }
         onGetVideoPinStatus:
         {
@@ -69,13 +71,13 @@ Item {
     }
 
     Timer {
-         id: burstShotTimer
-         interval: 1000
-         onTriggered: {
-             root.imageCapture(CommonEnums.BURST_SHOT);
-             stop()
-         }
-     }
+        id: burstShotTimer
+        interval: 1000
+        onTriggered: {
+            root.imageCapture(CommonEnums.BURST_SHOT);
+            stop()
+        }
+    }
 
     // Used when selecting auto exposure in image Quality settings menu
     Timer {
@@ -98,8 +100,8 @@ Item {
     }
 
     Action {
-    id: firmwareVersion
-    onTriggered:
+        id: firmwareVersion
+        onTriggered:
         {
             getFirmwareVersion()
         }
@@ -125,14 +127,14 @@ Item {
             spacing:20
 
             Text {
-            id: scene_mode
-            text: "--- Scene Mode ---"
-            font.pixelSize: 14
-            font.family: "Ubuntu"
-            color: "#ffffff"
-            smooth: true
-            Layout.alignment: Qt.AlignCenter
-            opacity: 0.50196078431373
+                id: scene_mode
+                text: "--- Scene Mode ---"
+                font.pixelSize: 14
+                font.family: "Ubuntu"
+                color: "#ffffff"
+                smooth: true
+                Layout.alignment: Qt.AlignCenter
+                opacity: 0.50196078431373
             }
 
 
@@ -157,13 +159,13 @@ Item {
                 RadioButton {
                     id: sceneDoc
                     style:  econRadioButtonStyle
-                    text: qsTr("Document")
+                    text: qsTr("Document")                  
                     exclusiveGroup: sceneInputGroup
                     activeFocusOnPress: true
-                    onClicked: {                        
+                    onClicked: {
                         see3camcu30.setSceneMode(See3Camcu30.SCENE_DOCUMENT)
                     }
-                    Keys.onReturnPressed: {                        
+                    Keys.onReturnPressed: {
                         see3camcu30.setSceneMode(See3Camcu30.SCENE_DOCUMENT)
                     }
 
@@ -173,14 +175,14 @@ Item {
             Row{
                 Layout.alignment: Qt.AlignCenter
                 Text {
-                   id: special_effects
-                   text: "--- Special Effects ---"
-                   font.pixelSize: 14
-                   font.family: "Ubuntu"
-                   color: "#ffffff"
-                   smooth: true
-                   opacity: 0.50196078431373
-               }
+                    id: special_effects
+                    text: "--- Special Effects ---"
+                    font.pixelSize: 14
+                    font.family: "Ubuntu"
+                    color: "#ffffff"
+                    smooth: true
+                    opacity: 0.50196078431373
+                }
             }
             Grid {
                 x: 23
@@ -206,39 +208,39 @@ Item {
                 RadioButton {
                     id: rdoEffectBW
                     style:  econRadioButtonStyle
-                    text: qsTr("Black and White")
+                    text: qsTr("Black and White")                   
                     exclusiveGroup: effectInputGroup
                     activeFocusOnPress: true
-                    onClicked: {                        
+                    onClicked: {
                         see3camcu30.setEffectMode(See3Camcu30.EFFECT_BLACK_WHITE)
                     }
-                    Keys.onReturnPressed: {                        
+                    Keys.onReturnPressed: {
                         see3camcu30.setEffectMode(See3Camcu30.EFFECT_BLACK_WHITE)
                     }
                 }
                 RadioButton {
                     id: rdoEffectGreyScale
                     style:  econRadioButtonStyle
-                    text: qsTr("GreyScale")
+                    text: qsTr("GreyScale")                
                     exclusiveGroup: effectInputGroup
                     activeFocusOnPress: true
-                    onClicked: {                        
+                    onClicked: {
                         see3camcu30.setEffectMode(See3Camcu30.EFFECT_GREYSCALE)
                     }
-                    Keys.onReturnPressed: {                        
+                    Keys.onReturnPressed: {
                         see3camcu30.setEffectMode(See3Camcu30.EFFECT_GREYSCALE)
                     }
                 }
                 RadioButton {
                     id: rdoEffectSketch
                     style:  econRadioButtonStyle
-                    text: qsTr("Sketch")
+                    text: qsTr("Sketch")                   
                     exclusiveGroup: effectInputGroup
                     activeFocusOnPress: true
-                    onClicked: {                        
+                    onClicked: {
                         see3camcu30.setEffectMode(See3Camcu30.EFFECT_SKETCH)
                     }
-                    Keys.onReturnPressed: {                        
+                    Keys.onReturnPressed: {
                         see3camcu30.setEffectMode(See3Camcu30.EFFECT_SKETCH)
                     }
                 }
@@ -248,10 +250,10 @@ Item {
                     text: qsTr("Negative")
                     exclusiveGroup: effectInputGroup
                     activeFocusOnPress: true
-                    onClicked: {                        
+                    onClicked: {
                         see3camcu30.setEffectMode(See3Camcu30.EFFECT_NEGATIVE)
                     }
-                    Keys.onReturnPressed: {                        
+                    Keys.onReturnPressed: {
                         see3camcu30.setEffectMode(See3Camcu30.EFFECT_NEGATIVE)
                     }
                 }
@@ -274,41 +276,41 @@ Item {
                 spacing:38
                 ExclusiveGroup { id: roiExpogroup }
 
-                 RadioButton {
-                      exclusiveGroup: roiExpogroup
-                      id: autoexpFull
-                      text: "Full"
-                      activeFocusOnPress: true
-                      style: econRadioButtonStyle
-                      opacity: enabled ? 1 : 0.1
-                      // setROIAutoExposure() args:  mode, videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord, WinSize]
-                      // videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord - these parameters are required only when click in preview]
-                      // winSize is required only for manual mode
-                      onClicked: {
-                          see3camcu30.setROIAutoExposure(See3Camcu30.AutoExpFull, 0, 0, 0, 0, 0);
-                          autoExpoWinSizeCombo.enabled = false
-                      }
-                      Keys.onReturnPressed: {
-                          see3camcu30.setROIAutoExposure(See3Camcu30.AutoExpFull, 0, 0, 0, 0, 0);
-                          autoExpoWinSizeCombo.enabled = false
-                      }
-                  }
-                  RadioButton {
-                      exclusiveGroup: roiExpogroup
-                      id: autoexpManual
-                      text: "Manual"
-                      activeFocusOnPress: true
-                      style: econRadioButtonStyle
-                      opacity: enabled ? 1 : 0.1
-                      onClicked: {                          
-                          see3camcu30.setROIAutoExposure(See3Camcu30.AutoExpManual, 0, 0, 0, 0, 0);
-                          autoExpoWinSizeCombo.enabled = true
-                      }
-                      Keys.onReturnPressed: {                          
-                          see3camcu30.setROIAutoExposure(See3Camcu30.AutoExpManual, 0, 0, 0, 0, 0);
-                          autoExpoWinSizeCombo.enabled = true
-                      }
-                  }
+                RadioButton {
+                    exclusiveGroup: roiExpogroup
+                    id: autoexpFull
+                    text: "Full"                   
+                    activeFocusOnPress: true
+                    style: econRadioButtonStyle
+                    opacity: enabled ? 1 : 0.1
+                    // setROIAutoExposure() args:  mode, videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord, WinSize]
+                    // videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord - these parameters are required only when click in preview]
+                    // winSize is required only for manual mode
+                    onClicked: {
+                        see3camcu30.setROIAutoExposure(See3Camcu30.AutoExpFull, 0, 0, 0, 0, 0);
+                        autoExpoWinSizeCombo.enabled = false
+                    }
+                    Keys.onReturnPressed: {
+                        see3camcu30.setROIAutoExposure(See3Camcu30.AutoExpFull, 0, 0, 0, 0, 0);
+                        autoExpoWinSizeCombo.enabled = false
+                    }
+                }
+                RadioButton {
+                    exclusiveGroup: roiExpogroup
+                    id: autoexpManual
+                    text: "Manual"                  
+                    activeFocusOnPress: true
+                    style: econRadioButtonStyle
+                    opacity: enabled ? 1 : 0.1
+                    onClicked: {
+                        see3camcu30.setROIAutoExposure(See3Camcu30.AutoExpManual, 0, 0, 0, 0, 0);
+                        autoExpoWinSizeCombo.enabled = true
+                    }
+                    Keys.onReturnPressed: {
+                        see3camcu30.setROIAutoExposure(See3Camcu30.AutoExpManual, 0, 0, 0, 0, 0);
+                        autoExpoWinSizeCombo.enabled = true
+                    }
+                }
             }
 
             ComboBox
@@ -328,65 +330,65 @@ Item {
                 }
                 activeFocusOnPress: true
                 style: econComboBoxStyle
-                onCurrentIndexChanged: {                    
+                onCurrentIndexChanged: {
                     if(skipUpdateUIOnExpWindowSize){
                         see3camcu30.setROIAutoExposure(See3Camcu30.AutoExpManual, 0, 0, 0, 0, autoExpoWinSizeCombo.currentText)
                     }
                     skipUpdateUIOnExpWindowSize = true
                 }
-            }            
+            }
 
             Text {
-                    id: exposureCompTextTitle
-                    text: "--- Exposure Compensation ---"
+                id: exposureCompTextTitle
+                text: "--- Exposure Compensation ---"
+                font.pixelSize: 14
+                font.family: "Ubuntu"
+                color: "#ffffff"
+                smooth: true
+                Layout.alignment: Qt.AlignCenter
+                opacity: 0.50196078431373
+            }
+            Row{
+                spacing: 9
+                Text {
+                    id: exposureCompText
+                    text: "value(µs)[8000 - 1000000]"
                     font.pixelSize: 14
                     font.family: "Ubuntu"
                     color: "#ffffff"
                     smooth: true
-                    Layout.alignment: Qt.AlignCenter
-                    opacity: 0.50196078431373
+                    width: 80
+                    wrapMode: Text.WordWrap
+                    opacity: 1
                 }
-            Row{
-                    spacing: 9
-                    Text {
-                        id: exposureCompText
-                        text: "value(µs)[8000 - 1000000]"
-                        font.pixelSize: 14
-                        font.family: "Ubuntu"
-                        color: "#ffffff"
-                        smooth: true
-                        width: 80
-                        wrapMode: Text.WordWrap
-                        opacity: 1
+                TextField {
+                    id: exposureCompValue
+                    font.pixelSize: 10
+                    font.family: "Ubuntu"
+                    smooth: true
+                    horizontalAlignment: TextInput.AlignHCenter
+                    opacity: 1
+                    style: econTextFieldStyle
+                    implicitHeight: 25
+                    implicitWidth: 80
+                    validator: IntValidator {bottom: expoCompMin; top: expoCompMax}
+                }
+                Button {
+                    id: exposureCompSet
+                    activeFocusOnPress : true
+                    text: "Set"                   
+                    style: econButtonStyle
+                    enabled: true
+                    opacity: 1
+                    implicitHeight: 25
+                    implicitWidth: 60
+                    onClicked: {
+                        exposureCompSetButtonClicked()
                     }
-                    TextField {
-                        id: exposureCompValue
-                        font.pixelSize: 10
-                        font.family: "Ubuntu"
-                        smooth: true
-                        horizontalAlignment: TextInput.AlignHCenter
-                        opacity: 1
-                        style: econTextFieldStyle
-                        implicitHeight: 25
-                        implicitWidth: 80
-                        validator: IntValidator {bottom: expoCompMin; top: expoCompMax}
+                    Keys.onReturnPressed: {
+                        exposureCompSetButtonClicked()
                     }
-                    Button {
-                        id: exposureCompSet
-                        activeFocusOnPress : true
-                        text: "Set"
-                        style: econButtonStyle
-                        enabled: true
-                        opacity: 1
-                        implicitHeight: 25
-                        implicitWidth: 60
-                        onClicked: {
-                            exposureCompSetButtonClicked()
-                        }
-                        Keys.onReturnPressed: {
-                            exposureCompSetButtonClicked()
-                        }
-                    }
+                }
             }
             Row{
                 Layout.alignment: Qt.AlignCenter
@@ -414,7 +416,7 @@ Item {
                     maximumValue: denoiseMax
                     onValueChanged:  {
                         deNoiseTextField.text = deNoiseSlider.value
-                        see3camcu30.setDenoiseValue(deNoiseSlider.value)                        
+                        see3camcu30.setDenoiseValue(deNoiseSlider.value)
                     }
                 }
                 TextField {
@@ -428,7 +430,7 @@ Item {
                     validator: IntValidator {bottom: deNoiseSlider.minimumValue; top: deNoiseSlider.maximumValue}
                     onTextChanged: {
                         if(text.length > 0){
-                            deNoiseSlider.value = deNoiseTextField.text                            
+                            deNoiseSlider.value = deNoiseTextField.text
                         }
                     }
                 }
@@ -474,7 +476,7 @@ Item {
                     if(skipUpdateUIOnBurstLength){
                         see3camcu30.setBurstLength(burstLengthCombo.currentText)
                     }
-                    skipUpdateUIOnBurstLength = true                    
+                    skipUpdateUIOnBurstLength = true
                 }
             }
             Row{
@@ -503,7 +505,7 @@ Item {
                     minimumValue: qFactorMin
                     maximumValue: qFactorMax
                     onValueChanged:  {
-                        qFactorTextField.text = qFactorSlider.value                        
+                        qFactorTextField.text = qFactorSlider.value
                         if(skipUpdateUIQFactor){
                             see3camcu30.setQFactor(qFactorSlider.value)
                         }
@@ -521,7 +523,7 @@ Item {
                     validator: IntValidator {bottom: qFactorSlider.minimumValue; top: qFactorSlider.maximumValue}
                     onTextChanged: {
                         if(text.length > 0){
-                            qFactorSlider.value = qFactorTextField.text                            
+                            qFactorSlider.value = qFactorTextField.text
                         }
                     }
                 }
@@ -555,7 +557,7 @@ Item {
                         if(skipUpdateUIFrameRate){
                             see3camcu30.setFrameRateCtrlValue(frameRateSlider.value)
                         }
-                        skipUpdateUIFrameRate = true                        
+                        skipUpdateUIFrameRate = true
                     }
                 }
                 TextField {
@@ -569,7 +571,7 @@ Item {
                     validator: IntValidator {bottom: frameRateSlider.minimumValue; top: frameRateSlider.maximumValue}
                     onTextChanged: {
                         if(text.length > 0){
-                            frameRateSlider.value = frameRateTextField.text                            
+                            frameRateSlider.value = frameRateTextField.text
                         }
                     }
                 }
@@ -595,10 +597,10 @@ Item {
                     text: "Horizontal"
                     style: econCheckBoxStyle
                     onClicked:{
-                        see3camcu30.setOrientation(flipCtrlHorizotal.checked, flipCtrlVertical.checked)                        
+                        see3camcu30.setOrientation(flipCtrlHorizotal.checked, flipCtrlVertical.checked)
                     }
                     Keys.onReturnPressed: {
-                        see3camcu30.setOrientation(flipCtrlHorizotal.checked, flipCtrlVertical.checked)                        
+                        see3camcu30.setOrientation(flipCtrlHorizotal.checked, flipCtrlVertical.checked)
                     }
                 }
                 CheckBox {
@@ -610,7 +612,7 @@ Item {
                         see3camcu30.setOrientation(flipCtrlHorizotal.checked, flipCtrlVertical.checked)
                     }
                     Keys.onReturnPressed: {
-                        see3camcu30.setOrientation(flipCtrlHorizotal.checked, flipCtrlVertical.checked)                        
+                        see3camcu30.setOrientation(flipCtrlHorizotal.checked, flipCtrlVertical.checked)
                     }
                 }
             }
@@ -635,10 +637,10 @@ Item {
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked:{
-                        see3camcu30.setFaceDetectionRect(true, faceDetectEmbedData.checked, overlayRect.checked)                        
+                        see3camcu30.setFaceDetectionRect(true, faceDetectEmbedData.checked, overlayRect.checked)
                     }
                     Keys.onReturnPressed: {
-                        see3camcu30.setFaceDetectionRect(true, faceDetectEmbedData.checked, overlayRect.checked)                        
+                        see3camcu30.setFaceDetectionRect(true, faceDetectEmbedData.checked, overlayRect.checked)
                     }
                 }
                 RadioButton {
@@ -648,10 +650,10 @@ Item {
                     activeFocusOnPress: true
                     style: econRadioButtonStyle
                     onClicked: {
-                        see3camcu30.setFaceDetectionRect(false, faceDetectEmbedData.checked, overlayRect.checked)                        
+                        see3camcu30.setFaceDetectionRect(false, faceDetectEmbedData.checked, overlayRect.checked)
                     }
                     Keys.onReturnPressed: {
-                        see3camcu30.setFaceDetectionRect(false, faceDetectEmbedData.checked, overlayRect.checked)                        
+                        see3camcu30.setFaceDetectionRect(false, faceDetectEmbedData.checked, overlayRect.checked)
                     }
                 }
             }
@@ -660,7 +662,7 @@ Item {
                 CheckBox {
                     id: faceDetectEmbedData
                     activeFocusOnPress : true
-                    text: "Embed Data"
+                    text: "Embed Data"                  
                     style: econCheckBoxTextWrapModeStyle
                     enabled: faceRectEnable.checked ? true : false
                     opacity: enabled ? 1 : 0.1
@@ -668,7 +670,7 @@ Item {
                         enableFaceDetectEmbedData()
                     }
                     Keys.onReturnPressed: {
-                        enableFaceDetectEmbedData()                        
+                        enableFaceDetectEmbedData()
                     }
                 }
                 CheckBox {
@@ -679,10 +681,10 @@ Item {
                     enabled: faceRectEnable.checked ? true : false
                     opacity: enabled ? 1 : 0.1
                     onClicked:{
-                        see3camcu30.setFaceDetectionRect(faceRectEnable.checked, faceDetectEmbedData.checked, checked)                        
+                        see3camcu30.setFaceDetectionRect(faceRectEnable.checked, faceDetectEmbedData.checked, checked)
                     }
                     Keys.onReturnPressed: {
-                        see3camcu30.setFaceDetectionRect(faceRectEnable.checked, faceDetectEmbedData.checked, checked)                        
+                        see3camcu30.setFaceDetectionRect(faceRectEnable.checked, faceDetectEmbedData.checked, checked)
                     }
                 }
             }
@@ -731,15 +733,15 @@ Item {
                 CheckBox {
                     id: smileDetectEmbedData
                     activeFocusOnPress : true
-                    text: "Embed Data"
+                    text: "Embed Data"               
                     style: econCheckBoxStyle
                     enabled: smileDetectEnable.checked ? true : false
                     opacity: enabled ? 1 : 0.1
                     onClicked:{
-                        enableSmileDetectEmbedData()                        
+                        enableSmileDetectEmbedData()
                     }
                     Keys.onReturnPressed: {
-                        enableSmileDetectEmbedData()                        
+                        enableSmileDetectEmbedData()
                     }
                 }
             }
@@ -810,6 +812,38 @@ Item {
                     }
                 }
             }
+
+            Text {
+                id: flickerctrlField
+                text: "-- Flicker Detection Control --"
+                font.pixelSize: 14
+                font.family: "Ubuntu"
+                color: "#ffffff"
+                smooth: true
+                Layout.alignment: Qt.AlignCenter
+                opacity: 0.50196078431373
+            }
+
+            ComboBox
+            {
+                id: flickercombo
+                opacity: 1
+                enabled: true
+                model: ListModel {
+                    ListElement { text: "AUTO" }
+                    ListElement { text: "50Hz" }
+                    ListElement { text: "60Hz" }
+                    ListElement { text: "DISABLE" }
+                }
+                activeFocusOnPress: true
+                style: econComboBoxStyle
+                onCurrentIndexChanged: {
+                    if(skipUpdateUIFlickerCtrl){
+                        setFlickerDetectionFn();
+                    }
+                }
+            }
+
             Row{
                 Layout.alignment: Qt.AlignCenter
                 Button {
@@ -836,17 +870,17 @@ Item {
                     tooltip: "Click to view the firmware version of the camera"
                     style: ButtonStyle {
                         background: Rectangle {
-                        border.width: control.activeFocus ? 3 :0
-                        color: "#222021"
-                        border.color: control.activeFocus ? "#ffffff" : "#222021"
-                        radius: 5
+                            border.width: control.activeFocus ? 3 :0
+                            color: "#222021"
+                            border.color: control.activeFocus ? "#ffffff" : "#222021"
+                            radius: 5
                         }
                         label: Image {
-                        source: "images/f_wversion_selected.png"
+                            source: "images/f_wversion_selected.png"
                         }
                     }
                     Keys.onReturnPressed: {
-                    getFirmwareVersion()
+                        getFirmwareVersion()
                     }
                 }
                 Button {
@@ -857,26 +891,26 @@ Item {
                     tooltip: "Click to view the Serial Number"
                     style: ButtonStyle {
                         background: Rectangle {
-                        border.width: control.activeFocus ? 3 :0
-                        color: "#222021"
-                        border.color: control.activeFocus ? "#ffffff" : "#222021"
-                        radius: 5
+                            border.width: control.activeFocus ? 3 :0
+                            color: "#222021"
+                            border.color: control.activeFocus ? "#ffffff" : "#222021"
+                            radius: 5
                         }
                         label: Image {
-                        source: "images/serial_no_selected.png"
+                            source: "images/serial_no_selected.png"
                         }
                     }
                     Keys.onReturnPressed: {
-                    getSerialNumber()
+                        getSerialNumber()
                     }
                 }
             }
-	    Row{
+            Row{
                 Layout.alignment: Qt.AlignCenter
                 Button {
                     id: dummybutton
                     opacity: 0
-		    enabled: false
+                    enabled: false
                 }
             }
         }
@@ -975,26 +1009,26 @@ Item {
     }
 
     Component {
-    id: econscrollViewStyle
-    ScrollViewStyle {
-    scrollToClickedPosition: true
-    handle: Image {
-        id: scrollhandle
-        source: "images/scroller.png"
-    }
-    scrollBarBackground: Image {
-        id: scrollStyle
-        source: "images/Scroller_bg.png"
-    }
-    incrementControl: Image {
-        id: increment
-        source: "images/down_arrow.png"
-    }
-    decrementControl: Image {
-        id: decrement
-        source: "images/up_arrow.png"
-    }
-    }}
+        id: econscrollViewStyle
+        ScrollViewStyle {
+            scrollToClickedPosition: true
+            handle: Image {
+                id: scrollhandle
+                source: "images/scroller.png"
+            }
+            scrollBarBackground: Image {
+                id: scrollStyle
+                source: "images/Scroller_bg.png"
+            }
+            incrementControl: Image {
+                id: increment
+                source: "images/down_arrow.png"
+            }
+            decrementControl: Image {
+                id: decrement
+                source: "images/up_arrow.png"
+            }
+        }}
 
     Component {
         id: econButtonStyle
@@ -1074,9 +1108,9 @@ Item {
             currentSceneMode(sceneMode)
         }
         onQFactorValue:{
-          skipUpdateUIQFactor = false
-          qFactorSlider.value = qFactor
-          skipUpdateUIQFactor = true
+            skipUpdateUIQFactor = false
+            qFactorSlider.value = qFactor
+            skipUpdateUIQFactor = true
         }
         onRoiAutoExpModeValue:{
             currentROIAutoExposureMode(roiMode, winSize)
@@ -1085,7 +1119,7 @@ Item {
         onFaceDetectModeValue:{
             updateFaceDetectModeUI(faceDetectMode, faceDetectEmbedDataValue, faceDetectOverlayRect)
         }
-        onSmileDetectModeValue:{            
+        onSmileDetectModeValue:{
             updateSmileDetectModeUI(smileDetectMode, smileDetectEmbedDataValue)
         }
 
@@ -1099,6 +1133,20 @@ Item {
             skipUpdateUIFrameRate = false
             frameRateSlider.value = frameRateCtrlValue
             skipUpdateUIFrameRate = true
+        }
+        onFlickerDetectionMode:{
+
+            skipUpdateUIFlickerCtrl = false
+            if(flickerMode == See3Camcu30.MODE_AUTO){
+                flickercombo.currentIndex = 0
+            }else if(flickerMode == See3Camcu30.MODE_50Hz){
+                flickercombo.currentIndex  = 1
+            }else if(flickerMode == See3Camcu30.MODE_60Hz){
+                flickercombo.currentIndex  = 2
+            }else if(flickerMode == See3Camcu30.MODE_DISABLE){
+                flickercombo.currentIndex  = 3
+            }else{ }
+            skipUpdateUIFlickerCtrl = true;
         }
         onIndicateCommandStatus:{
             if(setButtonClicked){
@@ -1117,8 +1165,9 @@ Item {
     }
 
 
-    Component.onCompleted:{        
+    Component.onCompleted:{
         getCameraValues()
+        root.disablePowerLineFreq()
     }
 
     function displayMessageBox(title, text){
@@ -1127,26 +1176,26 @@ Item {
         messageDialog.open()
     }
     // current ROI auto exposure mode
-    function currentROIAutoExposureMode(roiMode, winSize){       
+    function currentROIAutoExposureMode(roiMode, winSize){
         switch(roiMode){
-            case See3Camcu30.AutoExpFull:
-                autoexpFull.checked = true
-                autoExpoWinSizeCombo.enabled = false
-                break
-            case See3Camcu30.AutoExpManual:
-                skipUpdateUIOnExpWindowSize = false
-                autoexpManual.checked = true
-                // If window size is got from camera is 0 then set window size to 1 in UI
-                if(winSize == 0){
-                    autoExpoWinSizeCombo.currentIndex = 0
-                }else
-                    autoExpoWinSizeCombo.currentIndex = winSize-1
-                break
-            case See3Camcu30.AutoExpDisabled:
-                autoexpFull.enabled = false
-                autoexpManual.enabled = false
-                autoExpoWinSizeCombo.enabled = false
-                break
+        case See3Camcu30.AutoExpFull:
+            autoexpFull.checked = true
+            autoExpoWinSizeCombo.enabled = false
+            break
+        case See3Camcu30.AutoExpManual:
+            skipUpdateUIOnExpWindowSize = false
+            autoexpManual.checked = true
+            // If window size is got from camera is 0 then set window size to 1 in UI
+            if(winSize == 0){
+                autoExpoWinSizeCombo.currentIndex = 0
+            }else
+                autoExpoWinSizeCombo.currentIndex = winSize-1
+            break
+        case See3Camcu30.AutoExpDisabled:
+            autoexpFull.enabled = false
+            autoexpManual.enabled = false
+            autoExpoWinSizeCombo.enabled = false
+            break
         }
     }
 
@@ -1168,33 +1217,33 @@ Item {
     {
         switch(mode)
         {
-            case See3Camcu30.FLIP_ON_MIRROR_ON:
-                 flipCtrlVertical.checked = true
-                 flipCtrlHorizotal.checked = true
-                break;
-            case See3Camcu30.FLIP_OFF_MIRROR_ON:
-                flipCtrlVertical.checked = true
-                flipCtrlHorizotal.checked = false
-                break;
-            case See3Camcu30.FLIP_ON_MIRROR_OFF:
-                 flipCtrlVertical.checked = false
-                 flipCtrlHorizotal.checked = true
-                break;
-            case See3Camcu30.FLIP_OFF_MIRROR_OFF:
-                flipCtrlVertical.checked = false
-                flipCtrlHorizotal.checked = false
-                break;
+        case See3Camcu30.FLIP_ON_MIRROR_ON:
+            flipCtrlVertical.checked = true
+            flipCtrlHorizotal.checked = true
+            break;
+        case See3Camcu30.FLIP_OFF_MIRROR_ON:
+            flipCtrlVertical.checked = true
+            flipCtrlHorizotal.checked = false
+            break;
+        case See3Camcu30.FLIP_ON_MIRROR_OFF:
+            flipCtrlVertical.checked = false
+            flipCtrlHorizotal.checked = true
+            break;
+        case See3Camcu30.FLIP_OFF_MIRROR_OFF:
+            flipCtrlVertical.checked = false
+            flipCtrlHorizotal.checked = false
+            break;
         }
     }
 
-      function updateSmileDetectModeUI(smileDetectMode, smileDetectEmbedDataValue){
+    function updateSmileDetectModeUI(smileDetectMode, smileDetectEmbedDataValue){
         if(smileDetectMode == See3Camcu30.SmileDetectEnable){
             smileDetectEnable.checked = true
             if(smileDetectEmbedDataValue == See3Camcu30.SmileDetectEmbedDataEnable){
                 smileDetectEmbedData.checked = true
             }else{
-		 smileDetectEmbedData.checked = false
-	    }	    
+                smileDetectEmbedData.checked = false
+            }
         }else if(smileDetectMode == See3Camcu30.SmileDetectDisable){
             smileDetectDisable.checked = true
             if(smileDetectEmbedDataValue == See3Camcu30.SmileDetectEmbedDataEnable){
@@ -1202,12 +1251,12 @@ Item {
             }else{
                 smileDetectEmbedData.checked = false
             }
-    
-	}
+
+        }
 
     }
 
-    function updateFaceDetectModeUI(faceDetectMode, faceDetectEmbedDataValue, faceDetectOverlayRect){        
+    function updateFaceDetectModeUI(faceDetectMode, faceDetectEmbedDataValue, faceDetectOverlayRect){
         if(faceDetectMode == See3Camcu30.FaceRectEnable){
             faceRectEnable.checked = true
             if(faceDetectEmbedDataValue == See3Camcu30.FaceDetectEmbedDataEnable){
@@ -1236,17 +1285,17 @@ Item {
             if(faceDetectEmbedData.checked){
                 displayMessageBox(qsTr("Status"),qsTr("The last part of the frame will be replaced by face data.Refer document See3CAM_CU30_Face_and_Smile_Detection for more details"))
             }
-        }        
+        }
     }
 
     function exposureCompSetButtonClicked(){
         exposureCompSet.enabled = false
         setButtonClicked = true
         see3camcu30.setExposureCompensation(exposureCompValue.text)
-        exposureCompSet.enabled = true        
+        exposureCompSet.enabled = true
     }
 
-  
+
     function enableSmileDetectEmbedData(){
         setButtonClicked = false
         if(see3camcu30.setSmileDetection(true, smileDetectEmbedData.checked)){
@@ -1255,7 +1304,7 @@ Item {
                 messageDialog.text = qsTr("The last part of the frame will be replaced by smile data.Refer document See3CAM_CU30_Face_and_Smile_Detection for more details")
                 messageDialog.open()
             }
-        }        
+        }
     }
 
     function enableDisableAutoExposureControls(autoExposureSelect){
@@ -1292,13 +1341,32 @@ Item {
     {
         switch(mode)
         {
-            case See3Camcu30.SCENE_NORMAL:
-                sceneNormal.checked = true
-                break;
-            case See3Camcu30.SCENE_DOCUMENT:
-                sceneDoc.checked = true
-                break;
+        case See3Camcu30.SCENE_NORMAL:
+            sceneNormal.checked = true
+            break;
+        case See3Camcu30.SCENE_DOCUMENT:
+            sceneDoc.checked = true
+            break;
         }
+    }
+
+    function setFlickerDetectionFn()
+    {
+        switch(flickercombo.currentIndex){
+        case 0:
+            flickerCtrl = See3Camcu30.MODE_AUTO
+            break
+        case 1:
+            flickerCtrl = See3Camcu30.MODE_50Hz
+            break
+        case 2:
+            flickerCtrl = See3Camcu30.MODE_60Hz
+            break
+        case 3:
+            flickerCtrl = See3Camcu30.MODE_DISABLE
+            break
+        }
+        see3camcu30.setFlickerDetection(flickerCtrl)
     }
 
     function getFirmwareVersion() {
@@ -1312,7 +1380,7 @@ Item {
 
     function setDefaultValues(){
         defaultValue.enabled = false //To avoid multiple clicks over Default button
-        see3camcu30.setToDefault()        
+        see3camcu30.setToDefault()
         getCameraValues()
         defaultValue.enabled = true
     }
@@ -1326,40 +1394,41 @@ Item {
         see3camcu30.getQFactor()
         see3camcu30.getOrientation()
         see3camcu30.getFrameRateCtrlValue()
+        see3camcu30.getFlickerDetection()
         see3camcu30.getExposureCompensation()
         see3camcu30.getFaceDetectMode()
         see3camcu30.getSmileDetectMode()
-	see3camcu30.getFlashState()
+        see3camcu30.getFlashState()
     }
 
     Connections{
-         target: root
-         onMouseRightClicked:{
-             if(autoexpManual.enabled && autoexpManual.checked){
+        target: root
+        onMouseRightClicked:{
+            if(autoexpManual.enabled && autoexpManual.checked){
                 see3camcu30.setROIAutoExposure(See3Camcu30.AutoExpManual, width, height, x, y, autoExpoWinSizeCombo.currentText)
-             }
-         }
-         onAutoExposureSelected:{
-             enableDisableAutoExposureControls(autoExposureSelect)
-         }
-         onEnableFaceRectafterBurst:{
-           see3camcu30.enableDisableFaceRectangle(true)
-         }
-         onBeforeRecordVideo:{
-            see3camcu30.enableDisableFaceRectangle(false)
-         }
-         onAfterRecordVideo:{
+            }
+        }
+        onAutoExposureSelected:{
+            enableDisableAutoExposureControls(autoExposureSelect)
+        }
+        onEnableFaceRectafterBurst:{
             see3camcu30.enableDisableFaceRectangle(true)
-         }
-         onVideoResolutionChanged:{
-             getexposureCompFrameRateCtrlTimer.start()
-         }
-         onPreviewFPSChanged:{
-             getexposureCompFrameRateCtrlTimer.start()
-         }
-         onVideoColorSpaceChanged:{
-             getexposureCompFrameRateCtrlTimer.start()
-         }
+        }
+        onBeforeRecordVideo:{
+            see3camcu30.enableDisableFaceRectangle(false)
+        }
+        onAfterRecordVideo:{
+            see3camcu30.enableDisableFaceRectangle(true)
+        }
+        onVideoResolutionChanged:{
+            getexposureCompFrameRateCtrlTimer.start()
+        }
+        onPreviewFPSChanged:{
+            getexposureCompFrameRateCtrlTimer.start()
+        }
+        onVideoColorSpaceChanged:{
+            getexposureCompFrameRateCtrlTimer.start()
+        }
     }
 }
 

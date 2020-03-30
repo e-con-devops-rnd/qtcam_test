@@ -30,6 +30,8 @@ Item {
     property bool skipUpdateUIOnBurstLength: false
     property bool skipUpdateUIiHDR: false
     property bool setButtonClicked: false
+    property bool skipUpdateUIFlickerCtrl:false
+    property int  flickerCtrl
 
     Connections
     {
@@ -170,7 +172,7 @@ Item {
                 RadioButton {
                     id: sceneNormal
                     style:  econRadioButtonStyle
-                    text:   qsTr("Normal")
+                    text:   qsTr("Normal")                 
                     exclusiveGroup: sceneInputGroup
                     activeFocusOnPress: true                    
                     onClicked: {
@@ -183,7 +185,7 @@ Item {
                 RadioButton {
                     id: sceneDoc
                     style:  econRadioButtonStyle
-                    text: qsTr("Document")
+                    text: qsTr("Document")                  
                     exclusiveGroup: sceneInputGroup
                     activeFocusOnPress: true
                     onClicked: {
@@ -759,6 +761,8 @@ Item {
                     id: exposureCompSet
                     activeFocusOnPress : true
                     text: "Set"
+                    tooltip: "You can set the required exposure compensation value by changing the
+value in the text box and click the Set button"
                     style: econButtonStyle
                     enabled: true
                     opacity: 1
@@ -1083,6 +1087,37 @@ Item {
                 }
             }
 
+            Text {
+                id: flickerctrlField
+                text: "-- Flicker Detection Control --"
+                font.pixelSize: 14
+                font.family: "Ubuntu"
+                color: "#ffffff"
+                smooth: true
+                Layout.alignment: Qt.AlignCenter
+                opacity: 0.50196078431373
+            }
+
+            ComboBox
+            {
+                id: flickercombo
+                opacity: 1
+                enabled: true
+                model: ListModel {
+                    ListElement { text: "AUTO" }
+                    ListElement { text: "50Hz" }
+                    ListElement { text: "60Hz" }
+                    ListElement { text: "DISABLE" }
+                }
+                activeFocusOnPress: true
+                style: econComboBoxStyle
+                onCurrentIndexChanged: {
+                    if(skipUpdateUIFlickerCtrl){
+                       setFlickerDetectionFn();
+                    }
+                }
+            }
+
             Row{
                 Layout.alignment: Qt.AlignCenter
                 Button {
@@ -1165,12 +1200,12 @@ Item {
         onDenoiseValueReceived:{
             skipUpdateUIDenoise = false
             deNoiseSlider.value = denoiseValue
-	    skipUpdateUIDenoise = true
+            skipUpdateUIDenoise = true
         }
         onFrameRateCtrlValueReceived:{
             skipUpdateUIFrameRate = false
             frameRateSlider.value = frameRateCtrlValue
-	    skipUpdateUIFrameRate = true
+            skipUpdateUIFrameRate = true
         }
 
         onAfModeValue:{
@@ -1255,6 +1290,21 @@ Item {
             skipUpdateUIOnBurstLength = false
             burstLengthCombo.currentIndex = burstLength - 1
         }
+        onFlickerDetectionMode:{
+
+            skipUpdateUIFlickerCtrl = false
+            if(flickerMode == See3Cam130.MODE_AUTO){
+                flickercombo.currentIndex = 0
+            }else if(flickerMode == See3Cam130.MODE_50Hz){
+                flickercombo.currentIndex  = 1
+            }else if(flickerMode == See3Cam130.MODE_60Hz){
+                flickercombo.currentIndex  = 2
+            }else if(flickerMode == See3Cam130.MODE_DISABLE){
+                flickercombo.currentIndex  = 3
+            }else{ }
+            skipUpdateUIFlickerCtrl = true;
+        }
+
         onAfRectModeValue:{            
             if(afRectMode == See3Cam130.AFRectEnable){                
                 rectEnable.checked = true
@@ -1464,8 +1514,10 @@ Item {
         seecam130.getAFRectMode()
         seecam130.getFlipMode()
         seecam130.getStreamMode()
+        seecam130.getFlickerDetection()
         seecam130.getFaceDetectMode()
         seecam130.getSmileDetectMode()
+        root.disablePowerLineFreq()   //Added by Navya-4th June 2019 - call to disable Power Line Frequency.
 
     }
 
@@ -1529,12 +1581,14 @@ Item {
     }
 
     function setMasterMode(){
-        seecam130.setStreamMode(See3Cam130.STREAM_MASTER)      
+        seecam130.setStreamMode(See3Cam130.STREAM_MASTER)
+        root.checkForTriggerMode(false)
         root.captureBtnEnable(true)
         root.videoRecordBtnEnable(true)
     }
 
     function setTriggerMode(){
+        root.checkForTriggerMode(true)
         root.captureBtnEnable(false)
         root.videoRecordBtnEnable(false)
         seecam130.setStreamMode(See3Cam130.STREAM_TRIGGER)
@@ -1551,6 +1605,7 @@ Item {
         messageDialog.open()
     }
     function setToDefaultValues(){
+        root.checkForTriggerMode(false)
         seecam130.setToDefault()
         seecam130.getSceneMode()
         seecam130.getEffectMode()
@@ -1564,6 +1619,7 @@ Item {
         seecam130.getAFRectMode()
         seecam130.getFlipMode()
         seecam130.getStreamMode()
+        seecam130.getFlickerDetection()
         // Added by Sankari: 17 Apr 2017. To get preview in master mode
         root.startUpdatePreviewInMasterMode()
         seecam130.getFaceDetectMode()
@@ -1694,6 +1750,25 @@ Item {
                 messageDialog.open()
             }
         }
+    }
+
+    function setFlickerDetectionFn()
+    {
+        switch(flickercombo.currentIndex){
+        case 0:
+            flickerCtrl= See3Cam130.MODE_AUTO
+            break
+        case 1:
+            flickerCtrl = See3Cam130.MODE_50Hz
+            break
+        case 2:
+            flickerCtrl = See3Cam130.MODE_60Hz
+            break
+        case 3:
+            flickerCtrl = See3Cam130.MODE_DISABLE
+            break
+        }
+        seecam130.setFlickerDetection(flickerCtrl)
     }
 
     function enableDisableAutoExposureControls(autoExposureSelect){

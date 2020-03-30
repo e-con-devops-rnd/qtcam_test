@@ -130,34 +130,30 @@ bool VideoEncoder::createFile(QString fileName,CodecID encodeType, unsigned widt
             pCodecCtx->flags |= CODEC_FLAG_GLOBAL_HEADER;
 
         pCodecCtx->codec_id = pOutputFormat->video_codec;
+
 #if !LIBAVCODEC_VER_AT_LEAST(54, 25)
-        if(encodeType == CODEC_ID_RAWVIDEO){
-            pCodecCtx->pix_fmt =  PIX_FMT_YUYV422;//AV_PIX_FMT_YUV444P;//AV_PIX_FMT_YUV422P;//PIX_FMT_YUYV422;//PIX_FMT_YUV420P;
-        }
-        else if(encodeType == CODEC_ID_MJPEG)
+        if(encodeType == CODEC_ID_MJPEG)
             pCodecCtx->pix_fmt =  PIX_FMT_YUVJ420P;
         else {
             pCodecCtx->pix_fmt =  PIX_FMT_YUV420P;
         }
 #else
-        if(encodeType == AV_CODEC_ID_RAWVIDEO){
-            pCodecCtx->pix_fmt =  AV_PIX_FMT_YUYV422;//AV_PIX_FMT_YUV444P;//AV_PIX_FMT_YUV422P;//PIX_FMT_YUYV422;//PIX_FMT_YUV420P;
-        }
-        else if(encodeType == AV_CODEC_ID_MJPEG)
+        if(encodeType == AV_CODEC_ID_MJPEG)
             pCodecCtx->pix_fmt =  AV_PIX_FMT_YUVJ420P;
         else {
             pCodecCtx->pix_fmt =  AV_PIX_FMT_YUV420P;
         }
 #endif
         // Added by Sankari: Mar 20, 2019
-        // If fps is 120 means, bitrate is very low. So "avcodec_open2" is failed in H264 encoder. So make it as 60.
+        // Edited by Navya : Jan 28, 2020
+        // If fps is >=112 means, bitrate is very low. So "avcodec_open2" is failed in H264 encoder. So make it as 60.
         unsigned supportedFpsDen;
-        if(fpsDenominator == 120){
+        if(fpsDenominator == 120 || fpsDenominator == 112 || fpsDenominator == 180){
             supportedFpsDen = 60;
         }else{
             supportedFpsDen = fpsDenominator;
         }
-        pCodecCtx->bit_rate =  getWidth() / 3.0f * getHeight() * fpsNumerator / supportedFpsDen;        
+        pCodecCtx->bit_rate =  getWidth() / 3.0f * getHeight() * fpsNumerator / supportedFpsDen;
         pCodecCtx->codec_type = AVMEDIA_TYPE_VIDEO;
         pCodecCtx->width = getWidth();
         pCodecCtx->height = getHeight();
@@ -304,26 +300,27 @@ bool VideoEncoder::closeFile()
 /**
    \brief Encode one frame
     /* buffer - input buffer to encode
-     * rgbBufferFormat - true if rgbabuffer passes
-     *                 - false if other than rgbabuffer passes
+     * bufferType - 0 if rgbabuffer passes
+     *              - 1 if yuyv  or other buffer passes
+     *              - 2 if uyvy buffer passes
 **/
 #if LIBAVCODEC_VER_AT_LEAST(54,01)
-int VideoEncoder::encodeImage(uint8_t *buffer, bool rgbBufferformat)
+int VideoEncoder::encodeImage(uint8_t *buffer,uint8_t bufferType)
 {
     int ret = -1;
-    ret = encodePacket(buffer, rgbBufferformat);
+    ret = encodePacket(buffer, bufferType);
     return ret;
 }
 
 /**
  * @brief VideoEncoder::encodePacket
  * @param buffer - input buffer to encode
-     * rgbBufferFormat - true if rgbabuffer passes
-     *                 - false if other than rgbabuffer passes 
+     * bufferType - 0 if rgbabuffer passes
+     *              - 1 if yuyv  or other buffer passes
+     *              - 2 if uyvy buffer passes
  * @return 0 if success/ -ve if failure
  */
-int VideoEncoder::encodePacket(uint8_t *buffer, bool rgbBufferformat){
-
+int VideoEncoder::encodePacket(uint8_t *buffer, uint8_t bufferType){
     double fps, recordTimeDurationInSec, millisecondsDiff;
     if(frameCount == 0){
         time1  = QTime::currentTime();
@@ -336,13 +333,13 @@ int VideoEncoder::encodePacket(uint8_t *buffer, bool rgbBufferformat){
         recordTimeDurationInSec = millisecondsDiff/1000; // convert millisec to sec
 
         fps = (frameCount)/ recordTimeDurationInSec; // calculate fps
+
     }
 
     if(!isOk())
         return -1;    
 
-    convertImage_sws(buffer, rgbBufferformat);
-
+    convertImage_sws(buffer,bufferType);
 
     int got_packet = 0;
     int out_size = 0;     
@@ -382,24 +379,32 @@ int VideoEncoder::encodePacket(uint8_t *buffer, bool rgbBufferformat){
             //pkt->pts      = frameTime / video_st->time_base.num;
             //pkt->duration = frameDuration;
 
+        pkt.duration = pCodecCtx->time_base.den/fps;
         // The above calculation can be shortly gives as below
-       pkt.pts  = (frameCount*(pCodecCtx->time_base.den/fps)) / pCodecCtx->time_base.num;
+        pkt.pts  = (frameCount*(pCodecCtx->time_base.den/fps)) / pCodecCtx->time_base.num;
+        pkt.dts = pkt.pts;
 
+        // Added by Navya -- 18 Sep 2019
+        // Adjusted timestamps inorder to avoid glitches in recorded video for h264 encoder.
+
+        if(pts_prev == pkt.pts | pkt.pts < pts_prev){
+            pkt.pts = pts_prev+1;  // Incremented the timestamp value,as pkt.pts is maintaining the same value,leading to av_write_interleaved_frame failure.
+            pkt.dts = pkt.pts;
+        }
+        pts_prev = pkt.pts;
         if(pCodecCtx->coded_frame->key_frame)
             pkt.flags |= AV_PKT_FLAG_KEY;
-
         /* Write the compressed frame to the media file. */
-        out_size = av_write_frame(pFormatCtx, &pkt);
-        if(out_size == 0){            
+        out_size = av_interleaved_write_frame(pFormatCtx, &pkt);
+        if(out_size == 0){
             videoPacketReceived = true;
             m_recStop = false;
-        }        
+        }
     }
-
     return out_size;
 }
 #else
-int VideoEncoder::encodeImage(uint8_t *buffer, bool rgbBufferformat)
+int VideoEncoder::encodeImage(uint8_t *buffer,uint8_t bufferType)
 {
     int out_size, ret;
 
@@ -420,8 +425,8 @@ int VideoEncoder::encodeImage(uint8_t *buffer, bool rgbBufferformat)
     if(!isOk())
         return -1;
 
-    convertImage_sws(buffer, rgbBufferformat);     /* rgba format means, true */
-                                                    /* other than rgba format means, false */
+    convertImage_sws(buffer, bufferType);
+
     /* encode the image */
     out_size = avcodec_encode_video(pCodecCtx, outbuf, outbuf_size, ppicture);
 
@@ -580,19 +585,36 @@ void VideoEncoder::freeFrame()
     }
 }
 
-bool VideoEncoder::convertImage_sws(uint8_t *buffer, bool rgbBufferformat)
+bool VideoEncoder::convertImage_sws(uint8_t *buffer,uint8_t bufferType)
 {
-    if(rgbBufferformat){
+    if(bufferType == RGB_BUFFER){
 #if !LIBAVCODEC_VER_AT_LEAST(54, 25)
         img_convert_ctx = sws_getCachedContext(img_convert_ctx,getWidth(),getHeight(), PIX_FMT_RGBA,getWidth(),getHeight(),pCodecCtx->pix_fmt,SWS_FAST_BILINEAR, NULL, NULL, NULL);
 #else
         img_convert_ctx = sws_getCachedContext(img_convert_ctx,getWidth(),getHeight(),AV_PIX_FMT_RGBA,getWidth(),getHeight(),pCodecCtx->pix_fmt,SWS_FAST_BILINEAR, NULL, NULL, NULL);
 #endif
-    }else{
+    }else if(bufferType == YUYV_BUFFER){
 #if !LIBAVCODEC_VER_AT_LEAST(54, 25)
         img_convert_ctx = sws_getCachedContext(img_convert_ctx,getWidth(),getHeight(), PIX_FMT_YUYV422,getWidth(),getHeight(),pCodecCtx->pix_fmt,SWS_FAST_BILINEAR, NULL, NULL, NULL);
 #else
         img_convert_ctx = sws_getCachedContext(img_convert_ctx,getWidth(),getHeight(),AV_PIX_FMT_YUYV422,getWidth(),getHeight(),pCodecCtx->pix_fmt,SWS_FAST_BILINEAR, NULL, NULL, NULL);
+#endif
+    }
+    /** Added by Navya:29 Nov 2019
+      * Previously UYVY/Y8 data are converted to YUVY and given for recording and hence the source format is configured to YUYV422.
+      * Now these data are directly given for recording,hence configuring source Format to the corresponding formatTypes.
+     **/
+    else if(bufferType == UYVY_BUFFER){
+#if !LIBAVCODEC_VER_AT_LEAST(54, 25)
+        img_convert_ctx = sws_getCachedContext(img_convert_ctx,getWidth(),getHeight(), PIX_FMT_UYVY422,getWidth(),getHeight(),pCodecCtx->pix_fmt,SWS_FAST_BILINEAR, NULL, NULL, NULL);
+#else
+        img_convert_ctx = sws_getCachedContext(img_convert_ctx,getWidth(),getHeight(),AV_PIX_FMT_UYVY422,getWidth(),getHeight(),pCodecCtx->pix_fmt,SWS_FAST_BILINEAR, NULL, NULL, NULL);
+#endif
+    } else if(bufferType == Y8_BUFFER){
+#if !LIBAVCODEC_VER_AT_LEAST(54, 25)
+        img_convert_ctx = sws_getCachedContext(img_convert_ctx,getWidth(),getHeight(), PIX_FMT_GRAY8,getWidth(),getHeight(),pCodecCtx->pix_fmt,SWS_FAST_BILINEAR, NULL, NULL, NULL);
+#else
+        img_convert_ctx = sws_getCachedContext(img_convert_ctx,getWidth(),getHeight(),AV_PIX_FMT_GRAY8,getWidth(),getHeight(),pCodecCtx->pix_fmt,SWS_FAST_BILINEAR, NULL, NULL, NULL);
 #endif
     }
 
@@ -607,8 +629,15 @@ bool VideoEncoder::convertImage_sws(uint8_t *buffer, bool rgbBufferformat)
     srcplanes[2]=0;
 
     int srcstride[3];
-    if(rgbBufferformat){
+    if(bufferType == RGB_BUFFER){
         srcstride[0]=getWidth()*4; // RGBA  - 32 bit.  so  4 is used
+    }
+    /** Added by Navya -29 Nov 2019
+        * Giving 8 bit data directly for Video Record,hence making the srcStride as "getwidth()*1"
+        * previously we are giving 16 bit data for recording,hence it was "getwidth()*2".
+        * */
+    else if(bufferType == Y8_BUFFER){
+        srcstride[0]=getWidth(); // Y8  - 8 bit.  so  1 is used
     }else{
         srcstride[0]=getWidth()*2; // YUYV  - 16 bit.  so  2 is used
     }
@@ -658,21 +687,28 @@ int VideoEncoder::encodeH264Packet(void *buffer, int bytesused){
 
     av_init_packet(&pkt);
 
-    pkt.pts  = (frameCount*(pCodecCtx->time_base.den/fps)) / pCodecCtx->time_base.num;
-
- /*   if (pCodecCtx->coded_frame->pts != AV_NOPTS_VALUE){
-        pkt.pts = av_rescale_q(pCodecCtx->coded_frame->pts, pCodecCtx->time_base, pVideoStream->time_base);
-    }*/
     pkt.stream_index = pVideoStream->index;
 
     if(pCodecCtx->coded_frame->key_frame)
         pkt.flags |= AV_PKT_FLAG_KEY;
 
+    pkt.pts  = (frameCount*(pCodecCtx->time_base.den/fps)) / pCodecCtx->time_base.num;
+    pkt.dts = pkt.pts;
+
+    // Added by Navya -- 18 Oct 2019
+    // Adjusted timestamps inorder to avoid glitches in recorded video for h264 encoder.
+
+    if(pts_prev == pkt.pts | pkt.pts < pts_prev){
+        pkt.pts = pts_prev+1;  // Incremented the timestamp value,as pkt.pts is maintaining the same value,leading to av_write_interleaved_frame failure.
+        pkt.dts = pkt.pts;
+    }
+    pts_prev = pkt.pts;
     /* Write the compressed frame to the media file. */
+
     out_size = av_write_frame(pFormatCtx, &pkt);
     if(out_size == 0){
          frameCount++;
-	 videoPacketReceived = true;
+         videoPacketReceived = true;
     }
 
      if(pkt.data != NULL && pkt.size != 0){
