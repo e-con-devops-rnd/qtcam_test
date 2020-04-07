@@ -174,6 +174,7 @@ class Videostreaming :  public QQuickItem, public v4l2
 {
     Q_OBJECT
     Q_PROPERTY(qreal t READ t WRITE setT NOTIFY tChanged)
+
 public:
     struct buffer {
         unsigned planes;
@@ -270,6 +271,7 @@ public:
     uint previewFrameSkipCount;
     uint previewFrameToSkip;
     bool skippingPreviewFrame;
+    bool changefps;
     enum fpsChange {
         FPS_30 = 0x00,
         FPS_60 = 0x01,

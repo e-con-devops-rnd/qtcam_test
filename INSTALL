@@ -8,7 +8,7 @@
 Qtcam is a camera application to capture photos and record videos. It is developed based on v4l2 framework and integrated with the help of Qt framework. 
 
 	All the essential informations regarding building and deploying  process are unfolded:
-1. How to  build and verify the various deliverables, library dependencies.
+1. How to  install library dependencies.
 2. How to install and run the  software, and the system requirements. 
 
 In addition to that, we collected some other useful  information related to the build process such as a description of the project repository and the design of the build system.
@@ -59,86 +59,48 @@ In addition to that, we collected some other useful  information related to the 
 
 	The build process is designed  for linux machine.  User can download the source code of the application through git server.  
 
-	Dependency library source link is provided below, so that the user can download the source and configure as per this document.
+	Also user can install dependency library packages. Using Qt qmake tool, one can build the source.
 
 3.1. System Requirements
 
 In order to run Qtcam application, your system must have:
 
-1. Qt 5.2.1
-2. Operating System: Linux (Tested on Ubuntu 12.04 & 14.04)
+1. Qt 5.5.1
+2. Operating System: Linux (Tested on Ubuntu 12.04, 14.04, 16.04 versions)
 
 3.2. Dependencies
 
 To run the Qtcam application your system should meet the following dependencies.
 
-3.2.1. Install Qt5.2.1 framework
+3.2.1. Install Qt5.5.1 framework
 
 Initially download the Qt package from the below link as per your system requirement,
-For 32 Bit - http://download.qt.io/archive/qt/5.2/5.2.1/qt-opensource-linux-x86-5.2.1.run
-For 64 Bit - http://download.qt.io/archive/qt/5.2/5.2.1/qt-opensource-linux-x64-5.2.1.run
+For 32 Bit - http://download.qt.io/archive/qt/5.5/5.5.1/qt-opensource-linux-x86-5.5.1.run
+For 64 Bit - http://download.qt.io/archive/qt/5.5/5.5.1/qt-opensource-linux-x64-5.5.1.run
+
 
 To configure Qt, If permission is not given for user set it by using chmod command.
 
-# chmod u+x  qt-opensource-linux-x86-5.2.1.run
+# chmod u+x  qt-opensource-linux-x86-5.5.1.run
 (or)
-# chmod u+x  qt-opensource-linux-x64-5.2.1.run
+# chmod u+x  qt-opensource-linux-x64-5.5.1.run
 Then double click the downloaded binary and install it to your local system.
 
-3.2.2. Install OpenGL development library
-To install opengl development library type the following command in the console,  this opengl package is required to build the qt quick application.
+3.2.2. Run following command to install following list of dependency packages
+ In ubuntu 12,
+ $ sudo apt-get install libv4l-dev qt55base qt55declarative libgl1-mesa-dev libglu1-mesa-dev libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libresample1-dev libudev-dev libavcodec-extra-53 libjpeg-turbo8-dev libusb-1.0-0-dev libusb-dev libevdev-dev libpulse-dev qt55multimedia libasound2-dev
+ $ sudo apt-add-repository ppa:qtcam/precise
+ $ sudo apt-get install qt55-meta-full
 
-sudo apt-get install freeglut3-dev
+ In ubuntu 14,
+ $ sudo apt-get install libv4l-dev qt55base qt55declarative libavcodec-dev libgl1-mesa-dev libglu1-mesa-dev libavformat-dev libavutil-dev libswscale-dev libavresample-dev libudev-dev libavcodec-extra-54 libjpeg-turbo8-dev libusb-1.0-0-dev libusb-dev libevdev-dev  libpulse-dev qt55multimedia qtdeclarative5-window-plugin qtdeclarative5-dialogs-plugin qtdeclarative5-controls-plugin  qtdeclarative5-qtquick2-plugin qt55-meta-full libasound2-dev
 
-3.2.3. Install libvpx library
-To install libvpx library type the following command in the console,  this libvpx package is required to build av library with vpx support.
+ In ubuntu 16.04,
+ $ sudo apt-get install libv4l-dev libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libavresample-dev libudev-dev libavcodec-extra qt5-default qtdeclarative5-dev freeglut3 freeglut3-dev libjpeg-turbo8-dev libusb-1.0-0-dev libusb-dev libevdev-dev libpulse-dev qtmultimedia5-dev qtdeclarative5-window-plugin qtdeclarative5-dialogs-plugin qtdeclarative5-controls-plugin  qtdeclarative5-qtquick2-plugin qtdeclarative5-qtmultimedia-plugin libasound2-dev 
 
-sudo apt-get install libvpx-dev
+ In ubuntu 18.04,
+ $sudo apt-get install libv4l-dev libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libavresample-dev libudev-dev libavcodec-extra qt5-default qtdeclarative5-dev freeglut3 freeglut3-dev libjpeg-turbo8-dev libusb-1.0-0-dev libusb-dev libevdev-dev libpulse-dev qtmultimedia5-dev qtdeclarative5-window-plugin qml-module-qtquick-controls qml-module-qtquick-dialogs qml-module-qtquick-extras qml-module-qtquick-privatewidgets qtdeclarative5-qtquick2-plugin libasound2-dev libturbojpeg0-dev qtquickcontrols5-doc g++-5 lsb-release
 
-3.2.4. Install H264 library
-To install h264 library type the following command in the console,  this libx264 package is required to build av library with H264 support.
-
-sudo apt-get install libx264-dev
-
-3.2.5.  Install libav libraries
-Download the libav libraries package from the below link,
-https://libav.org/releases/libav-11.1.tar.gz
-
-Untar the package by the following command in console:
-tar zxvf  libav-11.1.tar.gz
-
-To configure libav package type the following command in the console,
-# cd libav-11.1
-# ./configure --disable-yasm --enable-shared --enable-libvpx --enable-libx264 --enable-gpl --prefix=OUTPUTDIRECTORY
-
-Include the OUTPUTDIRECTORY path(both library and include path respectively) in your .pro file.
-Note: OUTPUTDIRECTORY is a user defined directory, for example, /home/@user/myAVlibDirectory
-Then run the following commands from console:
-$  make
-$  make install
-
-3.2.7. Install udev library
-http://www.freedesktop.org/software/systemd/systemd-218.tar.xz
-
-Untar the package by the following command in console:
-tar xvf  systemd-218.tar.xz
-
-To configure udev package type the following command in the console,
-
-# cd systemd-218
-#./configure --enable-shared --prefix=OUTPUTDIRECTORY
-
-Include the OUTPUTDIRECTORY path(both library and include path respectively) in your .pro file.
-Note: 
-1. OUTPUTDIRECTORY is a user defined directory, for example, /home/@user/mySystemdlibDirectory
-2.  libudev.h is available under  OUTPUTDIRECTORY/include
-3.  libudev.so is availabe under OUTPUTDIRECTORY/lib
-
-Then run the following commands from console:
-$  make
-$  make install
-
-Once these configurations are done successfully, application dependency will be resolved.
 
 3.3 Build the application
 
@@ -147,39 +109,61 @@ You can build your application in two ways
 2. Console
 
 3.3.1 Using Qt Creator:
-1.  Open the project in your Qt creator.
-2. Provide your qmake path in the Tool->Options.(/home/@user/Qt5.2.1/5.2.1/gcc_64/bin/qmake)
-3.  Right click in your project, click qmake.
-4.  Right click in your project, click build
-5.  Right click in your project, click run.
+1. Open the project in your Qt creator.
+2. Provide your qmake path in the Tool->Options.(/home/@user/Qt5.5.1/5.5.1/gcc_64/bin/qmake)
+3. Set LAUNCHPAD macro in common.h to 0 in "src" directory.
+4. Right click in your project, click qmake.
+5. Right click in your project, click build
+6. Right click in your project, click run.
 
 3.3.2 Using Console:
 1.  Goto your git clone path.
 2.  cd src/
-3.  qmake,(For example, /home/@user/Qt5.2.1/5.2.1/gcc_64/bin/qmake)
-4.  make clean
-5.  make
-6.  Execute the application.
-7. sudo ./Qtcam
+3.  Set LAUNCHPAD macro in common.h to 0.
+4.  qmake,(For example, /home/@user/Qt5.5.1/5.5.1/gcc_64/bin/qmake)
+5.  make clean
+6.  make
+7.  Execute the application.
+    sudo ./Qtcam    
+
+4. Installation
+Note: If qtcam is already installed, remove the qtcam accessory files using following commands and follow 4.1 section.
+$ sudo rm -rf /usr/share/qml
+$ sudo rm -rf /usr/share/applications/Qtcam*.desktop
+$ sudo apt-get remove qtcam
+
+4.1 Launchpad
+4.1.1 Ubuntu 14
+$ sudo apt-add-repository ppa:qtcam/trusty
+$ sudo apt-get update
+$ sudo apt-get install qtcam
+
+4.1.2 Ubuntu 12
+$ sudo apt-add-repository ppa:qtcam/precise
+$ sudo apt-get update
+$ sudo apt-get install qtcam
+
+4.1.3 Ubuntu 16.04
+$ sudo apt-add-repository ppa:qtcam/xenial
+$ sudo apt-get update
+$ sudo apt-get install qtcam
+
+4.1.4 Ubuntu 18.04
+$ sudo apt-add-repository ppa:qtcam/bionic
+$ sudo apt-get update
+$ sudo apt-get install qtcam
 
 
-4. Deployment
+5. How to run the application
+   * By clicking Qtcam icon from Dash home
+   or 
+  *  By running command from  terminal,
+     $sudo qtcam
 
-	Qtcam is a standalone application.  So the application setup creation can be installer, debian package, a tar file, etc..  E-Con releases the application setup as a installer, built using the qt installer framework, please look into the qt installer framework documentation to create the setup.
-http://doc.qt.io/qtinstallerframework/ .
 
-4.1. Installing and Running
 
-	A seperate installation manual is provided with screenshots.
+5. Legal
 
-5. Future Directions
-
-1. Tested with five e-con cameras, supported needs to be extended to all v4l2 compactable uvc cameras.
-2. Enhance the application by sending the captured data over the network.
-3.  Recording should come along with  audio support also.
-
-6. Legal
-
-6.1 Licensing
+5.1 Licensing
 	Please look into the LICENSE file available in the parent directory.
 
