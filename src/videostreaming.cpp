@@ -452,8 +452,8 @@ void FrameRenderer::drawBufferFor360p(){
         if((currentlySelectedEnumValue == CommonEnums::SEE3CAM_20CUG)){
             skipFrames = frame;
         }
-        else if(currentlySelectedEnumValue == CommonEnums::ECAM22_USB && h264DecodeRet<0 )
-             goto skip;
+        else if(currentlySelectedEnumValue == CommonEnums::ECAM22_USB && (h264DecodeRet<0) )
+                goto skip;
         else{
             skipFrames = 4;
         }
@@ -535,6 +535,7 @@ void FrameRenderer::drawRGBBUffer(){
     }
     else{
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, mIndicesData);
+        renderyuyvMutex.unlock();
     }
     m_shaderProgram->disableAttributeArray(0);
     m_shaderProgram->disableAttributeArray(1);
@@ -571,7 +572,7 @@ void FrameRenderer::drawYUYVBUffer(){
         if((currentlySelectedEnumValue == CommonEnums::SEE3CAM_20CUG)){
             skipFrames = frame;
         }
-        else if(currentlySelectedEnumValue == CommonEnums::ECAM22_USB && h264DecodeRet<0 )
+        else if(currentlySelectedEnumValue == CommonEnums::ECAM22_USB && (h264DecodeRet<0) )
              goto skip;
         else{
             skipFrames = 4;
@@ -734,6 +735,7 @@ void FrameRenderer::changeShader(){
         case V4L2_PIX_FMT_H264:
         case V4L2_PIX_FMT_Y12:
         case V4L2_PIX_FMT_SGRBG8:
+        case V4L2_PIX_FMT_SBGGR8: //Added by M Vishnu Murali: See3CAM_10CUG_CH uses respective pixel format 
             shaderYUYV();
             drawYUYVBUffer(); // To fix white color corruption drawing intially
             break;
@@ -760,6 +762,10 @@ void FrameRenderer::shaderRGB(){
                                                  "v_texCoord = a_texCoord;\n"
                                                  "}\n");
         m_shaderProgram->addShaderFromSourceCode(QOpenGLShader::Fragment,
+                                                 "#ifdef GL_ES\n"
+                                                 "precision highp float;\n"
+                                                 "#endif\n"
+
                                                  "varying vec2 v_texCoord;"
                                                  "uniform sampler2D texture;"
                                                  "vec4 color;"
@@ -1025,7 +1031,6 @@ void FrameRenderer::paint()
             m_formatChange = false;
             changeShader();
         }
-
         // Calculate render preview area only when resolution changed,side bar opened/closed and preview window changes.
         int x, y, winWidth, winHeight;
         if(m_videoResolnChange || sidebarStateChanged || windowStatusChanged){
@@ -2173,7 +2178,6 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
 
         // cu40 cam - flag
         if(m_renderer->y16BayerFormat){ // y16 - 10bit bayer
-
             m_renderer->renderBufferFormat = CommonEnums::YUYV_BUFFER_RENDER;
 
             y16BayerDestBuffer = (unsigned char *)malloc(width * height * 3);
@@ -2220,7 +2224,7 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
                 memcpy(m_renderer->yuvBuffer, (uint8_t *)inputbuffer, width*height*2);/* directly giving yuyv to render */
             }
                 break;
-
+            case V4L2_PIX_FMT_SBGGR8:   //Added by M Vishnu Murali(02/06/2020): For Proper rendering of See3CAM_10CUG_CH cam
             case V4L2_PIX_FMT_SGRBG8:{  // BA8 to yuyv conversion
                 m_renderer->renderBufferFormat = CommonEnums::YUYV_BUFFER_RENDER;
                 destBuffer = (uint8_t *)malloc(width * height * 3);

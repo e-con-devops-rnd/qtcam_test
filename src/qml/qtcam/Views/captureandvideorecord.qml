@@ -76,6 +76,8 @@ Item {
         id: videoRecord
         enabled: record.enabled ?  true : false
         onTriggered: {
+            camera_selected_mousearea.enabled = false
+            video_selected_Mousearea.enabled =false
             root.videoRecordBegin()
         }
     }
@@ -85,6 +87,8 @@ Item {
         enabled: record_stop.visible ? true : false
         onTriggered: {
             root.videoSaveVideo()
+            video_selected_Mousearea.enabled = true
+            camera_selected_mousearea.enabled = true
         }
     }
 
@@ -141,6 +145,7 @@ Item {
             source: "images/camera_selected.png"
             opacity: 1
             MouseArea {
+                id: camera_selected_mousearea
                 anchors.fill: parent
                 onClicked: {
                     root.keyEventFiltering = true
@@ -161,6 +166,7 @@ Item {
             opacity: 1
             visible: false
             MouseArea {
+                id:video_selected_Mousearea
                 anchors.fill: parent
                 onClicked: {
                     root.keyEventFiltering = false
@@ -329,6 +335,8 @@ Item {
         {
             record.enabled = enable
             record.opacity = enable ? 1 : 0.5
+            if(recordBtnVisible)
+                root.keyEventFiltering = true
         }
     }
 
