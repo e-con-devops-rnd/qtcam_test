@@ -95,7 +95,7 @@ static GLfloat mVerticesDataTextCord[] = {
 };
 
 static unsigned short mIndicesData[] = { 0, 1, 2, 0, 2, 3 };
-//bool FrameRenderer::useBuffer = true;
+
 Videostreaming::Videostreaming() : m_t(0)
   , m_renderer(0)
 {
@@ -528,7 +528,6 @@ void FrameRenderer::drawRGBBUffer(){
 
       glViewport(glViewPortX, glViewPortY, glViewPortWidth, glViewPortHeight);
     if(renderyuyvMutex.tryLock() && useBuffer){
-        qDebug()<<"In drawRGB"<<QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss,zzz");
         if(rgbaDestBuffer){
             glTexImage2D(GL_TEXTURE_2D, 0,  GL_RGBA, videoResolutionwidth, videoResolutionHeight, 0,GL_RGBA , GL_UNSIGNED_BYTE, rgbaDestBuffer);
         }
@@ -1053,7 +1052,7 @@ void FrameRenderer::paint()
                 windowStatusChanged = false;
             }
         }
-        if(renderBufferFormat == CommonEnums::RGB_BUFFER_RENDER ){ // RGBA
+        if(renderBufferFormat == CommonEnums::RGB_BUFFER_RENDER){ // RGBA
             drawRGBBUffer();
         }else if(renderBufferFormat == CommonEnums::YUYV_BUFFER_RENDER){ // YUYV
             drawYUYVBUffer();
@@ -1557,7 +1556,6 @@ int Videostreaming::jpegDecode(Videostreaming *obj, unsigned char **pic, unsigne
     int retval = 0;
     obj->m_renderer->renderyuyvMutex.lock();
     useBuffer = false;
-    qDebug()<<"JpegDevode Starting: "<<QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss,zzz");
     tjhandle handle = NULL;
     tjtransform *t = NULL;
 
@@ -1720,7 +1718,6 @@ bailout:
         handle = NULL;
     }
     useBuffer = true;
-    qDebug()<<"JpegDevode Ended: "<<QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss,zzz");
     obj->m_renderer->renderyuyvMutex.unlock();
     obj->m_renderer->gotFrame = true;
     obj->frameSkip = false;
@@ -2178,9 +2175,7 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
         m_renderer->renderyuyvMutex.lock();
                         if(useBuffer)
                         {
-                            qDebug()<<"In prepareBuf Copy Starting: "<<QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss,zzz");
                             memcpy(tempSrcBuffer, (unsigned char *)inputbuffer, bytesUsed);
-                            qDebug()<<"In prepareBuf Copy Ended: "<<QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss,zzz");
                             if((m_renderer!=NULL )&&( m_renderer->rgbaDestBuffer!=NULL)){
                                 T=QtConcurrent::run(jpegDecode, this, &m_renderer->rgbaDestBuffer, tempSrcBuffer, bytesUsed);
                                 m_renderer->renderyuyvMutex.unlock();

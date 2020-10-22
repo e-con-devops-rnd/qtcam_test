@@ -1293,7 +1293,7 @@ Rectangle {
             see3cam = Qt.createComponent("../UVCSettings/see3camcu22/see3camcu22.qml").createObject(root)
         }else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_130D) { // Added By Navya : 11 Dec 2019
             see3cam = Qt.createComponent("../UVCSettings/see3cam130D/see3cam_130D.qml").createObject(root)
-        }else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_24CUG) { // Added By Navya : 11 Dec 2019
+        }else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_24CUG) {
             see3cam = Qt.createComponent("../UVCSettings/see3cam24cug/see3cam_24cug.qml").createObject(root)
         }
         else {
