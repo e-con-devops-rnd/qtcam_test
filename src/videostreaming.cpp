@@ -70,7 +70,6 @@ QStringListModel Videostreaming::encoderList;
 int Videostreaming::deviceNumber;
 QString Videostreaming::camDeviceName;
 bool isStillFrame = false;
-bool useBuffer = true;
 typedef void (*ftopict) (int * out, uint8_t *pic, int width);
 
 //Added by Dhurka
@@ -527,7 +526,8 @@ void FrameRenderer::drawRGBBUffer(){
     glTexParameteri(GL_TEXTURE_2D,        GL_TEXTURE_WRAP_T,            GL_CLAMP_TO_EDGE);
 
       glViewport(glViewPortX, glViewPortY, glViewPortWidth, glViewPortHeight);
-    if(renderyuyvMutex.tryLock() && useBuffer){
+    if(renderyuyvMutex.tryLock()){
+        qDebug()<<Q_FUNC_INFO<<" locked "<<QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss,zzz");
         if(rgbaDestBuffer){
             glTexImage2D(GL_TEXTURE_2D, 0,  GL_RGBA, videoResolutionwidth, videoResolutionHeight, 0,GL_RGBA , GL_UNSIGNED_BYTE, rgbaDestBuffer);
         }
@@ -535,10 +535,12 @@ void FrameRenderer::drawRGBBUffer(){
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, mIndicesData);
         }
         renderyuyvMutex.unlock();
+        qDebug()<<Q_FUNC_INFO<<" UNlocked "<<QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss,zzz");
     }
     else{
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, mIndicesData);
-        renderyuyvMutex.unlock();
+      //  renderyuyvMutex.unlock();
+      //  qDebug()<<Q_FUNC_INFO<<" UNlocked "<<QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss,zzz");
     }
     m_shaderProgram->disableAttributeArray(0);
     m_shaderProgram->disableAttributeArray(1);
@@ -1554,8 +1556,10 @@ int Videostreaming::jpegDecode(Videostreaming *obj, unsigned char **pic, unsigne
 
 
     int retval = 0;
+
     obj->m_renderer->renderyuyvMutex.lock();
-    useBuffer = false;
+    qDebug()<<Q_FUNC_INFO<<" locked "<<QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss,zzz");
+  // obj->m_renderer->gotFrame = false;
     tjhandle handle = NULL;
     tjtransform *t = NULL;
 
@@ -1632,8 +1636,8 @@ int Videostreaming::jpegDecode(Videostreaming *obj, unsigned char **pic, unsigne
 
         _w = w;
         _h = h;
-    if(obj->m_renderer->updateStop)
-        goto bailout;
+//    if(obj->m_renderer->updateStop)
+//        goto bailout;
         jpegsize[0] = srcSize;
         if(srcSize<tjBufSize(tilew, tileh,subsamp))
             memcpy(jpegbuf[0], srcbuf, srcSize); /* Important Step */
@@ -1717,11 +1721,10 @@ bailout:
         tjDestroy(handle);
         handle = NULL;
     }
-    useBuffer = true;
     obj->m_renderer->renderyuyvMutex.unlock();
+    qDebug()<<Q_FUNC_INFO<<" Unlocked "<<QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss,zzz");
     obj->m_renderer->gotFrame = true;
     obj->frameSkip = false;
-
     return retval;
 }
 
@@ -2172,15 +2175,9 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
                 if(!frameSkip){
                     getFrameRates();
                     frameSkip = true;
-        m_renderer->renderyuyvMutex.lock();
-                        if(useBuffer)
-                        {
-                            memcpy(tempSrcBuffer, (unsigned char *)inputbuffer, bytesUsed);
-                            if((m_renderer!=NULL )&&( m_renderer->rgbaDestBuffer!=NULL)){
-                                T=QtConcurrent::run(jpegDecode, this, &m_renderer->rgbaDestBuffer, tempSrcBuffer, bytesUsed);
-                                m_renderer->renderyuyvMutex.unlock();
-                            }
-                        return true;
+                    memcpy(tempSrcBuffer, (unsigned char *)inputbuffer, bytesUsed);
+                    if((m_renderer!=NULL )&&( m_renderer->rgbaDestBuffer!=NULL)){
+                       T=QtConcurrent::run(jpegDecode, this, &m_renderer->rgbaDestBuffer, tempSrcBuffer, bytesUsed);
                     }
                 }else{
                 }
@@ -2888,6 +2885,7 @@ void Videostreaming::displayFrame() {
 
 void Videostreaming::stopCapture() {
     m_renderer->renderyuyvMutex.lock();
+    qDebug()<<Q_FUNC_INFO<<" locked "<<QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss,zzz");
     T.waitForFinished();
     startFrame = true;
     m_renderer->gotFrame = false;
@@ -2979,6 +2977,7 @@ void Videostreaming::stopCapture() {
     }
 
     m_renderer->renderyuyvMutex.unlock();
+    qDebug()<<Q_FUNC_INFO<<" UNlocked "<<QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss,zzz");
 }
 
 void Videostreaming::closeDevice() {
@@ -3002,10 +3001,12 @@ void Videostreaming::closeDevice() {
 void Videostreaming::startAgain() {
 
     m_renderer->renderyuyvMutex.lock();
+    qDebug()<<Q_FUNC_INFO<<" locked "<<QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss,zzz");
     m_renderer->gotFrame = false;
     m_renderer->updateStop = true;
     allocBuffers();
     m_renderer->renderyuyvMutex.unlock();
+    qDebug()<<Q_FUNC_INFO<<" UNlocked "<<QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss,zzz");
     if(openSuccess) {
         displayFrame();
     }
