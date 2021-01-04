@@ -1296,6 +1296,10 @@ signal disableStillProp(bool status);
             see3cam = Qt.createComponent("../UVCSettings/see3cam130D/see3cam_130D.qml").createObject(root)//Added by M Vishnu Murali
         }else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_24CUG) {
             see3cam = Qt.createComponent("../UVCSettings/see3cam24cug/see3cam_24cug.qml").createObject(root)
+        }else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU81) {
+                    see3cam = Qt.createComponent("../UVCSettings/see3cam_cu81/see3cam_cu81.qml").createObject(root)
+        }else if(selectedDeviceEnumValue == CommonEnums.ECAM51A_USB) {
+            see3cam = Qt.createComponent("../UVCSettings/ecam51A_USB/ecam51A_usb.qml").createObject(root)
         }
         else {
             see3cam = Qt.createComponent("../UVCSettings/others/others.qml").createObject(root)
@@ -1347,6 +1351,8 @@ signal disableStillProp(bool status);
         case CommonEnums.SEE3CAM_CU22:
         case CommonEnums.SEE3CAM_130D: //Added by M.VishnuMurali
         case CommonEnums.SEE3CAM_24CUG:
+        case CommonEnums.SEE3CAM_CU81:
+        case CommonEnums.ECAM51A_USB:
             camproperty.openHIDDevice(device_box.currentText);
             break;
         }
