@@ -29,12 +29,20 @@ Item {
 
     Connections
     {
+        target: vidstreamproperty
+        onTriggerShotCap:
+        {
+             imageCapture(CommonEnums.SNAP_SHOT)
+        }
+
+    }
+
+    Connections
+    {
         target: root
         onTakeScreenShot:
         {
-            //if(see3cam24cug.enableDisableFaceRectangle(false)) {
                 root.imageCapture(CommonEnums.BURST_SHOT);
-        //    }
         }
         onGetVideoPinStatus:
         {
@@ -107,52 +115,7 @@ Item {
             y:5
             spacing:20
 
-            Text {
-                id: scene_mode
-                text: "--- Scene Mode ---"
-                font.pixelSize: 14
-                font.family: "Ubuntu"
-                color: "#ffffff"
-                smooth: true
-                Layout.alignment: Qt.AlignCenter
-                opacity: 0.50196078431373
-            }
 
-
-            Grid {
-                columns: 2
-                spacing: 50
-
-                ExclusiveGroup { id: sceneInputGroup }
-                RadioButton {
-                    id: sceneNormal
-                    style:  econRadioButtonStyle
-                    text:   qsTr("Normal")
-                    exclusiveGroup: sceneInputGroup
-                    activeFocusOnPress: true
-                    onClicked: {
-                        see3cam24cug.setSceneMode(See3Cam24CUG.SCENE_NORMAL)
-                    }
-                    Keys.onReturnPressed: {
-                        see3cam24cug.setSceneMode(See3Cam24CUG.SCENE_NORMAL)
-                    }
-                }
-                RadioButton {
-                    id: sceneDoc
-                    style:  econRadioButtonStyle
-                    text: qsTr("Document")
-                    exclusiveGroup: sceneInputGroup
-                    activeFocusOnPress: true
-                    onClicked: {
-                        see3cam24cug.setSceneMode(See3Cam24CUG.SCENE_DOCUMENT)
-                    }
-                    Keys.onReturnPressed: {
-                        see3cam24cug.setSceneMode(See3Cam24CUG.SCENE_DOCUMENT)
-                    }
-
-                }
-
-            }
             Row{
                 Layout.alignment: Qt.AlignCenter
                 Text {
@@ -368,6 +331,53 @@ Item {
                     }
                     Keys.onReturnPressed: {
                         exposureCompSetButtonClicked()
+                    }
+                }
+            }
+            Row{
+                Layout.alignment: Qt.AlignCenter
+                Text {
+                    id: stream_modes
+                    text: "--- Stream Modes ---"
+                    font.pixelSize: 14
+                    font.family: "Ubuntu"
+                    color: "#ffffff"
+                    smooth: true
+                    opacity: 0.50196078431373
+                }
+            }
+            Grid {
+                x: 23
+                y: 235
+                columns: 2
+                spacing: 15
+                ExclusiveGroup { id: streamModeGroup }
+                RadioButton {
+                    id: rdoModeMaster
+                    style:  econRadioButtonStyle
+                    text:   qsTr("Master")
+                    exclusiveGroup: streamModeGroup
+                    activeFocusOnPress: true
+                    onClicked: {
+                        setMasterMode()
+                    }
+                    Keys.onReturnPressed:  {
+                         setMasterMode()
+                    }
+                }
+                RadioButton {
+                    id: rdoModeTrigger
+                    style:  econRadioButtonStyle
+                    text: qsTr("Trigger")
+                    exclusiveGroup: streamModeGroup
+                    activeFocusOnPress: true
+                    onClicked: {
+                        root.checkForTriggerMode(true)
+                        setTriggerMode()
+                    }
+                    Keys.onReturnPressed: {
+                        root.checkForTriggerMode(true)
+                        setTriggerMode()
                     }
                 }
             }
@@ -749,7 +759,7 @@ Item {
                         exclusiveGroup: flashGrp
                         checked: false
                         id: flashModeStrobe
-                        text: "Strobe"
+                        text: "Enable"
                         activeFocusOnPress: true
                         style: econRadioButtonStyle
                         onClicked: {
@@ -760,28 +770,13 @@ Item {
                         }
                     }
                 }
-//                Column{
-//                    RadioButton {
-//                        exclusiveGroup: flashGrp
-//                        checked: false
-//                        id: flashModeTorch
-//                        text: "Torch"
-//                        activeFocusOnPress: true
-//                        style: econRadioButtonStyle
-//                        onClicked: {
-//                            see3cam24cug.setFlashState(See3Cam24CUG.FLASHMODE_TORCH)
-//                        }
-//                        Keys.onReturnPressed: {
-//                            see3cam24cug.setFlashState(See3Cam24CUG.FLASHMODE_TORCH)
-//                        }
-//                    }
-//                }
+
                 Column{
                     RadioButton {
                         exclusiveGroup: flashGrp
                         checked: false
                         id: flashModeOff
-                        text: "OFF"
+                        text: "Disable"
                         activeFocusOnPress: true
                         style: econRadioButtonStyle
                         onClicked: {
@@ -1059,6 +1054,17 @@ Item {
         onFlashModeValue:{
             currentFlashMode(flashMode)
         }
+        onStreamModeValue:{
+            if(streamMode == See3Cam24CUG.MODE_MASTER){
+                rdoModeMaster.checked = true
+                root.startUpdatePreviewInMasterMode()
+                root.disableStillProp(true)
+            }else if(streamMode == See3Cam24CUG.MODE_TRIGGER){
+                root.disableStillProp(false)
+                rdoModeTrigger.checked = true
+                root.stopUpdatePreviewInTriggerMode()
+            }
+        }
         onSendEffectMode:{
             switch(effectMode){
             case See3Cam24CUG.EFFECT_NORMAL:
@@ -1084,9 +1090,6 @@ Item {
         }
         onSendDenoiseValue:{
             deNoiseSlider.value = denoiseValue
-        }
-        onSceneModeValue: {
-            currentSceneMode(sceneMode)
         }
         onQFactorValue:{
             skipUpdateUIQFactor = false
@@ -1248,7 +1251,7 @@ Item {
             }
         }else if(faceDetectMode == See3Cam24CUG.FaceRectDisable){
             faceRectDisable.checked = true
-            if(faceDetectEmbedDataValue == See3Cam24CUG.FaceDetectEmbedDataEnable){
+            if(faceDetectEmbedDataValue == see3cam24cug.FaceDetectEmbedDataEnable){
                 faceDetectEmbedData.checked = true
             }else{
                 faceDetectEmbedData.checked = false
@@ -1318,19 +1321,6 @@ Item {
         getAutoExpsoureControlValues.start()
     }
 
-    function currentSceneMode(mode)
-    {
-        switch(mode)
-        {
-        case See3Cam24CUG.SCENE_NORMAL:
-            sceneNormal.checked = true
-            break;
-        case See3Cam24CUG.SCENE_DOCUMENT:
-            sceneDoc.checked = true
-            break;
-        }
-    }
-
     function setFlickerDetectionFn()
     {
         switch(flickercombo.currentIndex){
@@ -1369,7 +1359,6 @@ Item {
     function getCameraValues(){
         see3cam24cug.getEffectMode()
         see3cam24cug.getDenoiseValue()
-        see3cam24cug.getSceneMode()
         see3cam24cug.getAutoExpROIModeAndWindowSize()
         see3cam24cug.getBurstLength()
         see3cam24cug.getQFactor()
@@ -1380,27 +1369,35 @@ Item {
         see3cam24cug.getFaceDetectMode()
         see3cam24cug.getSmileDetectMode()
         see3cam24cug.getFlashState()
+        see3cam24cug.getStreamMode()
     }
 
+    function setMasterMode(){
+  root.disableStillProp(true)
+        root.checkForTriggerMode(false)
+        root.captureBtnEnable(true)
+        root.videoRecordBtnEnable(true)
+        see3cam24cug.setStreamMode(See3Cam24CUG.MODE_MASTER)
+        root.startUpdatePreviewInMasterMode()
+    }
+    function setTriggerMode(){
+  	root.disableStillProp(false)
+        root.captureBtnEnable(false)
+        root.videoRecordBtnEnable(false)
+        root.stopUpdatePreviewInTriggerMode()
+        see3cam24cug.setStreamMode(See3Cam24CUG.MODE_TRIGGER)
+        root.stopUpdatePreviewInTriggerMode()
+    }
     Connections{
         target: root
         onMouseRightClicked:{
             if(autoexpManual.enabled && autoexpManual.checked){
-                see3cam24cug.setROIAutoExposure(see3cam24cug.AutoExpManual, width, height, x, y, autoExpoWinSizeCombo.currentText)
+                see3cam24cug.setROIAutoExposure(See3Cam24CUG.AutoExpManual, width, height, x, y, autoExpoWinSizeCombo.currentText)
             }
         }
         onAutoExposureSelected:{
             enableDisableAutoExposureControls(autoExposureSelect)
         }
-//        onEnableFaceRectafterBurst:{
-//            see3cam24cug.enableDisableFaceRectangle(true)
-//        }
-//        onBeforeRecordVideo:{
-//            see3cam24cug.enableDisableFaceRectangle(false)
-//        }
-//        onAfterRecordVideo:{
-//            see3cam24cug.enableDisableFaceRectangle(true)
-//        }
         onVideoResolutionChanged:{
             getexposureCompFrameRateCtrlTimer.start()
         }

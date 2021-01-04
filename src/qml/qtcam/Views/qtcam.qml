@@ -226,6 +226,7 @@ Rectangle {
 
     signal cameraSelected();
 
+signal disableStillProp(bool status);
     width:Screen.width
     height:Screen.height
     focus: true
@@ -684,8 +685,8 @@ Rectangle {
 
                         // Added by Sankari: 12 Feb 2018 : stop Getting key from camera.
                         keyEvent.stopGetKeyFromCamera()
-
-                        enumerateAudioSettings();
+			 if(!is20_04detcted)
+                        	enumerateAudioSettings();
 
                         cameraSelected()
                         //Added by Dhurka - 20th Oct 2016
@@ -1292,7 +1293,7 @@ Rectangle {
         }else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU22) { // Added By Navya : 11 Dec 2019
             see3cam = Qt.createComponent("../UVCSettings/see3camcu22/see3camcu22.qml").createObject(root)
         }else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_130D) { // Added By Navya : 11 Dec 2019
-            see3cam = Qt.createComponent("../UVCSettings/see3cam130D/see3cam_130D.qml").createObject(root)
+            see3cam = Qt.createComponent("../UVCSettings/see3cam130D/see3cam_130D.qml").createObject(root)//Added by M Vishnu Murali
         }else if(selectedDeviceEnumValue == CommonEnums.SEE3CAM_24CUG) {
             see3cam = Qt.createComponent("../UVCSettings/see3cam24cug/see3cam_24cug.qml").createObject(root)
         }
@@ -1344,7 +1345,7 @@ Rectangle {
         case CommonEnums.SEE3CAM_CU55_MH:
         case CommonEnums.SEE3CAM_20CUG:
         case CommonEnums.SEE3CAM_CU22:
-        case CommonEnums.SEE3CAM_130D:
+        case CommonEnums.SEE3CAM_130D: //Added by M.VishnuMurali
         case CommonEnums.SEE3CAM_24CUG:
             camproperty.openHIDDevice(device_box.currentText);
             break;
@@ -1392,10 +1393,13 @@ Rectangle {
         {
             videoSettingsRootObject = videoViewComponent.createObject(root,{"imageFormatY" : imageFormatYValue,"stillPropertyY" : stillPropertyYValue});
         }
-        var AudioViewComponent = Qt.createComponent("audiocapturesettings.qml")
-        if (AudioViewComponent.status === Component.Ready)
+        if(!is20_04detcted)
         {
-            audioSettingsRootObject = AudioViewComponent.createObject(root,{"imageFormatY" : imageFormatYValue,"stillPropertyY" : stillPropertyYValue});
+            var AudioViewComponent = Qt.createComponent("audiocapturesettings.qml")
+            if (AudioViewComponent.status === Component.Ready)
+            {
+                audioSettingsRootObject = AudioViewComponent.createObject(root,{"imageFormatY" : imageFormatYValue,"stillPropertyY" : stillPropertyYValue});
+            }
         }
         //Capture and Video recording
         var captureVideoRecordComponent = Qt.createComponent("captureandvideorecord.qml")

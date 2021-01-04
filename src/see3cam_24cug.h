@@ -13,9 +13,6 @@
 #define SMILE_THRESHOLD_MAX 75
 #define DEFAULT_SMILE_THRESHOLD 40
 
-#define GET_SCENEMODE_24CUG                  0x01
-#define SET_SCENEMODE_24CUG                  0x02
-
 #define GET_SPECIALEFFECT_24CUG              0x03
 #define SET_SPECIALEFFECT_24CUG              0x04
 
@@ -68,7 +65,12 @@
 #define GET_BURST_LENGTH_24CUG               0x19
 #define SET_BURST_LENGTH_24CUG               0x1A
 
+#define GET_STREAM_MADE_24CUG                0x1B
+#define SET_STREAM_MADE_24CUG                0x1C
+
 #define SET_TO_DEFAULT_24CUG                 0xFF
+
+//#define SET_OS_CODE                              0x70
 
 class See3CAM_24CUG :public QObject
 {
@@ -84,12 +86,11 @@ private:
 public:
     explicit See3CAM_24CUG(QObject *parent = 0);
 
-    enum sceneModes
-    {
-        SCENE_NORMAL = 0x01,
-        SCENE_DOCUMENT = 0x0C
+    enum streamModes {
+       MODE_MASTER =0x00,
+       MODE_TRIGGER =0x01
     };
-    Q_ENUMS(sceneModes)
+    Q_ENUMS(streamModes)
 
     enum specialEffects
     {
@@ -164,7 +165,6 @@ public:
 signals:
     void sendEffectMode(uint effectMode);
     void sendDenoiseValue(uint denoiseValue);
-    void sceneModeValue(uint sceneMode);
     void roiAutoExpModeValue(uint roiMode, uint winSize);
     void burstLengthValue(uint burstLength);
     void qFactorValue(uint qFactor);
@@ -177,10 +177,9 @@ signals:
     void smileDetectModeValue(uint smileDetectMode, uint smileDetectEmbedDataValue);
     void flashModeValue(uint flashMode);
     void flickerDetectionMode(uint flickerMode);
+    void streamModeValue(uint streamMode);
 
 public slots:
-    bool getSceneMode();
-    bool setSceneMode(const sceneModes& sceneMode);
 
     bool getEffectMode();
     bool setEffectMode(const specialEffects& specialEffect);
@@ -216,13 +215,13 @@ public slots:
     bool getFlickerDetection();
     bool setFlickerDetection(camFlickerMode flickerMode);
 
-//    bool enableDisableFaceRectangle(bool enableFaceRect);
-
     bool getFlashState();
     bool setFlashState(flashStateValues flashMode);
 
-    bool setToDefault();
+    bool getStreamMode();
+    bool setStreamMode(streamModes streamMode);
 
+    bool setToDefault();
 };
 
 #endif // SEE3CAM_24CUG_H

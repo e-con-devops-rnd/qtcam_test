@@ -61,7 +61,6 @@
 #endif
 
 int h264DecodeRet;
-
 QStringListModel Videostreaming::resolution;
 QStringListModel Videostreaming::stillOutputFormat;
 QStringListModel Videostreaming::videoOutputFormat;
@@ -70,6 +69,7 @@ QStringListModel Videostreaming::encoderList;
 int Videostreaming::deviceNumber;
 QString Videostreaming::camDeviceName;
 bool isStillFrame = false;
+
 typedef void (*ftopict) (int * out, uint8_t *pic, int width);
 
 //Added by Dhurka
@@ -159,6 +159,7 @@ Videostreaming::Videostreaming() : m_t(0)
     connect(this, SIGNAL(captureVideo()), this, SLOT(recordVideo()));
     videoEncoder=new VideoEncoder();
     m_convertData = NULL;
+    trigger_mode = false;
 }
 
 Videostreaming::~Videostreaming()
@@ -527,7 +528,6 @@ void FrameRenderer::drawRGBBUffer(){
 
       glViewport(glViewPortX, glViewPortY, glViewPortWidth, glViewPortHeight);
     if(renderyuyvMutex.tryLock()){
-        qDebug()<<Q_FUNC_INFO<<" locked "<<QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss,zzz");
         if(rgbaDestBuffer){
             glTexImage2D(GL_TEXTURE_2D, 0,  GL_RGBA, videoResolutionwidth, videoResolutionHeight, 0,GL_RGBA , GL_UNSIGNED_BYTE, rgbaDestBuffer);
         }
@@ -535,12 +535,9 @@ void FrameRenderer::drawRGBBUffer(){
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, mIndicesData);
         }
         renderyuyvMutex.unlock();
-        qDebug()<<Q_FUNC_INFO<<" UNlocked "<<QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss,zzz");
     }
     else{
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, mIndicesData);
-      //  renderyuyvMutex.unlock();
-      //  qDebug()<<Q_FUNC_INFO<<" UNlocked "<<QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss,zzz");
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, mIndicesData); //Edited by M.Vishnu Murali:Removed renderyuyvMutex.unlock() as it is leading to improper buffer allocations especially at high resolutions.
     }
     m_shaderProgram->disableAttributeArray(0);
     m_shaderProgram->disableAttributeArray(1);
@@ -578,7 +575,10 @@ void FrameRenderer::drawYUYVBUffer(){
             skipFrames = frame;
         }
         else if(currentlySelectedEnumValue == CommonEnums::ECAM22_USB && h264DecodeRet<0 )
-             goto skip;
+        {
+            renderyuyvMutex.unlock();   //Added by M.Vishnu Murali: Inorder to unlock Qmutex when decoding fails.
+            goto skip;
+        }
         else{
             skipFrames = 4;
         }
@@ -592,8 +592,8 @@ void FrameRenderer::drawYUYVBUffer(){
     }
     else{
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, mIndicesData);
-skip:   renderyuyvMutex.unlock();
     }
+skip:
     m_shaderProgram->disableAttributeArray(0);
     m_shaderProgram->disableAttributeArray(1);
     // Not strictly needed for this example, but generally useful for when
@@ -740,7 +740,7 @@ void FrameRenderer::changeShader(){
         case V4L2_PIX_FMT_H264:
         case V4L2_PIX_FMT_Y12:
         case V4L2_PIX_FMT_SGRBG8:
-        case V4L2_PIX_FMT_SBGGR8: //Added by M Vishnu Murali: See3CAM_10CUG_CH uses respective pixel format
+        case V4L2_PIX_FMT_SBGGR8: //Added by M Vishnu Murali: See3CAM_10CUG_CH uses respective pixel format 
             shaderYUYV();
             drawYUYVBUffer(); // To fix white color corruption drawing intially
             break;
@@ -1251,6 +1251,7 @@ void Videostreaming::capFrame()
 
         return;
     }
+    
     if (again) {
         return;
     }
@@ -1405,8 +1406,10 @@ void Videostreaming::capFrame()
 
         /*Added by Navya: 27 Mar 2019
            Checking whether the frame is still/preview. */
-
-        temp_Buffer = (unsigned char *)malloc(width * height * 2);
+	if(width * height * 2<buf.bytesused)
+        	temp_Buffer = (unsigned char *)malloc(buf.bytesused);//width * height * 2);
+	else
+		temp_Buffer = (unsigned char *)malloc(width * height * 2);
         memcpy(temp_Buffer,(unsigned char *)m_buffers[buf.index].start[0],buf.bytesused);
 
         if(buf.bytesused>0){
@@ -1545,6 +1548,12 @@ void Videostreaming::capFrame()
     if(windowResized){
         emit setWindowSize(resizedWidth,resizedHeight);
     }
+    if(currentlySelectedCameraEnum == CommonEnums::SEE3CAM_24CUG && trigger_mode) //Added by M.VishnuMurali: For capturing trigger mode images.
+    {
+    	m_renderer->gotFrame = false;
+        emit   triggerShotCap();
+
+    }
     m_timer.start(2000);
 }
 
@@ -1554,12 +1563,8 @@ void Videostreaming::capFrame()
 int Videostreaming::jpegDecode(Videostreaming *obj, unsigned char **pic, unsigned char *buf, unsigned long bytesUsed)
 {
 
-
     int retval = 0;
-
     obj->m_renderer->renderyuyvMutex.lock();
-    qDebug()<<Q_FUNC_INFO<<" locked "<<QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss,zzz");
-  // obj->m_renderer->gotFrame = false;
     tjhandle handle = NULL;
     tjtransform *t = NULL;
 
@@ -1636,8 +1641,7 @@ int Videostreaming::jpegDecode(Videostreaming *obj, unsigned char **pic, unsigne
 
         _w = w;
         _h = h;
-//    if(obj->m_renderer->updateStop)
-//        goto bailout;
+
         jpegsize[0] = srcSize;
         if(srcSize<tjBufSize(tilew, tileh,subsamp))
             memcpy(jpegbuf[0], srcbuf, srcSize); /* Important Step */
@@ -1721,8 +1725,8 @@ bailout:
         tjDestroy(handle);
         handle = NULL;
     }
+
     obj->m_renderer->renderyuyvMutex.unlock();
-    qDebug()<<Q_FUNC_INFO<<" Unlocked "<<QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss,zzz");
     obj->m_renderer->gotFrame = true;
     obj->frameSkip = false;
     return retval;
@@ -2176,8 +2180,9 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
                     getFrameRates();
                     frameSkip = true;
                     memcpy(tempSrcBuffer, (unsigned char *)inputbuffer, bytesUsed);
-                    if((m_renderer!=NULL )&&( m_renderer->rgbaDestBuffer!=NULL)){
-                       T=QtConcurrent::run(jpegDecode, this, &m_renderer->rgbaDestBuffer, tempSrcBuffer, bytesUsed);
+                    if(m_renderer && m_renderer->rgbaDestBuffer){
+                        //Added by M.vishnu Murali: threadMonitor used for monitor jpegDecode() in seperate thread.
+                        threadMonitor=QtConcurrent::run(jpegDecode, this, &m_renderer->rgbaDestBuffer, tempSrcBuffer, bytesUsed);
                     }
                 }else{
                 }
@@ -2297,7 +2302,6 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
                     m_renderer->renderBufferFormat = CommonEnums::YUYV_BUFFER_RENDER;
                 // check - decode h264 to yuyv available
                 h264DecodeRet = h264Decode->decodeH264(yuv420pdestBuffer, (uint8_t *) inputbuffer, bytesUsed); /* decode h264 to yuv420p */
-
                 h264Decode->yu12_to_yuyv(yuyvBuffer, yuv420pdestBuffer, width, height); /*yuv420p to yuyv conversion */
                 memcpy(m_renderer->yuvBuffer, yuyvBuffer, width*height*2);
             }
@@ -2884,37 +2888,39 @@ void Videostreaming::displayFrame() {
 }
 
 void Videostreaming::stopCapture() {
-    m_renderer->renderyuyvMutex.lock();
-    qDebug()<<Q_FUNC_INFO<<" locked "<<QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss,zzz");
-    T.waitForFinished();
+    threadMonitor.waitForFinished();   //Added by M.Vishnu Murali:Inorder to finish jpegDecoding then stop else preview corruption will occur
     startFrame = true;
-    m_renderer->gotFrame = false;
-    m_renderer->updateStop = true;
     if(h264Decode!=NULL){
         h264Decode->closeFile();
         delete h264Decode;
         h264Decode=NULL;
     }
+
     if(yuyvBuffer != NULL ){
         free(yuyvBuffer);
         yuyvBuffer = NULL;
     }
-    if(yuyvBuffer_Y12 != NULL){
+
+    if(yuyvBuffer_Y12 != NULL ){
         free(yuyvBuffer_Y12);
         yuyvBuffer_Y12 = NULL;
     }
+
     if(yuv420pdestBuffer != NULL){
         free(yuv420pdestBuffer);
         yuv420pdestBuffer = NULL;
     }
+
     if(tempSrcBuffer != NULL){
         free(tempSrcBuffer);
         tempSrcBuffer = NULL;
     }
+
     if(m_renderer->yBuffer != NULL){
         free(m_renderer->yBuffer);
         m_renderer->yBuffer = NULL;
     }
+
 
     if(m_renderer->uBuffer != NULL){
         free(m_renderer->uBuffer);
@@ -2925,7 +2931,8 @@ void Videostreaming::stopCapture() {
         free(m_renderer->vBuffer);
         m_renderer->vBuffer = NULL;
     }
-
+    m_renderer->gotFrame = false;
+    m_renderer->updateStop = true;
 
     m_renderer->y16BayerFormat = false; // BY default this will be false, If cu40 [ y16 bayer format ] is selected ,
     //this will be enabled.
@@ -2961,6 +2968,8 @@ void Videostreaming::stopCapture() {
         }
     }
 
+    m_renderer->renderyuyvMutex.lock();
+
     if(m_renderer->rgbaDestBuffer != NULL){
         free(m_renderer->rgbaDestBuffer);
         m_renderer->rgbaDestBuffer = NULL;
@@ -2977,7 +2986,6 @@ void Videostreaming::stopCapture() {
     }
 
     m_renderer->renderyuyvMutex.unlock();
-    qDebug()<<Q_FUNC_INFO<<" UNlocked "<<QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss,zzz");
 }
 
 void Videostreaming::closeDevice() {
@@ -3001,12 +3009,10 @@ void Videostreaming::closeDevice() {
 void Videostreaming::startAgain() {
 
     m_renderer->renderyuyvMutex.lock();
-    qDebug()<<Q_FUNC_INFO<<" locked "<<QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss,zzz");
     m_renderer->gotFrame = false;
     m_renderer->updateStop = true;
     allocBuffers();
     m_renderer->renderyuyvMutex.unlock();
-    qDebug()<<Q_FUNC_INFO<<" UNlocked "<<QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss,zzz");
     if(openSuccess) {
         displayFrame();
     }
@@ -3336,15 +3342,12 @@ void Videostreaming::cameraFilterControls(bool actualValue) {
 }
 
 QString Videostreaming::getSettings(unsigned int id) {
+    int tries = IOCTL_RETRY;
     struct v4l2_control c;
     c.id = id;
     c.value = 0;
-    if (ioctl(VIDIOC_G_CTRL, &c)) {
-        //v4l2_queryctrl qctrl;
-        //qctrl.id = id;
-        emit logCriticalHandle("Unable to get the Value, setting the Default value: "+ QString::number(c.value,10));
-        return QString::number(c.value,10);
-    }
+	while((ioctl(VIDIOC_G_CTRL, &c)<0)&&tries--)	
+        emit logCriticalHandle("Unable to get the Value, Retrying...");
     QString value = QString::number(c.value,10);
     return value;
 }
@@ -3529,11 +3532,13 @@ void Videostreaming::stopUpdatePreview() {
 }
 
 void Videostreaming::triggerModeEnabled() {
+    trigger_mode = true;
     stopUpdatePreview();
 }
 
 void Videostreaming::masterModeEnabled() {
     m_renderer->updateStop = false;
+    trigger_mode = false;
 }
 //Added by Dhurka - 13th Oct 2016
 /**

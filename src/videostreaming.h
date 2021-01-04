@@ -176,7 +176,6 @@ class Videostreaming :  public QQuickItem, public v4l2
     Q_PROPERTY(qreal t READ t WRITE setT NOTIFY tChanged)
 
 public:
-    QFuture<int> T;
     struct buffer {
         unsigned planes;
         void   *start[VIDEO_MAX_PLANES];
@@ -281,6 +280,7 @@ public:
     Q_ENUMS(fpsChange)
 
 private:
+    QFuture <int >threadMonitor;        //Added by M.Vishnu Murali:In order to moitor functions running in seperate thread.
     qreal m_t;
     __u8 m_bufReqCount;
     FrameRenderer *m_renderer;
@@ -331,6 +331,7 @@ private:
     bool tempMsgBoxValue;
     bool m_VideoRecord;
     bool previewStop;
+    bool trigger_mode;
 
     QSocketNotifier *m_capNotifier;
 
@@ -637,6 +638,8 @@ public slots:
     void doEncodeAudio();
 
 signals:
+    void   triggerShotCap();
+
 
     // from qml file , rendering animation duration t changed
     void tChanged();
