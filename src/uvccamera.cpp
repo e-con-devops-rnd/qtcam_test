@@ -94,6 +94,15 @@ void uvccamera::initCameraEnumMap()
     cameraEnumMap.insert(econVid + (",c1d4"),CommonEnums::FSCAM_CU135);
     cameraEnumMap.insert(econVid + (",c124"),CommonEnums::SEE3CAM_20CUG);
     cameraEnumMap.insert(econVid + (",c126"),CommonEnums::SEE3CAM_CU22);
+    //Added by M Vishnu Murali
+    cameraEnumMap.insert(econVid + (",c129"),CommonEnums::ECAM22_USB); //hyperyon Dual stream device
+    cameraEnumMap.insert(econVid + (",c0d6"),CommonEnums::SEE3CAM_130D);
+    cameraEnumMap.insert(econVid + (",C128"),CommonEnums::SEE3CAM_24CUG);
+    cameraEnumMap.insert(econVid + (",D400"),CommonEnums::NONE);//See3CAM_160_EVALKIT
+    cameraEnumMap.insert(econVid + (",C180"),CommonEnums::SEE3CAM_CU81);
+    cameraEnumMap.insert(econVid + (",C058"),CommonEnums::ECAM51A_USB);
+    cameraEnumMap.insert(econVid + (",C05a"),CommonEnums::ECAM51A_USB);
+    cameraEnumMap.insert(econVid + (",c05c"),CommonEnums::ECAM51B_USB);
 }
 
 unsigned int uvccamera::getTickCount()
@@ -511,7 +520,7 @@ bool uvccamera::initExtensionUnit(QString cameraName) {
     /*
      * Correcting OS code supported cameras
      */
-    if(selectedDeviceEnum == CommonEnums::SEE3CAM_11CUG || selectedDeviceEnum == CommonEnums::SEE3CAM_12CUNIR || selectedDeviceEnum == CommonEnums::ECON_1MP_BAYER_RGB  || selectedDeviceEnum == CommonEnums::ECON_1MP_MONOCHROME || selectedDeviceEnum == CommonEnums::SEE3CAM_CU51)
+    if(selectedDeviceEnum == CommonEnums::SEE3CAM_CU81||selectedDeviceEnum == CommonEnums::SEE3CAM_11CUG || selectedDeviceEnum == CommonEnums::SEE3CAM_12CUNIR || selectedDeviceEnum == CommonEnums::ECON_1MP_BAYER_RGB  || selectedDeviceEnum == CommonEnums::ECON_1MP_MONOCHROME || selectedDeviceEnum == CommonEnums::SEE3CAM_CU51 ||selectedDeviceEnum == CommonEnums::SEE3CAM_24CUG)
     {                                
         ret = sendOSCode();
         if (ret == false) {

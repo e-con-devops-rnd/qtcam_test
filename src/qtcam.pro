@@ -22,7 +22,6 @@ SOURCES += main.cpp \
     seecam_10cug_m.cpp \
     seecam_10cug_bayer.cpp \
     seecam_11cug.cpp \
-    seecam_cu80.cpp \
     seecam_cu50.cpp \
     seecam_ar0130.cpp \
     videoencoder.cpp \
@@ -49,7 +48,12 @@ SOURCES += main.cpp \
     fscam_cu135.cpp \
     see3camcu55_mh.cpp \
     see3cam_20cug.cpp \
-    see3cam_cu22.cpp
+    see3cam_cu22.cpp \
+    see3cam_130d.cpp \
+    see3cam_24cug.cpp \
+    see3cam_cu81.cpp \
+    seecam_cu80.cpp \
+    ecam51a_usb.cpp
 
 # Installation path
 # target.path =
@@ -99,7 +103,11 @@ HEADERS += \
     fscam_cu135.h\
     see3camcu55_mh.h \
     see3cam_20cug.h  \
-    see3cam_cu22.h
+    see3cam_cu22.h \
+    see3cam_130d.h \
+    see3cam_24cug.h \
+    see3cam_cu81.h \
+    ecam51a_usb.h
 
 
 INCLUDEPATH +=  $$PWD/v4l2headers/include \
@@ -164,6 +172,11 @@ contains(BOARD_ARM64, arm64):{
 #QMAKE_CXX += -ggdb
 QMAKE_CFLAGS_THREAD = -D__STDC_CONSTANT_MACROS      #For Ubuntu 12.04 compilation
 QMAKE_CXXFLAGS_THREAD = -D__STDC_CONSTANT_MACROS    #For Ubuntu 12.04 compilation
+QMAKE_CFLAGS_ISYSTEM = -I                           #For Ubuntu 20.04
 
 OTHER_FILES += \
     qml/qtcam/Views/qtcam.qml
+
+DISTFILES += \
+    qml/qtcam/UVCSettings/see3cam_cu81/see3cam_cu81.qml \
+    qml/qtcam/UVCSettings/ecam51A_USB/ecam51A_usb.qml

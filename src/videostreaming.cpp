@@ -61,7 +61,6 @@
 #endif
 
 int h264DecodeRet;
-
 QStringListModel Videostreaming::resolution;
 QStringListModel Videostreaming::stillOutputFormat;
 QStringListModel Videostreaming::videoOutputFormat;
@@ -153,10 +152,14 @@ Videostreaming::Videostreaming() : m_t(0)
     m_capImage = NULL;
     frameSkip = false;
     tempSrcBuffer = NULL;
+    startFrame = true;
+    _bytesUsed = 0;
     connect(this, &QQuickItem::windowChanged, this, &Videostreaming::handleWindowChanged);
     connect(&audioinput, SIGNAL(captureAudio()), this, SLOT(doEncodeAudio()));
     connect(this, SIGNAL(captureVideo()), this, SLOT(recordVideo()));
     videoEncoder=new VideoEncoder();
+    m_convertData = NULL;
+    trigger_mode = false;
 }
 
 Videostreaming::~Videostreaming()
@@ -534,7 +537,7 @@ void FrameRenderer::drawRGBBUffer(){
         renderyuyvMutex.unlock();
     }
     else{
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, mIndicesData);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, mIndicesData); //Edited by M.Vishnu Murali:Removed renderyuyvMutex.unlock() as it is leading to improper buffer allocations especially at high resolutions.
     }
     m_shaderProgram->disableAttributeArray(0);
     m_shaderProgram->disableAttributeArray(1);
@@ -572,7 +575,10 @@ void FrameRenderer::drawYUYVBUffer(){
             skipFrames = frame;
         }
         else if(currentlySelectedEnumValue == CommonEnums::ECAM22_USB && h264DecodeRet<0 )
-             goto skip;
+        {
+            renderyuyvMutex.unlock();   //Added by M.Vishnu Murali: Inorder to unlock Qmutex when decoding fails.
+            goto skip;
+        }
         else{
             skipFrames = 4;
         }
@@ -586,8 +592,8 @@ void FrameRenderer::drawYUYVBUffer(){
     }
     else{
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, mIndicesData);
-skip:   renderyuyvMutex.unlock();
     }
+skip:
     m_shaderProgram->disableAttributeArray(0);
     m_shaderProgram->disableAttributeArray(1);
     // Not strictly needed for this example, but generally useful for when
@@ -734,6 +740,7 @@ void FrameRenderer::changeShader(){
         case V4L2_PIX_FMT_H264:
         case V4L2_PIX_FMT_Y12:
         case V4L2_PIX_FMT_SGRBG8:
+        case V4L2_PIX_FMT_SBGGR8: //Added by M Vishnu Murali: See3CAM_10CUG_CH uses respective pixel format 
             shaderYUYV();
             drawYUYVBUffer(); // To fix white color corruption drawing intially
             break;
@@ -760,6 +767,10 @@ void FrameRenderer::shaderRGB(){
                                                  "v_texCoord = a_texCoord;\n"
                                                  "}\n");
         m_shaderProgram->addShaderFromSourceCode(QOpenGLShader::Fragment,
+                                                 "#ifdef GL_ES\n"
+                                                 "precision highp float;\n"
+                                                 "#endif\n"
+
                                                  "varying vec2 v_texCoord;"
                                                  "uniform sampler2D texture;"
                                                  "vec4 color;"
@@ -1025,7 +1036,6 @@ void FrameRenderer::paint()
             m_formatChange = false;
             changeShader();
         }
-
         // Calculate render preview area only when resolution changed,side bar opened/closed and preview window changes.
         int x, y, winWidth, winHeight;
         if(m_videoResolnChange || sidebarStateChanged || windowStatusChanged){
@@ -1184,7 +1194,6 @@ bool Videostreaming::saveIRImage(){
     return true;
 }
 
-
 void Videostreaming::setPreviewBgrndArea(int width, int height, bool sidebarAvailable){
     if(m_renderer){
         if(windowResized){  //Update Application width and height only when window is resized.
@@ -1238,8 +1247,14 @@ void Videostreaming::capFrame()
 
         emit deviceUnplugged("Disconnected","Device Not Found");
         emit logCriticalHandle("Device disconnected");
-
         return;
+    }
+
+    if(currentlySelectedCameraEnum == CommonEnums::SEE3CAM_24CUG && trigger_mode) //Added by M.VishnuMurali: For capturing trigger mode images.
+    {
+        m_renderer->gotFrame = false;
+        m_renderer->updateStop = true;
+        emit   triggerShotCap();
     }
     if (again) {
         return;
@@ -1287,6 +1302,16 @@ void Videostreaming::capFrame()
         }
     }
         break;
+    case V4L2_PIX_FMT_MJPEG:
+    {
+        validFrame = true;
+        _bytesUsed = buf.bytesused;
+        if(startFrame)
+        {
+            allocBuffers();
+            startFrame = false;
+        }
+    }break;
     default:
         validFrame = true;
         // To do: for other color spaces
@@ -1385,8 +1410,10 @@ void Videostreaming::capFrame()
 
         /*Added by Navya: 27 Mar 2019
            Checking whether the frame is still/preview. */
-
-        temp_Buffer = (unsigned char *)malloc(width * height * 2);
+	if(width * height * 2<buf.bytesused)
+        	temp_Buffer = (unsigned char *)malloc(buf.bytesused);//width * height * 2);
+	else
+		temp_Buffer = (unsigned char *)malloc(width * height * 2);
         memcpy(temp_Buffer,(unsigned char *)m_buffers[buf.index].start[0],buf.bytesused);
 
         if(buf.bytesused>0){
@@ -1459,6 +1486,11 @@ void Videostreaming::capFrame()
             m_snapShot = false;
             retrieveShot = false;
             if(m_burstNumber == m_burstLength){
+                if(currentlySelectedCameraEnum == CommonEnums::SEE3CAM_24CUG && trigger_mode) //Added by M.Vishnu Murali:for 24CUG in trigger mode consider the preview settings while
+                {                                                                             //saving image.
+                    stillSize=lastPreviewSize;
+                    stillOutFormat = lastFormat;
+                }
                 if (!((stillSize == lastPreviewSize) && (stillOutFormat == lastFormat)))
                 {
                     if(m_displayCaptureDialog){
@@ -1525,6 +1557,7 @@ void Videostreaming::capFrame()
     if(windowResized){
         emit setWindowSize(resizedWidth,resizedHeight);
     }
+
     m_timer.start(2000);
 }
 
@@ -1536,7 +1569,6 @@ int Videostreaming::jpegDecode(Videostreaming *obj, unsigned char **pic, unsigne
 
     int retval = 0;
     obj->m_renderer->renderyuyvMutex.lock();
-
     tjhandle handle = NULL;
     tjtransform *t = NULL;
 
@@ -1615,7 +1647,10 @@ int Videostreaming::jpegDecode(Videostreaming *obj, unsigned char **pic, unsigne
         _h = h;
 
         jpegsize[0] = srcSize;
-        memcpy(jpegbuf[0], srcbuf, srcSize); /* Important Step */
+        if(srcSize<tjBufSize(tilew, tileh,subsamp))
+            memcpy(jpegbuf[0], srcbuf, srcSize); /* Important Step */
+        else
+            memcpy(jpegbuf[0], srcbuf, tjBufSize(tilew, tileh,subsamp));
 
         if(w == tilew)
             _tilew = _w;
@@ -1696,7 +1731,10 @@ bailout:
     }
 
     obj->m_renderer->renderyuyvMutex.unlock();
-    obj->m_renderer->gotFrame = true;
+    if(!obj->trigger_mode)
+    {
+        obj->m_renderer->gotFrame = true;
+    }
     obj->frameSkip = false;
     return retval;
 }
@@ -1776,8 +1814,9 @@ int Videostreaming::decomp(Videostreaming *obj,unsigned char **jpegbuf,
 
 bailout:
     if(handle)
-        tjDestroy(handle);
-
+    {    tjDestroy(handle);
+         handle = NULL;
+    }
     return retval;
 }
 
@@ -2138,24 +2177,22 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
         frameMjpeg = true;
         m_renderer->renderBufferFormat = CommonEnums::RGB_BUFFER_RENDER;
         if(m_capSrcFormat.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG){
-            if(bytesUsed <= HEADERFRAME1) {
-                emit logCriticalHandle("Ignoring empty buffer");
-                return false;
-            }
-            if(((uint8_t *) inputbuffer)[0] == 0xFF && ((uint8_t *) inputbuffer)[1] == 0xD8){
+            if(check_jpeg_header(inputbuffer,bytesUsed))
+            {
                 if(!frameSkip){
                     getFrameRates();
                     frameSkip = true;
                     memcpy(tempSrcBuffer, (unsigned char *)inputbuffer, bytesUsed);
                     if(m_renderer && m_renderer->rgbaDestBuffer){
-                        QtConcurrent::run(jpegDecode, this, &m_renderer->rgbaDestBuffer, tempSrcBuffer, bytesUsed);
+                        //Added by M.vishnu Murali: threadMonitor used for monitor jpegDecode() in seperate thread.
+                        threadMonitor=QtConcurrent::run(jpegDecode, this, &m_renderer->rgbaDestBuffer, tempSrcBuffer, bytesUsed);
                     }
                 }else{
                 }
             }
-            else{
+            else
                 return false;
-            }
+
         }
 
         return true;
@@ -2173,7 +2210,6 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
 
         // cu40 cam - flag
         if(m_renderer->y16BayerFormat){ // y16 - 10bit bayer
-
             m_renderer->renderBufferFormat = CommonEnums::YUYV_BUFFER_RENDER;
 
             y16BayerDestBuffer = (unsigned char *)malloc(width * height * 3);
@@ -2220,7 +2256,7 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
                 memcpy(m_renderer->yuvBuffer, (uint8_t *)inputbuffer, width*height*2);/* directly giving yuyv to render */
             }
                 break;
-
+            case V4L2_PIX_FMT_SBGGR8:   //Added by M Vishnu Murali(02/06/2020): For Proper rendering of See3CAM_10CUG_CH cam
             case V4L2_PIX_FMT_SGRBG8:{  // BA8 to yuyv conversion
                 m_renderer->renderBufferFormat = CommonEnums::YUYV_BUFFER_RENDER;
                 destBuffer = (uint8_t *)malloc(width * height * 3);
@@ -2395,6 +2431,29 @@ void Videostreaming::freeBuffers(unsigned char *destBuffer, unsigned char *copyB
     }
 }
 
+void Videostreaming::allocBuffers()
+{
+    m_renderer->videoResolutionwidth = m_width;
+    m_renderer->videoResolutionHeight = m_height;
+
+    int buffLength = m_width * m_height;
+     int buffHalfLength = (m_width * m_height)/ 2;
+
+    m_renderer->yBuffer = (uint8_t*)realloc(m_renderer->yBuffer,buffLength);
+    m_renderer->uBuffer = (uint8_t*)realloc(m_renderer->uBuffer,buffHalfLength);
+    m_renderer->vBuffer = (uint8_t*)realloc(m_renderer->vBuffer,buffHalfLength);
+    m_renderer->yuvBuffer = (uint8_t*)realloc(m_renderer->yuvBuffer,buffLength*2);
+    m_renderer->greyBuffer = (uint8_t*)realloc(m_renderer->greyBuffer,buffLength);
+
+    m_renderer->rgbaDestBuffer = (unsigned char *)realloc(m_renderer->rgbaDestBuffer,m_renderer->videoResolutionwidth * (m_renderer->videoResolutionHeight) * 4);
+    if((m_renderer->videoResolutionwidth * (m_renderer->videoResolutionHeight) * 2)<_bytesUsed)
+            tempSrcBuffer = (unsigned char *)realloc(tempSrcBuffer,_bytesUsed);
+    else
+            tempSrcBuffer =(unsigned char *)realloc(tempSrcBuffer,m_renderer->videoResolutionwidth * (m_renderer->videoResolutionHeight) * 2);
+    yuyvBuffer = (uint8_t *)malloc(m_renderer->videoResolutionwidth * m_renderer->videoResolutionHeight * 2);
+    yuyvBuffer_Y12 = (uint8_t *)malloc(m_renderer->videoResolutionwidth * m_renderer->videoResolutionHeight * 2);
+}
+
 void Videostreaming::getFrameRates() {
     struct timeval tv, res;
     if (m_frame == 0)
@@ -2549,12 +2608,15 @@ void Videostreaming::makeShot(QString filePath,QString imgFormatType) {
     triggerShot = false;
     changeFpsAndShot = false;
     m_displayCaptureDialog = true;
+    if(currentlySelectedCameraEnum == CommonEnums::SEE3CAM_24CUG&&trigger_mode)
+        return;
 
     if (!((stillSize == lastPreviewSize) && (stillOutFormat == lastFormat)))
     {
         m_renderer->updateStop = true;
         stopCapture();
         vidCapFormatChanged(stillOutFormat);
+
         setResoultion(stillSize);
         if(currentlySelectedCameraEnum == CommonEnums::ECAM22_USB)
         {
@@ -2691,6 +2753,20 @@ void Videostreaming::setImageFormatType(QString imgFormatType){
 
 QString Videostreaming::getImageFormatType(){
     return m_imgFormatType;
+}
+//Added by M.VishnuMurali:moved jpeg header checking to seperate function
+bool Videostreaming::check_jpeg_header(void *inputbuffer, __u32 bytesUsed)
+{
+    if(bytesUsed <= HEADERFRAME1)
+    {
+        emit logCriticalHandle("Ignoring empty buffer");
+        startFrame=false ;
+        return false;
+    }
+    for(int i=0;i<8;++i)
+        if(((uint8_t *) inputbuffer)[i] == 0xFF && ((uint8_t *) inputbuffer)[i+1] == 0xD8)
+           return true;
+    return false;
 }
 
 void Videostreaming::makeBurstShot(QString filePath,QString imgFormatType, uint burstLength){
@@ -2832,7 +2908,8 @@ void Videostreaming::displayFrame() {
 }
 
 void Videostreaming::stopCapture() {
-
+    threadMonitor.waitForFinished();   //Added by M.Vishnu Murali:Inorder to finish jpegDecoding then stop else preview corruption will occur
+    startFrame = true;
     if(h264Decode!=NULL){
         h264Decode->closeFile();
         delete h264Decode;
@@ -2940,31 +3017,22 @@ void Videostreaming::closeDevice() {
             m_capNotifier = NULL;
             m_capImage = NULL;
         }
+        if(m_convertData)
+        {
         v4lconvert_destroy(m_convertData);
+        m_convertData =NULL;
+    }
         close();
     }
 }
 
 void Videostreaming::startAgain() {
 
-    m_renderer->videoResolutionwidth = m_width;
-    m_renderer->videoResolutionHeight = m_height;
-
-    int buffLength = m_width * m_height;
-     int buffHalfLength = (m_width * m_height)/ 2;
-
-    m_renderer->yBuffer = (uint8_t*)malloc(buffLength);
-    m_renderer->uBuffer = (uint8_t*)malloc(buffHalfLength);
-    m_renderer->vBuffer = (uint8_t*)malloc(buffHalfLength);
-    m_renderer->yuvBuffer = (uint8_t*)malloc(buffLength*2);
-    m_renderer->greyBuffer = (uint8_t*)malloc(buffLength);
-
-    m_renderer->rgbaDestBuffer = (unsigned char *)malloc(m_renderer->videoResolutionwidth * (m_renderer->videoResolutionHeight) * 4);
-    tempSrcBuffer = (unsigned char *)malloc(m_renderer->videoResolutionwidth * (m_renderer->videoResolutionHeight) * 2);
-
-    yuyvBuffer = (uint8_t *)malloc(m_renderer->videoResolutionwidth * m_renderer->videoResolutionHeight * 2);
-    yuyvBuffer_Y12 = (uint8_t *)malloc(m_renderer->videoResolutionwidth * m_renderer->videoResolutionHeight * 2);
-
+    m_renderer->renderyuyvMutex.lock();
+    m_renderer->gotFrame = false;
+    m_renderer->updateStop = true;
+    allocBuffers();
+    m_renderer->renderyuyvMutex.unlock();
     if(openSuccess) {
         displayFrame();
     }
@@ -3294,15 +3362,12 @@ void Videostreaming::cameraFilterControls(bool actualValue) {
 }
 
 QString Videostreaming::getSettings(unsigned int id) {
+    int tries = IOCTL_RETRY;
     struct v4l2_control c;
     c.id = id;
     c.value = 0;
-    if (ioctl(VIDIOC_G_CTRL, &c)) {
-        //v4l2_queryctrl qctrl;
-        //qctrl.id = id;
-        emit logCriticalHandle("Unable to get the Value, setting the Default value: "+ QString::number(c.value,10));
-        return QString::number(c.value,10);
-    }
+	while((ioctl(VIDIOC_G_CTRL, &c)<0)&&tries--)	
+        emit logCriticalHandle("Unable to get the Value, Retrying...");
     QString value = QString::number(c.value,10);
     return value;
 }
@@ -3487,11 +3552,14 @@ void Videostreaming::stopUpdatePreview() {
 }
 
 void Videostreaming::triggerModeEnabled() {
+    trigger_mode = true;
     stopUpdatePreview();
 }
 
 void Videostreaming::masterModeEnabled() {
-    m_renderer->updateStop = false;
+    trigger_mode = false;
+     m_snapShot = false;
+     m_renderer->updateStop = false;
 }
 //Added by Dhurka - 13th Oct 2016
 /**
@@ -3543,6 +3611,7 @@ void Videostreaming::retrieveFrameFromStoreCam() {
  *                        false - switch to preview
  */
 void Videostreaming::switchToStillPreviewSettings(bool stillSettings){
+
 
     if (!((stillSize == lastPreviewSize) && (stillOutFormat == lastFormat)))
     {

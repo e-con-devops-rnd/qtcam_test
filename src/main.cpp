@@ -23,6 +23,7 @@
 #include <QtWidgets/QWidget>
 #include <QIcon>
 #include <QStandardPaths>
+#include<QProcess>
 #include "qtquick2applicationviewer.h"
 #include "cameraproperty.h"
 #include "videostreaming.h"
@@ -59,7 +60,10 @@
 #include "see3camcu55_mh.h"
 #include "see3cam_20cug.h"
 #include "see3cam_cu22.h"
-
+#include "see3cam_130d.h"
+#include "see3cam_24cug.h"
+#include "see3cam_cu81.h"
+#include "ecam51a_usb.h"
 //*! \mainpage Qtcam - A econ's camera product
 // *
 // * \section See3CAM_10CUG
@@ -68,9 +72,18 @@
 // * \section See3CAM_10CUG
 // * Bayer Camera
 
-
 int main(int argc, char *argv[])
 {
+    /*Indentifying OS version*/
+    QProcess process;
+    process.start("bash", QStringList() << "-c" << "cat /etc/os-release | grep \"PRETTY_NAME\" "); //Reading os-release file for checking OS
+    process.waitForFinished();
+    char *os_name = strdup(process.readAllStandardOutput());
+    bool is20_04detected =false;
+
+    if(strstr(os_name,"20.04"))
+         is20_04detected = true;
+
     QApplication app(argc, argv);
     qmlRegisterType<Cameraproperty>("econ.camera.property",1,0,"Camproperty");
     qmlRegisterType<Videostreaming>("econ.camera.stream", 1, 0, "Videostreaming");
@@ -110,7 +123,6 @@ int main(int argc, char *argv[])
     qmlRegisterType<See3CAM_CU55>("econ.camera.see3camcu55", 1, 0, "See3camCu55");
     // Added by Navya :08 July 2019
     qmlRegisterType<See3CAM_CU55_MH>("econ.camera.see3camcu55mh",1,0,"See3camcu55MH");
-
     // Added by Sankari: 27 July 2017
     qmlRegisterType<See3CAM_CU20>("econ.camera.see3camcu20", 1, 0, "See3Camcu20");
     qmlRegisterType<See3CAM_CU22>("econ.camera.see3camcu22", 1, 0, "See3Camcu22");
@@ -123,6 +135,11 @@ int main(int argc, char *argv[])
     qmlRegisterType<AboutPage>("econ.camera.about", 1, 0, "AboutPage");
 
     qmlRegisterType<AudioInput>("econ.camera.audioinput", 1, 0, "Audioinput");
+    //Added by M.Vishnu Murali
+    qmlRegisterType<See3CAM_130D>("econ.camera.see3cam130D", 1, 0, "See3Cam130D");
+    qmlRegisterType<See3CAM_24CUG>("econ.camera.see3cam24cug", 1, 0, "See3Cam24CUG");
+    qmlRegisterType<See3CAM_CU81>("econ.camera.see3camcu81", 1, 0, "See3CamCU81");
+    qmlRegisterType<ecam51A_USB>("econ.camera.ecam51a_usb",1,0,"Ecam51AUSB");//while exposing to qml it is must that first letter should be in caps.
     //Added by Dhurka - 13th Oct 2016
     /**
      * @brief qmlRegisterType<CommonEnums> - Access the ENUM list to QML
@@ -149,6 +166,12 @@ int main(int argc, char *argv[])
 
     Videostreaming vs;   
     AudioInput audio;
+    
+    if(is20_04detected)
+        viewer.rootContext()->setContextProperty("is20_04detcted", QVariant(true));
+    else {
+         viewer.rootContext()->setContextProperty("is20_04detcted", QVariant(false));
+    }
     viewer.rootContext()->setContextProperty("resolutionModel", &vs.resolution);
     viewer.rootContext()->setContextProperty("stillOutputFormatModel", &vs.stillOutputFormat);
     viewer.rootContext()->setContextProperty("videoOutputFormatModel", &vs.videoOutputFormat);

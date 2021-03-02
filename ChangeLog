@@ -1,3 +1,84 @@
+Qtcam Application - 24.0.4
+---------------------------
+*Added fix for Preview during Trigger Mode in MJPEG for See3CAM_24CUG.
+
+Qtcam Application - 24.0.3
+---------------------------
+*Updated Exposure Compensation value for See3CAM_24CUG.
+*See3CAM_24CUG bug fixes.
+
+Qtcam Application - 24.0.2
+---------------------------
+*Changed Stream mode control for See3CAM_24CUG.
+*Added autofocuslock control for See3CAM_24CUG.
+*Added Connections in qml for ECAM51A_USB. 
+
+Qtcam Application - 24.0.1
+---------------------------
+*Added fix for disabling AF rect while stillcapture for See3CAM_130D.
+
+Qtcam Application - 24.0.0
+---------------------------
+*Added support for See3CAM_CU81 and ECAM51A_USB.
+*Added fix for not enumerating all the devices connected to the host.
+
+Qtcam Application - 23.0.1
+---------------------------
+*Removed Scene mode for See3CAM_24CUG.
+*Images will be captured and stored when device is in Trigger mode for See3CAM_24CUG.
+*Disabled Still resolution and colorspace combobox when device is in trigger mode.
+ 
+Qtcam Application - 23.0.0
+---------------------------
+*Added Stream modes for See3CAM_24CUG.
+*Changed strobe control for See3CAM_24CUG.
+*Added fix for See3cam_130D AF Rectangle was displayed in the preview even though it was disabled.
+*Added fix: Flip control was not getting updated when hardware default was pressed.
+*Added fix: When we click Hardware default, Focus absolute slider was enabled in Auto mode.
+
+Qtcam Application - 22.0.29
+---------------------------
+*Added support for See3CAM_130D and See3CAM_24CUG.
+*Added See3CAM_160_EVALKIT PID.
+
+Qtcam Application - 22.0.28
+---------------------------
+*Changed all png images with incorrect icc profile.
+*Suppressed libavcodec warnings.
+*Added fix for live preview corruption in 18.04 when swicted between Preview and Record node in Hypreyon Dual Stream.
+*Added fix for manual focus issue in See3CAM_CU55MH.
+
+Qtcam Application - 22.0.27
+---------------------------
+*Added Fix H264 Quality was disabled when CBR mode was active.
+
+Qtcam Application - 22.0.26
+---------------------------
+*Added PID for enumetating extension unit HyperyonDualStream Device.
+*Added CBR control for HyperyonDualStream Device.
+
+Qtcam Application - 22.0.25
+---------------------------
+*Added fix for Inconsistently corruption occurs while switching to Record mode from Preview mode in Hyperyon Dual stream.
+
+
+Qtcam Application - 22.0.24
+---------------------------
+*Added fix for crash while streaming mjpeg on embedded boards.
+
+Qtcam Application - 22.0.23
+---------------------------
+*Added fix for crash while streaming on See3CAM_10CUG_CH
+
+Qtcam Application - 22.0.22
+---------------------------
+* Added fix to avoid image capture while application is in recording mode.
+*Added fix for cu135 when changed from trigger mode to master mode Image capturing even when application is in recording mode.
+
+Qtcam Application - 22.0.21
+---------------------------
+* Implemented Flicker Detection Mode for See3CAM_CU130
+
 Qtcam Application - 22.0.20
 ---------------------------
 * Added fix for preview corruption while changing AutoExposureMode in Hyperyon.

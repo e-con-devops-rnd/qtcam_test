@@ -43,7 +43,7 @@
 #include <QTimer>
 #include <QAudioDeviceInfo>
 #include <QAudioInput>
-
+#include <QProcess>
 #include "audioinput.h"
 
 
@@ -164,7 +164,6 @@ qint64 AudioInfo::writeData(const char *data, qint64 len)
 {
 
 }
-
 
 AudioInput::AudioInput()
 {
@@ -380,11 +379,16 @@ void AudioInput::pa_sourcelist_cb(pa_context *c, const pa_source_info *l, int eo
     /* This function connects to the pulse server */
     if(pa_context_connect(pa_ctx, NULL, (pa_context_flags_t)0x0000U, NULL) < 0)
     {
-        fprintf(stderr,"AUDIO: PULSE - unable to connect to server: pa_context_connect failed\n");
-        finish(pa_ctx, pa_ml);
-        return -1;
+        process.start("bash", QStringList() << "-c" << "sudo pulseaudio -D");
+        process.waitForFinished();
+        if(process.exitStatus() <0)
+        {
+            fprintf(stderr,"AUDIO: PULSE - unable to connect to server: pa_context_connect failed\n");
+            finish(pa_ctx, pa_ml);
+            return -1;
+        }
+        pa_context_connect(pa_ctx, NULL, (pa_context_flags_t)0x0000U, NULL);
     }
-
     /*
      * This function defines a callback so the server will tell us
      * it's state.
@@ -831,7 +835,6 @@ bool AudioInput::audio_init()
          * allocated data is big enough for float samples (32 bit)
          * although it may contain int16 samples (16 bit)
          */
-
     return true;
 }
 
@@ -890,15 +893,14 @@ int AudioInput::getCards(void)
 
 
 bool AudioInput::updateSupportedInfo(uint currentIndex)
-{   
+{
     getCards();
-
     QString cardName;
     QMap<int, QString>::iterator cardNameIterator;
     for (cardNameIterator = audioCardMap.begin(); cardNameIterator != audioCardMap.end(); ++cardNameIterator)
-    {        
+    {
         if(cardNameIterator.key() == currentIndex){
-            cardName = cardNameIterator.value();                        
+            cardName = cardNameIterator.value();
             break;
         }
     }
@@ -1019,7 +1021,7 @@ audio_context_t* AudioInput::audio_init_pulseaudio()
         free(audio_ctx);
         return NULL;
     }
-
+    audio_context = audio_ctx;
     return audio_ctx;
 }
 
@@ -1126,9 +1128,13 @@ int AudioInput::audio_free_buffers()
 
     for(i = 0; i < AUDBUFF_NUM; ++i)
     {
-        free(audio_buffers[i].data);
+        if(audio_buffers[i].data)
+        {
+            free(audio_buffers[i].data);
+            audio_buffers[i].data = NULL;
+        }
     }
-
+    if(audio_buffers)
     free(audio_buffers);
     audio_buffers = NULL;
 }
