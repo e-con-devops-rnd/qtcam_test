@@ -69,12 +69,12 @@ Item
                     activeFocusOnPress: true
                     onClicked: {
                         see3camcu81.setCameraMode(See3CamCU81.HDR_MODE)
-                        root.hdrModeSelected(true)
+                        root.disableManualExp(true)
                         extSettingsBasedOnAutoExposureSelectionInUVCSettings(JS.autoExposureSelected)
                     }
                     Keys.onReturnPressed:  {
                         see3camcu81.setCameraMode(See3CamCU81.HDR_MODE)
-                        root.hdrModeSelected(true)
+                        root.disableManualExp(true)
                         extSettingsBasedOnAutoExposureSelectionInUVCSettings(JS.autoExposureSelected)
                     }
                 }
@@ -87,12 +87,12 @@ Item
                     activeFocusOnPress: true
                     onClicked: {
                         see3camcu81.setCameraMode(See3CamCU81.LINEAR_MODE)
-                        root.hdrModeSelected(false)
+                        root.disableManualExp(false)
                         extSettingsBasedOnAutoExposureSelectionInUVCSettings(JS.autoExposureSelected)
                     }
                     Keys.onReturnPressed: {
                         see3camcu81.setCameraMode(See3CamCU81.LINEAR_MODE)
-                        root.hdrModeSelected(false)
+                        root.disableManualExp(false)
                         extSettingsBasedOnAutoExposureSelectionInUVCSettings(JS.autoExposureSelected)
                     }
                 }
@@ -864,12 +864,12 @@ Item
         {
             if(cameraMode == See3CamCU81.HDR_MODE)
             {
-                root.hdrModeSelected(true)
+                root.disableManualExp(true)
                 hdr_mode.checked = true
             }
             else if(cameraMode == See3CamCU81.LINEAR_MODE)
             {
-                root.hdrModeSelected(false)
+                root.disableManualExp(false)
                 linear_mode.checked = true
             }
         }

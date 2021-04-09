@@ -1244,9 +1244,9 @@ Item {
         {
             videoFilter.visible = status;
         }
-        onHdrModeSelected:
+        onDisableManualExp:
         {
-            hdrModeSelected = hdrMode;
+            hdrModeSelected = ishdrModeSelected;
             if(hdrModeSelected && exposureCombo.currentIndex!=0 && root.selectedDeviceEnumValue == CommonEnums.SEE3CAM_CU81){
                 updateUIifHdrModeSelected()
             }

@@ -226,7 +226,7 @@ Rectangle {
 
     signal cameraSelected();
 
-    signal hdrModeSelected(bool hdrMode);
+    signal disableManualExp(bool ishdrModeSelected);
 
 signal disableStillProp(bool status);
     width:Screen.width
