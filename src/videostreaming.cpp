@@ -509,7 +509,7 @@ skip:
  * @brief FrameRenderer::drawRGBABUffer - Shader for RGBA buffer and render
  */
 void FrameRenderer::drawRGBBUffer(){
-
+//    qDebug() << Q_FUNC_INFO;
     m_shaderProgram->bind();
 
     glVertexAttribPointer(mPositionLoc, 3, GL_FLOAT, false, 12, mVerticesDataPosition);
@@ -531,6 +531,7 @@ void FrameRenderer::drawRGBBUffer(){
       glViewport(glViewPortX, glViewPortY, glViewPortWidth, glViewPortHeight);
     if(renderyuyvMutex.tryLock()){
         if(rgbaDestBuffer){
+//            qDebug() << "inside glteximage2D";
             glTexImage2D(GL_TEXTURE_2D, 0,  GL_RGBA, videoResolutionwidth, videoResolutionHeight, 0,GL_RGBA , GL_UNSIGNED_BYTE, rgbaDestBuffer);
         }
         if(gotFrame && !updateStop){
@@ -710,6 +711,7 @@ void FrameRenderer::clearShader(){
  * @brief FrameRenderer::changeShader - Change the shader program based on the format
  */
 void FrameRenderer::changeShader(){
+//    qDebug() << Q_FUNC_INFO;
     clearShader();
     if(m_shaderProgram){
         delete m_shaderProgram;
@@ -755,9 +757,11 @@ void FrameRenderer::changeShader(){
  */
 void FrameRenderer::shaderRGB(){
     if (!m_shaderProgram) {
+//        qDebug() << Q_FUNC_INFO;
         initializeOpenGLFunctions();
 
         m_shaderProgram = new QOpenGLShaderProgram();
+//        qDebug() << "after m_Shaderprogram";
 
         m_shaderProgram->addShaderFromSourceCode(QOpenGLShader::Vertex,
                                                  "attribute vec4 a_position;\n"
@@ -780,22 +784,27 @@ void FrameRenderer::shaderRGB(){
                                                  "color = texture2D(texture, v_texCoord);"
                                                  "gl_FragColor = color;"
                                                  "}\n");
+//        qDebug() << "after adding vertex and fragment shader";
 
         m_shaderProgram->bindAttributeLocation("a_position", 0);
         m_shaderProgram->bindAttributeLocation("a_texCoord", 1);
         m_shaderProgram->link();
+//        qDebug() << "after linking";
 
         mPositionLoc = m_shaderProgram->attributeLocation("a_position");
         mTexCoordLoc = m_shaderProgram->attributeLocation("a_texCoord");
 
-
+//        qDebug() << "befor enable texture";
         /*********** Y-Texture**************/
         glEnable(GL_TEXTURE_2D);
         samplerLocRGB = m_shaderProgram->uniformLocation("texture");
         GLuint yTextureId;
+//        qDebug() << "before gentexture";
         glGenTextures (1, &yTextureId); // Generate a texture object
         glActiveTexture(GL_TEXTURE1);
+//        qDebug() << "befor bund texture";
         glBindTexture (GL_TEXTURE_2D, yTextureId);
+//        qDebug() << "end of " << Q_FUNC_INFO;
     }
 }
 
@@ -1033,6 +1042,7 @@ void FrameRenderer::shaderUYVY(){
 */
 void FrameRenderer::paint()
 {
+//    qDebug() << Q_FUNC_INFO << "gotframe:" << gotFrame;
     if(gotFrame && !triggermodeFlag){               //Added by Nivedha : 12 Mar 2021 -- To avoid getting preview in trigger mode.
         if(m_formatChange | m_videoResolnChange){  // Call to change Shader on format and Resolution change
             m_formatChange = false;
@@ -1067,6 +1077,7 @@ void FrameRenderer::paint()
         }else if(renderBufferFormat == CommonEnums::BUFFER_RENDER_360P){ // Render 360p resoln
             drawBufferFor360p();
         }
+//        qDebug() << "end " << Q_FUNC_INFO;
     }
 }
 
@@ -1215,6 +1226,7 @@ void Videostreaming::sidebarStateChanged(){
 
 void Videostreaming::capFrame()
 {
+//    qDebug() <<"start" <<  Q_FUNC_INFO;
     unsigned char *temp_Buffer=NULL;
     __u32 buftype = m_buftype;
     v4l2_plane planes[VIDEO_MAX_PLANES];
@@ -1246,9 +1258,10 @@ void Videostreaming::capFrame()
 
         // When device is unplugged, Stop rendering.
         m_renderer->updateStop = true;
-
+//        qDebug() << "before device disconnected emit deviceunplugged" << Q_FUNC_INFO;
         emit deviceUnplugged("Disconnected","Device Not Found");
         emit logCriticalHandle("Device disconnected");
+//        qDebug() << "before device disconnected return" << Q_FUNC_INFO;
         return;
     }
 
@@ -1281,6 +1294,7 @@ void Videostreaming::capFrame()
         qbuf(buf);
         retrieveFrame=true;
         emit signalTograbPreviewFrame(retrieveframeStoreCamInCross,true);
+//        qDebug() << "inside skipframe";
         return;
     }
 
@@ -1315,6 +1329,7 @@ void Videostreaming::capFrame()
     {
         validFrame = true;
         _bytesUsed = buf.bytesused;
+//        qDebug() << _bytesUsed;
         if(startFrame)
         {
             allocBuffers();
@@ -1568,6 +1583,7 @@ void Videostreaming::capFrame()
     }
 
     m_timer.start(2000);
+//    qDebug() << "end" << Q_FUNC_INFO;
 }
 
 /**
@@ -1575,7 +1591,7 @@ void Videostreaming::capFrame()
 */
 int Videostreaming::jpegDecode(Videostreaming *obj, unsigned char **pic, unsigned char *buf, unsigned long bytesUsed)
 {
-
+//    qDebug() << "start" << Q_FUNC_INFO;
     int retval = 0;
     obj->m_renderer->renderyuyvMutex.lock();
     tjhandle handle = NULL;
@@ -1708,6 +1724,7 @@ int Videostreaming::jpegDecode(Videostreaming *obj, unsigned char **pic, unsigne
         }
         lockerRecord.unlock();
     }
+//     qDebug() << "before bailout " << Q_FUNC_INFO;
 
 bailout:
     if(jpegbuf)
@@ -1745,6 +1762,7 @@ bailout:
         obj->m_renderer->gotFrame = true;
     }
     obj->frameSkip = false;
+//    qDebug() << "end of " << Q_FUNC_INFO;
     return retval;
 }
 
@@ -1792,18 +1810,21 @@ int Videostreaming::decomp(Videostreaming *obj,unsigned char **jpegbuf,
             {
                 __u32 width = obj->dotile? min(tilew, w-col*tilew):scaledw;
                 __u32 height = obj->dotile? min(tileh, h-row*tileh):scaledh;
+//                qDebug() << "w:" << obj->m_capSrcFormat.fmt.pix.width << "scaledw:" << scaledw << "h:" << obj->m_capSrcFormat.fmt.pix.height<< "scaledh:"<< scaledh;
                 // Added by Sankari: To avoid crash when switching resolution.[in storage camera]
                 if(obj->m_capSrcFormat.fmt.pix.width != width && obj->m_capSrcFormat.fmt.pix.height != height){
                     retval = -1;
                     goto bailout;
                 }
-
+//                qDebug() << "before decompress";
                 if(tjDecompress2(handle, jpegbuf[tile], jpegsize[tile], *pic,
                                  width, pitch, height, obj->pf, obj->flags) == -1){
                     //emit logCriticalHandle("tjDecompress2() failed");
+//                    qDebug() << "decompress failed";
                     retval = -1;
                     goto bailout;
                 }
+//                qDebug() << "after decompress";
             }
         }
         iter++;
@@ -2191,7 +2212,10 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
                 if(!frameSkip){
                     getFrameRates();
                     frameSkip = true;
-                    memcpy(tempSrcBuffer, (unsigned char *)inputbuffer, bytesUsed);
+                    if(tempSrcBuffer && inputbuffer)
+                        memcpy(tempSrcBuffer, (unsigned char *)inputbuffer, bytesUsed);
+                    else
+                        qDebug() << "memory not allocated";
                     if(m_renderer && m_renderer->rgbaDestBuffer){
                         //Added by M.vishnu Murali: threadMonitor used for monitor jpegDecode() in seperate thread.
                         threadMonitor=QtConcurrent::run(jpegDecode, this, &m_renderer->rgbaDestBuffer, tempSrcBuffer, bytesUsed);
@@ -2482,6 +2506,7 @@ void Videostreaming::getFrameRates() {
 
 bool Videostreaming::startCapture()
 {
+//    qDebug() << Q_FUNC_INFO;
     __u32 buftype = m_buftype;
     v4l2_requestbuffers req;
     unsigned int i;
@@ -2919,6 +2944,7 @@ void Videostreaming::displayFrame() {
 }
 
 void Videostreaming::stopCapture() {
+//    qDebug() << Q_FUNC_INFO;
     threadMonitor.waitForFinished();   //Added by M.Vishnu Murali:Inorder to finish jpegDecoding then stop else preview corruption will occur
     startFrame = true;
     if(h264Decode!=NULL){
@@ -2927,40 +2953,65 @@ void Videostreaming::stopCapture() {
         h264Decode=NULL;
     }
 
+//    yuyvBuffer = (uint8_t *)realloc(yuyvBuffer,1);
+//    yuyvBuffer_Y12 = (uint8_t *)realloc(yuyvBuffer_Y12,1);
+//    yuv420pdestBuffer = (uint8_t *)realloc(yuv420pdestBuffer,1);
+//    tempSrcBuffer = (uint8_t *)realloc(tempSrcBuffer,1);
+//    m_renderer->yBuffer = (uint8_t *)realloc(m_renderer->yBuffer,1);
+//    m_renderer->uBuffer = (uint8_t *)realloc(m_renderer->uBuffer,1);
+//    m_renderer->vBuffer = (uint8_t *)realloc(m_renderer->vBuffer,1);
+//    m_renderer->rgbaDestBuffer = (uint8_t *)realloc(m_renderer->rgbaDestBuffer,1);
+//    m_renderer->yuvBuffer = (uint8_t *)realloc(m_renderer->yuvBuffer,1);
+//    m_renderer->greyBuffer = (uint8_t *)realloc(m_renderer->greyBuffer,1);
+
     if(yuyvBuffer != NULL ){
+//        qDebug() << "free yuvbuffer";
         free(yuyvBuffer);
         yuyvBuffer = NULL;
+//        qDebug("after freeyuv");
     }
 
     if(yuyvBuffer_Y12 != NULL ){
+//        qDebug() << "free y12";
         free(yuyvBuffer_Y12);
         yuyvBuffer_Y12 = NULL;
+//        qDebug() << "After free y12";
     }
 
     if(yuv420pdestBuffer != NULL){
+//        qDebug() << "free yuv420";
         free(yuv420pdestBuffer);
         yuv420pdestBuffer = NULL;
+//        qDebug() << "after free yuv420";
     }
 
     if(tempSrcBuffer != NULL){
-        free(tempSrcBuffer);
+//        qDebug() << "free tempsrcbuffer";
+            free(tempSrcBuffer);
         tempSrcBuffer = NULL;
+//        qDebug() << "after tempsrcbuffer";
     }
 
     if(m_renderer->yBuffer != NULL){
+//        qDebug() << "free ybuffer";
         free(m_renderer->yBuffer);
         m_renderer->yBuffer = NULL;
+//        qDebug() << "after free ybuffer";
     }
 
 
     if(m_renderer->uBuffer != NULL){
+//        qDebug() << "free ubuffer";
         free(m_renderer->uBuffer);
         m_renderer->uBuffer = NULL;
+//        qDebug() << "after free ubuffer";
     }
 
     if(m_renderer->vBuffer != NULL){
+//        qDebug() << "free vbuffer";
         free(m_renderer->vBuffer);
         m_renderer->vBuffer = NULL;
+//        qDebug() << "after free vbuffer";
     }
     m_renderer->gotFrame = false;
     m_renderer->updateStop = true;
@@ -2977,6 +3028,7 @@ void Videostreaming::stopCapture() {
             perror("VIDIOC_STREAMOFF");
             emit logCriticalHandle("Stream OFF failed");
         }
+//        qDebug() << "AFTER STREAMOFF";
 
         // Added by Navya : 11 Feb 2020 -- emitting signal to disable capturing until streamon occurs
         emit signalToSwitchResoln(false);
@@ -3002,21 +3054,28 @@ void Videostreaming::stopCapture() {
     m_renderer->renderyuyvMutex.lock();
 
     if(m_renderer->rgbaDestBuffer != NULL){
+//        qDebug() <<"inside free rgabuffer";
         free(m_renderer->rgbaDestBuffer);
         m_renderer->rgbaDestBuffer = NULL;
+//        qDebug()<<"aftr free rgbabuffer";
     }
 
     if(m_renderer->yuvBuffer != NULL){
+//        qDebug() << "inside free yuvbuffer";
         free(m_renderer->yuvBuffer);
         m_renderer->yuvBuffer = NULL;
+//        qDebug() << "aftr free yuvbuffer";
     }
 
     if(m_renderer->greyBuffer != NULL){
+//        qDebug() << "inside free greybuffer";
         free(m_renderer->greyBuffer);
         m_renderer->greyBuffer = NULL;
+//        qDebug() << "aftr free greybuffer";
     }
 
     m_renderer->renderyuyvMutex.unlock();
+//    qDebug() << "end" << Q_FUNC_INFO;
 }
 
 void Videostreaming::closeDevice() {

@@ -105,8 +105,11 @@ Item {
         }
 
         onExtensionTabVisible:{
-            getValuesFromCamera()
-            extSettingsBasedOnAutoFocusSelectionInUVCSettings(JS.autoFocusChecked) // Initially get the auto focus mode in UVC settings and enable/disable controls in extension unit
+            if(visible)
+            {
+                getValuesFromCamera()
+                extSettingsBasedOnAutoFocusSelectionInUVCSettings(JS.autoFocusChecked) // Initially get the auto focus mode in UVC settings and enable/disable controls in extension unit
+            }
         }
 
     }
@@ -679,6 +682,7 @@ Item {
             customAreaWindowSizeCombo.opacity = 0.1
             customAreaWindowSize.opacity = 0.1
         }
+        extSettingsBasedOnAutoFocusSelectionInUVCSettings(autoFocusChecked)
     }
 
     function getFirmwareVersion() {
@@ -1073,7 +1077,6 @@ Item {
         onQFactorValue:{
             skipUpdateUIQFactor = false
             qFactorSlider.value = qFactor
-            see3cam160.setQFactor(qFactorSlider.value)
             skipUpdateUIQFactor = true
         }
 
@@ -1095,12 +1098,10 @@ Item {
             if(lockStatus)
             {
                 aeLock.checked = true
-                see3cam160.setAElockstatus(See3cam160.AE_LOCK_ON)
             }
             else
             {
                 aeLock.checked = false
-                see3cam160.setAElockstatus(See3cam160.AE_LOCK_OFF)
             }
         }
 
@@ -1130,12 +1131,10 @@ Item {
             if(lockStatus)
             {
                 afLock.checked = true
-                see3cam160.setAFlockstatus(See3cam160.AF_LOCK_ON)
             }
             else
             {
                 afLock.checked = false
-                see3cam160.setAFlockstatus(See3cam160.AF_LOCK_OFF)
             }
         }
 
@@ -1165,12 +1164,10 @@ Item {
             if(afstatus)
             {
                 afOff.checked = true
-                see3cam160.setAFstatus(See3cam160.AF_OFF)
             }
             else
             {
                 afOff.checked = false
-                see3cam160.setAFstatus(See3cam160.AF_ON)
             }
         }
 
@@ -1202,30 +1199,25 @@ Item {
         onAutoFocusRoiModeChanged: {
             if(afRoiMode == See3cam160.ROI_CENTERED){
                 radiocenter.checked = true
-                see3cam160.setCenteredAutoFocusMode()
             }
             else if(afRoiMode == See3cam160.ROI_CUSTOM){
                 radiocustom.checked = true
-                see3cam160.setCustomAreaAutoFocus(width, height, width/2, height/2, customAreaWindowSizeCombo.currentText)
             }
         }
 
         onAwbPresetModeChanged: {
             skipUpdateUIAWbPreset = false
             awbPresetsCombo.currentIndex = awbMode - 1
-            see3cam160.setAWBpresetMode(awbPresetsCombo.currentIndex + 1)
         }
 
         onAwbLockStatusChanged: {
             if(lockStatus)
             {
                 awbLock.checked = true
-                see3cam160.setAWBlockstatus(See3cam160.AWB_LOCK_ON)
             }
             else
             {
                 awbLock.checked = false
-                see3cam160.setAWBlockstatus(See3cam160.AWB_LOCK_OFF)
             }
         }
 

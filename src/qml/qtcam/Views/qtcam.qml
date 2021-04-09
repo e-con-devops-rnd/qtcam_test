@@ -226,6 +226,8 @@ Rectangle {
 
     signal cameraSelected();
 
+    signal hdrModeSelected(bool hdrMode);
+
 signal disableStillProp(bool status);
     width:Screen.width
     height:Screen.height
@@ -969,6 +971,10 @@ signal disableStillProp(bool status);
             }
         }
     }
+
+//    function hdrModeSelected(hdrMode){
+//        imageSettingsRootObject.disableManualExpAsHdrModeIsSelected(hdrMode)
+//    }
 
     function enumerateAudioSettings(){
         vidstreamproperty.enumerateAudioProperties()

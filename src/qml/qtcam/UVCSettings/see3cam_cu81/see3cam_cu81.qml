@@ -6,6 +6,7 @@ import econ.camera.uvcsettings 1.0
 import econ.camera.see3camcu81 1.0
 import cameraenum 1.0
 import QtQuick 2.0
+import "../../JavaScriptFiles/tempValue.js" as JS
 
 Item
 {
@@ -23,8 +24,8 @@ Item
     property int denoiseMax: 15
     property int qFactorMin: 10
     property int qFactorMax: 96
-    property int frameRateMin: 1
-    property int frameRateMax: 120
+    property int frameRateMin: 3
+    property int frameRateMax: 60
     property int expoCompMin: 8000
     property int expoCompMax: 1000000
 
@@ -45,13 +46,13 @@ Item
 
             Text
             {
-                 id: cameraMode_title
-                 text: "--- Camera Mode ---"
-                 font.pixelSize: 14
-                 font.family: "Ubuntu"
-                 color: "#ffffff"
-                 smooth: true
-                 opacity: 0.50196078431373
+                id: cameraMode_title
+                text: "--- Camera Mode ---"
+                font.pixelSize: 14
+                font.family: "Ubuntu"
+                color: "#ffffff"
+                smooth: true
+                opacity: 0.50196078431373
             }
             Grid
             {
@@ -68,9 +69,13 @@ Item
                     activeFocusOnPress: true
                     onClicked: {
                         see3camcu81.setCameraMode(See3CamCU81.HDR_MODE)
+                        root.hdrModeSelected(true)
+                        extSettingsBasedOnAutoExposureSelectionInUVCSettings(JS.autoExposureSelected)
                     }
                     Keys.onReturnPressed:  {
                         see3camcu81.setCameraMode(See3CamCU81.HDR_MODE)
+                        root.hdrModeSelected(true)
+                        extSettingsBasedOnAutoExposureSelectionInUVCSettings(JS.autoExposureSelected)
                     }
                 }
                 RadioButton
@@ -82,21 +87,25 @@ Item
                     activeFocusOnPress: true
                     onClicked: {
                         see3camcu81.setCameraMode(See3CamCU81.LINEAR_MODE)
+                        root.hdrModeSelected(false)
+                        extSettingsBasedOnAutoExposureSelectionInUVCSettings(JS.autoExposureSelected)
                     }
                     Keys.onReturnPressed: {
                         see3camcu81.setCameraMode(See3CamCU81.LINEAR_MODE)
+                        root.hdrModeSelected(false)
+                        extSettingsBasedOnAutoExposureSelectionInUVCSettings(JS.autoExposureSelected)
                     }
                 }
             }
             Text
             {
-                 id: special_effects
-                 text: "--- Special Effects ---"
-                 font.pixelSize: 14
-                 font.family: "Ubuntu"
-                 color: "#ffffff"
-                 smooth: true
-                 opacity: 0.50196078431373
+                id: special_effects
+                text: "--- Special Effects ---"
+                font.pixelSize: 14
+                font.family: "Ubuntu"
+                color: "#ffffff"
+                smooth: true
+                opacity: 0.50196078431373
             }
             Grid
             {
@@ -245,63 +254,68 @@ Item
             }
             Row
             {
-                  spacing:38
-                  ExclusiveGroup { id: roiExpogroup }
+                spacing:38
+                ExclusiveGroup { id: roiExpogroup }
 
-                  RadioButton
-                  {
-                      exclusiveGroup: roiExpogroup
-                      id: autoexpFull
-                      text: "Full"
-                      activeFocusOnPress: true
-                      style: econRadioButtonStyle
-                      opacity: enabled ? 1 : 0.1
-                      // setROIAutoExposure() args:  mode, videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord, WinSize]
-                      // videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord - these parameters are required only when click in preview]
-                      // winSize is required only for manual mode
-                      onClicked: {
-                          see3camcu81.setROIAutoExposure(See3CamCU81.AutoExpFull, 0, 0, 0, 0, 0);
-                          autoExpoWinSizeCombo.enabled = false
-                      }
-                      Keys.onReturnPressed: {
-                          see3camcu81.setROIAutoExposure(See3CamCU81.AutoExpFull, 0, 0, 0, 0, 0);
-                          autoExpoWinSizeCombo.enabled = false
-                      }
-                  }
-                  RadioButton
-                  {
-                      exclusiveGroup: roiExpogroup
-                      id: autoexpManual
-                      text: "Manual"
-                      activeFocusOnPress: true
-                      style: econRadioButtonStyle
-                      opacity: enabled ? 1 : 0.1
-                      onClicked: {
-                          see3camcu81.setROIAutoExposure(See3CamCU81.AutoExpManual, 0, 0, 0, 0, 0);
-                          autoExpoWinSizeCombo.enabled = true
-                      }
-                      Keys.onReturnPressed: {
-                          see3camcu81.setROIAutoExposure(See3CamCU81.AutoExpManual, 0, 0, 0, 0, 0);
-                          autoExpoWinSizeCombo.enabled = true
-                      }
-                  }
+                RadioButton
+                {
+                    exclusiveGroup: roiExpogroup
+                    id: autoexpFull
+                    text: "Full"
+                    activeFocusOnPress: true
+                    style: econRadioButtonStyle
+                    opacity: enabled ? 1 : 0.1
+                    // setROIAutoExposure() args:  mode, videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord, WinSize]
+                    // videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord - these parameters are required only when click in preview]
+                    // winSize is required only for manual mode
+                    onClicked: {
+                        see3camcu81.setROIAutoExposure(See3CamCU81.AutoExpFull, 0, 0, 0, 0, 0);
+                        autoExpoWinSizeCombo.enabled = false
+                        autoExpoWinSizeCombo.opacity = 0.1
+                    }
+                    Keys.onReturnPressed: {
+                        see3camcu81.setROIAutoExposure(See3CamCU81.AutoExpFull, 0, 0, 0, 0, 0);
+                        autoExpoWinSizeCombo.enabled = false
+                        autoExpoWinSizeCombo.opacity = 0.1
+                    }
+                }
+                RadioButton
+                {
+                    exclusiveGroup: roiExpogroup
+                    id: autoexpManual
+                    text: "Manual"
+                    activeFocusOnPress: true
+                    style: econRadioButtonStyle
+                    opacity: enabled ? 1 : 0.1
+                    onClicked: {
+                        see3camcu81.setROIAutoExposure(See3CamCU81.AutoExpManual, 0, 0, 0, 0, 0);
+                        autoExpoWinSizeCombo.enabled = true
+                        autoExpoWinSizeCombo.opacity = 1
+                    }
+                    Keys.onReturnPressed: {
+                        see3camcu81.setROIAutoExposure(See3CamCU81.AutoExpManual, 0, 0, 0, 0, 0);
+                        autoExpoWinSizeCombo.enabled = true
+                        autoExpoWinSizeCombo.opacity = 1
+                    }
+                }
             }
+
             ComboBox
             {
                 id: autoExpoWinSizeCombo
                 enabled: (autoexpManual.enabled && autoexpManual.checked) ? true : false
                 opacity: (autoexpManual.enabled && autoexpManual.checked) ? 1 : 0.1
                 model: ListModel
-                       {
-                            ListElement { text: "1" }
-                            ListElement { text: "2" }
-                            ListElement { text: "3" }
-                            ListElement { text: "4" }
-                            ListElement { text: "5" }
-                            ListElement { text: "6" }
-                            ListElement { text: "7" }
-                            ListElement { text: "8" }
-                        }
+                {
+                    ListElement { text: "1" }
+                    ListElement { text: "2" }
+                    ListElement { text: "3" }
+                    ListElement { text: "4" }
+                    ListElement { text: "5" }
+                    ListElement { text: "6" }
+                    ListElement { text: "7" }
+                    ListElement { text: "8" }
+                }
                 activeFocusOnPress: true
                 style: econComboBoxStyle
                 onCurrentIndexChanged: {
@@ -327,13 +341,13 @@ Item
                 opacity: 1
                 enabled: true
                 model: ListModel
-                       {
-                            ListElement { text: "1" }
-                            ListElement { text: "2" }
-                            ListElement { text: "3" }
-                            ListElement { text: "4" }
-                            ListElement { text: "5" }
-                        }
+                {
+                    ListElement { text: "1" }
+                    ListElement { text: "2" }
+                    ListElement { text: "3" }
+                    ListElement { text: "4" }
+                    ListElement { text: "5" }
+                }
                 activeFocusOnPress: true
                 style: econComboBoxStyle
                 onCurrentIndexChanged: {
@@ -436,269 +450,269 @@ Item
             }
             Text
             {
-                 id: exposureCompTextTitle
-                 text: "--- Exposure Compensation ---"
-                 font.pixelSize: 14
-                 font.family: "Ubuntu"
-                 color: "#ffffff"
-                 smooth: true
-                 Layout.alignment: Qt.AlignCenter
-                 opacity: 0.50196078431373
+                id: exposureCompTextTitle
+                text: "--- Exposure Compensation ---"
+                font.pixelSize: 14
+                font.family: "Ubuntu"
+                color: "#ffffff"
+                smooth: true
+                Layout.alignment: Qt.AlignCenter
+                opacity: 0.50196078431373
             }
             Row
             {
-                    spacing: 9
-                    Text
-                    {
-                        id: exposureCompText
-                        text: "value(µs)[8000 - 1000000]"
-                        font.pixelSize: 14
-                        font.family: "Ubuntu"
-                        color: "#ffffff"
-                        smooth: true
-                        width: 80
-                        wrapMode: Text.WordWrap
-                        opacity: 1
-                    }
-                    TextField
-                    {
-                        id: exposureCompValue
-                        font.pixelSize: 10
-                        font.family: "Ubuntu"
-                        smooth: true
-                        horizontalAlignment: TextInput.AlignHCenter
-                        opacity: 1
-                        style: econTextFieldStyle
-                        implicitHeight: 25
-                        implicitWidth: 80
-                        validator: IntValidator {bottom: expoCompMin; top: expoCompMax}
-                    }
-                    Button
-                    {
-                        id: exposureCompSet
-                        activeFocusOnPress : true
-                        text: "Set"
-                        tooltip: "You can set the required exposure compensation value by changing the
+                spacing: 9
+                Text
+                {
+                    id: exposureCompText
+                    text: "value(µs)[8000 - 1000000]"
+                    font.pixelSize: 14
+                    font.family: "Ubuntu"
+                    color: "#ffffff"
+                    smooth: true
+                    width: 80
+                    wrapMode: Text.WordWrap
+                    opacity: 1
+                }
+                TextField
+                {
+                    id: exposureCompValue
+                    font.pixelSize: 10
+                    font.family: "Ubuntu"
+                    smooth: true
+                    horizontalAlignment: TextInput.AlignHCenter
+                    opacity: 1
+                    style: econTextFieldStyle
+                    implicitHeight: 25
+                    implicitWidth: 80
+                    validator: IntValidator {bottom: expoCompMin; top: expoCompMax}
+                }
+                Button
+                {
+                    id: exposureCompSet
+                    activeFocusOnPress : true
+                    text: "Set"
+                    tooltip: "You can set the required exposure compensation value by changing the
     value in the text box and click the Set button"
-                        style: econButtonStyle
-                        enabled: true
-                        opacity: 1
-                        implicitHeight: 25
-                        implicitWidth: 60
-                        onClicked:
-                        {
-                            exposureCompSet.enabled = false
-                            see3camcu81.setExposureCompensation(exposureCompValue.text)
-                            exposureCompSet.enabled = true
-                        }
-                        Keys.onReturnPressed:
-                        {
-                            exposureCompSet.enabled = false
-                            see3camcu81.setExposureCompensation(exposureCompValue.text)
-                            exposureCompSet.enabled = true
-                        }
+                    style: econButtonStyle
+                    enabled: true
+                    opacity: 1
+                    implicitHeight: 25
+                    implicitWidth: 60
+                    onClicked:
+                    {
+                        exposureCompSet.enabled = false
+                        see3camcu81.setExposureCompensation(exposureCompValue.text)
+                        exposureCompSet.enabled = true
+                    }
+                    Keys.onReturnPressed:
+                    {
+                        exposureCompSet.enabled = false
+                        see3camcu81.setExposureCompensation(exposureCompValue.text)
+                        exposureCompSet.enabled = true
                     }
                 }
-                Text
-                {
-                    id: frameRateText
-                    text: "--- Frame Rate Control ---"
-                    font.pixelSize: 14
-                    font.family: "Ubuntu"
-                    color: "#ffffff"
-                    smooth: true
-                    Layout.alignment: Qt.AlignCenter
-                    opacity: 0.50196078431373
-                }
+            }
+            Text
+            {
+                id: frameRateText
+                text: "--- Frame Rate Control ---"
+                font.pixelSize: 14
+                font.family: "Ubuntu"
+                color: "#ffffff"
+                smooth: true
+                Layout.alignment: Qt.AlignCenter
+                opacity: 0.50196078431373
+            }
 
-                Row
+            Row
+            {
+                spacing: 35
+                Slider
                 {
-                    spacing: 35
-                    Slider
-                    {
-                        activeFocusOnPress: true
-                        updateValueWhileDragging: false
-                        id: frameRateSlider
-                        width: 150
-                        stepSize: 1
-                        style:econSliderStyle
-                        minimumValue: frameRateMin
-                        maximumValue: frameRateMax
-                        onValueChanged:  {
-                            frameRateTextField.text = frameRateSlider.value
-                            if(skipUpdateUIFrameRate){
-                                see3camcu81.setFrameRateCtrlValue(frameRateSlider.value)
-                            }
-                            skipUpdateUIFrameRate = true
-                        }
-                    }
-                    TextField
-                    {
-                        id: frameRateTextField
-                        text: frameRateSlider.value
-                        font.pixelSize: 10
-                        font.family: "Ubuntu"
-                        smooth: true
-                        horizontalAlignment: TextInput.AlignHCenter
-                        style: econTextFieldStyle
-                        validator: IntValidator {bottom: frameRateSlider.minimumValue; top: frameRateSlider.maximumValue}
-                        onTextChanged: {
-                            if(text.length > 0){
-                                frameRateSlider.value = frameRateTextField.text
-                            }
-                        }
-                    }
-                }
-                Text
-                {
-                    id: antiFlickerMode
-                    text: "--- Anti Flicker Mode ---"
-                    font.pixelSize: 14
-                    font.family: "Ubuntu"
-                    color: "#ffffff"
-                    smooth: true
-                    Layout.alignment: Qt.AlignCenter
-                    opacity: 0.50196078431373
-                }
-                Row
-                {
-                      spacing:90
-                      ExclusiveGroup { id: antiFlickerModegroup }
-                      RadioButton
-                      {
-                          exclusiveGroup: antiFlickerModegroup
-                          id: antiFlickerModeAuto
-                          text: "Auto"
-                          activeFocusOnPress: true
-                          style: econRadioButtonStyle
-                          opacity: enabled ? 1 : 0.1
-                          onClicked: {
-                              see3camcu81.setAntiFlickerMode(see3camcu81.AntiFlickerAuto);
-                          }
-                          Keys.onReturnPressed: {
-                              see3camcu81.setAntiFlickerMode(see3camcu81.AntiFlickerAuto);
-                          }
-                      }
-                      RadioButton
-                      {
-                          exclusiveGroup: antiFlickerModegroup
-                          id: antiFlickerModeManual
-                          text: "Manual"
-                          activeFocusOnPress: true
-                          style: econRadioButtonStyle
-                          opacity: enabled ? 1 : 0.1
-                          onClicked: {
-                              setAntiFlickerMode()
-                          }
-                          Keys.onReturnPressed: {
-                              setAntiFlickerMode()
-                          }
-                      }
-                }
-                Text
-                {
-                    id: frequency
-                    text: "Frequency :"
-                    font.pixelSize: 14
-                    font.family: "Ubuntu"
-                    color: "#ffffff"
-                    smooth: true
-                    opacity: (antiFlickerModeManual.enabled && antiFlickerModeManual.checked) ? 1 : 0.1
-                }
-                ComboBox
-                {
-                    id: antiFlickerCombo
-                    enabled: (antiFlickerModeManual.enabled && antiFlickerModeManual.checked) ? true : false
-                    opacity: (antiFlickerModeManual.enabled && antiFlickerModeManual.checked) ? 1 : 0.1
-                    model: ListModel
-                           {
-                                ListElement { text: "50 Hz" }
-                                ListElement { text: "60 Hz" }
-                           }
                     activeFocusOnPress: true
-                    style: econComboBoxStyle
-                    onCurrentIndexChanged: {
-                        if(skipUpdateUIOnAntiFlickerMode){
-                            setAntiFlickerMode()
+                    updateValueWhileDragging: false
+                    id: frameRateSlider
+                    width: 150
+                    stepSize: 1
+                    style:econSliderStyle
+                    minimumValue: frameRateMin
+                    maximumValue: frameRateMax
+                    onValueChanged:  {
+                        frameRateTextField.text = frameRateSlider.value
+                        if(skipUpdateUIFrameRate){
+                            see3camcu81.setFrameRateCtrlValue(frameRateSlider.value)
                         }
-                        skipUpdateUIOnAntiFlickerMode = true
+                        skipUpdateUIFrameRate = true
                     }
                 }
-                Row
+                TextField
                 {
-                    Layout.alignment: Qt.AlignCenter
-                    Button
-                    {
-                        id: defaultValue
-                        opacity: 1
-                        activeFocusOnPress : true
-                        text: "Default"
-                        tooltip: "Click to set default values in extension controls"
-                        action: setDefault
-                        style: econButtonStyle
-                        Keys.onReturnPressed: {
-                            setToDefaultValues()
+                    id: frameRateTextField
+                    text: frameRateSlider.value
+                    font.pixelSize: 10
+                    font.family: "Ubuntu"
+                    smooth: true
+                    horizontalAlignment: TextInput.AlignHCenter
+                    style: econTextFieldStyle
+                    validator: IntValidator {bottom: frameRateSlider.minimumValue; top: frameRateSlider.maximumValue}
+                    onTextChanged: {
+                        if(text.length > 0){
+                            frameRateSlider.value = frameRateTextField.text
                         }
                     }
                 }
-
-
-                Row
+            }
+            Text
+            {
+                id: antiFlickerMode
+                text: "--- Anti Flicker Mode ---"
+                font.pixelSize: 14
+                font.family: "Ubuntu"
+                color: "#ffffff"
+                smooth: true
+                Layout.alignment: Qt.AlignCenter
+                opacity: 0.50196078431373
+            }
+            Row
+            {
+                spacing:90
+                ExclusiveGroup { id: antiFlickerModegroup }
+                RadioButton
                 {
-                    Layout.alignment: Qt.AlignCenter
-                    Button
-                    {
-                        id: f_wversion_selected130
-                        opacity: 1
-                        action: firmwareVersion
-                        activeFocusOnPress : true
-                        tooltip: "Click to view the firmware version of the camera"
-                        style: ButtonStyle {
-                            background: Rectangle {
+                    exclusiveGroup: antiFlickerModegroup
+                    id: antiFlickerModeAuto
+                    text: "Auto"
+                    activeFocusOnPress: true
+                    style: econRadioButtonStyle
+                    opacity: enabled ? 1 : 0.1
+                    onClicked: {
+                        see3camcu81.setAntiFlickerMode(see3camcu81.AntiFlickerAuto);
+                    }
+                    Keys.onReturnPressed: {
+                        see3camcu81.setAntiFlickerMode(see3camcu81.AntiFlickerAuto);
+                    }
+                }
+                RadioButton
+                {
+                    exclusiveGroup: antiFlickerModegroup
+                    id: antiFlickerModeManual
+                    text: "Manual"
+                    activeFocusOnPress: true
+                    style: econRadioButtonStyle
+                    opacity: enabled ? 1 : 0.1
+                    onClicked: {
+                        setAntiFlickerMode()
+                    }
+                    Keys.onReturnPressed: {
+                        setAntiFlickerMode()
+                    }
+                }
+            }
+            Text
+            {
+                id: frequency
+                text: "Frequency :"
+                font.pixelSize: 14
+                font.family: "Ubuntu"
+                color: "#ffffff"
+                smooth: true
+                opacity: (antiFlickerModeManual.enabled && antiFlickerModeManual.checked) ? 1 : 0.1
+            }
+            ComboBox
+            {
+                id: antiFlickerCombo
+                enabled: (antiFlickerModeManual.enabled && antiFlickerModeManual.checked) ? true : false
+                opacity: (antiFlickerModeManual.enabled && antiFlickerModeManual.checked) ? 1 : 0.1
+                model: ListModel
+                {
+                    ListElement { text: "50 Hz" }
+                    ListElement { text: "60 Hz" }
+                }
+                activeFocusOnPress: true
+                style: econComboBoxStyle
+                onCurrentIndexChanged: {
+                    if(skipUpdateUIOnAntiFlickerMode){
+                        setAntiFlickerMode()
+                    }
+                    skipUpdateUIOnAntiFlickerMode = true
+                }
+            }
+            Row
+            {
+                Layout.alignment: Qt.AlignCenter
+                Button
+                {
+                    id: defaultValue
+                    opacity: 1
+                    activeFocusOnPress : true
+                    text: "Default"
+                    tooltip: "Click to set default values in extension controls"
+                    action: setDefault
+                    style: econButtonStyle
+                    Keys.onReturnPressed: {
+                        setToDefaultValues()
+                    }
+                }
+            }
+
+
+            Row
+            {
+                Layout.alignment: Qt.AlignCenter
+                Button
+                {
+                    id: f_wversion_selected130
+                    opacity: 1
+                    action: firmwareVersion
+                    activeFocusOnPress : true
+                    tooltip: "Click to view the firmware version of the camera"
+                    style: ButtonStyle {
+                        background: Rectangle {
                             border.width: control.activeFocus ? 3 :0
                             color: "#222021"
                             border.color: control.activeFocus ? "#ffffff" : "#222021"
                             radius: 5
-                            }
-                            label: Image {
+                        }
+                        label: Image {
                             source: "images/f_wversion_selected.png"
-                            }
-                        }
-                        Keys.onReturnPressed: {
-                        getFirmwareVersion()
                         }
                     }
-                    Button
-                    {
-                        id: serial_no_selected
-                        opacity: 1
-                        action: serialNumber
-                        activeFocusOnPress : true
-                        tooltip: "Click to view the Serial Number"
-                        style: ButtonStyle {
-                            background: Rectangle {
+                    Keys.onReturnPressed: {
+                        getFirmwareVersion()
+                    }
+                }
+                Button
+                {
+                    id: serial_no_selected
+                    opacity: 1
+                    action: serialNumber
+                    activeFocusOnPress : true
+                    tooltip: "Click to view the Serial Number"
+                    style: ButtonStyle {
+                        background: Rectangle {
                             border.width: control.activeFocus ? 3 :0
                             color: "#222021"
                             border.color: control.activeFocus ? "#ffffff" : "#222021"
                             radius: 5
-                            }
-                            label: Image {
+                        }
+                        label: Image {
                             source: "images/serial_no_selected.png"
-                            }
                         }
-                        Keys.onReturnPressed: {
+                    }
+                    Keys.onReturnPressed: {
                         getSerialNumber()
-                        }
                     }
                 }
-                Row
+            }
+            Row
+            {
+                Button
                 {
-                    Button
-                    {
-                        id: dummy
-                        opacity: 0
-                    }
+                    id: dummy
+                    opacity: 0
                 }
+            }
         }//ColumnLayout
     }//ScrollView
     Action
@@ -711,24 +725,25 @@ Item
     }
     Action
     {
-         id: firmwareVersion
-         onTriggered:
-         {
-             getFirmwareVersion()
-         }
+        id: firmwareVersion
+        onTriggered:
+        {
+            getFirmwareVersion()
+        }
     }
 
     Action
     {
-         id: serialNumber
-         onTriggered:
-         {
-                getSerialNumber()
-         }
+        id: serialNumber
+        onTriggered:
+        {
+            getSerialNumber()
+        }
     }
     function setToDefaultValues()
     {
         see3camcu81.setToDefault()
+        see3camcu81.getCameraMode()
         see3camcu81.getEffect()
         see3camcu81.getDenoise()
         see3camcu81.getQFactor()
@@ -738,35 +753,36 @@ Item
         see3camcu81.getExposureCompensation()
         see3camcu81.getFrameRateCtrlValue()
         see3camcu81.getAntiFlickerMode()
+        extSettingsBasedOnAutoExposureSelectionInUVCSettings(JS.autoExposureSelected)
     }
     function setAntiFlickerMode()
     {
         if(antiFlickerCombo.currentIndex === 0)
-          see3camcu81.setAntiFlickerMode(See3CamCU81.AntiFlicker50Hz)
+            see3camcu81.setAntiFlickerMode(See3CamCU81.AntiFlicker50Hz)
         else
-          see3camcu81.setAntiFlickerMode(See3CamCU81.AntiFlicker60Hz)
+            see3camcu81.setAntiFlickerMode(See3CamCU81.AntiFlicker60Hz)
     }
     function currentROIAutoExposureMode(roiMode, winSize)
     {
         switch(roiMode){
-            case See3CamCU81.AutoExpFull:
-                autoexpFull.checked = true
-                autoExpoWinSizeCombo.enabled = false
-                break
-            case See3CamCU81.AutoExpManual:
-                skipUpdateUIOnExpWindowSize = false
-                autoexpManual.checked = true
-                // If window size is got from camera is 0 then set window size to 1 in UI
-                if(winSize == 0){
-                    autoExpoWinSizeCombo.currentIndex = 0
-                }else
-                    autoExpoWinSizeCombo.currentIndex = winSize-1
-                break
-            case See3CamCU81.AutoExpDisabled:
-                autoexpFull.enabled = false
-                autoexpManual.enabled = false
-                autoExpoWinSizeCombo.enabled = false
-                break
+        case See3CamCU81.AutoExpFull:
+            autoexpFull.checked = true
+            autoExpoWinSizeCombo.enabled = false
+            break
+        case See3CamCU81.AutoExpManual:
+            skipUpdateUIOnExpWindowSize = false
+            autoexpManual.checked = true
+            // If window size is got from camera is 0 then set window size to 1 in UI
+            if(winSize == 0){
+                autoExpoWinSizeCombo.currentIndex = 0
+            }else
+                autoExpoWinSizeCombo.currentIndex = winSize-1
+            break
+        case See3CamCU81.AutoExpDisabled:
+            autoexpFull.enabled = false
+            autoexpManual.enabled = false
+            autoExpoWinSizeCombo.enabled = false
+            break
         }
     }
     function getFirmwareVersion()
@@ -780,35 +796,102 @@ Item
         messageDialog.open()
     }
 
+    function extSettingsBasedOnAutoExposureSelectionInUVCSettings(autoExposureChecked){
+        if(autoExposureChecked)
+        {
+            if(linear_mode.checked)
+            {
+                exposureCompSet.opacity = 1
+                exposureCompValue.opacity = 1
+                exposureCompText.opacity = 1
+                exposureCompSet.enabled = true
+                exposureCompValue.enabled = true
+                exposureCompText.enabled = true
+            }
+            else
+            {
+                exposureCompSet.opacity = 0.1
+                exposureCompValue.opacity = 0.1
+                exposureCompText.opacity = 0.1
+                exposureCompSet.enabled = false
+                exposureCompValue.enabled = false
+                exposureCompText.enabled = false
+            }
+            autoexpFull.opacity = 1
+            autoexpManual.opacity = 1
+            autoexpFull.enabled = true
+            autoexpManual.enabled = true
+        }
+        else
+        {
+            if(linear_mode.checked)
+            {
+                autoexpFull.opacity = 0.1
+                autoexpManual.opacity = 0.1
+                autoexpFull.enabled = false
+                autoexpManual.enabled = false
+            }
+            else
+            {
+                autoexpFull.opacity = 1
+                autoexpManual.opacity = 1
+                autoexpFull.enabled = true
+                autoexpManual.enabled = true
+            }
+            exposureCompSet.opacity = 0.1
+            exposureCompValue.opacity = 0.1
+            exposureCompText.opacity = 0.1
+            exposureCompSet.enabled = false
+            exposureCompValue.enabled = false
+            exposureCompText.enabled = false
+        }
+        if(autoexpManual.enabled && autoexpManual.checked && (autoexpManual.opacity == 1))
+        {
+            autoExpoWinSizeCombo.opacity = 1
+            autoExpoWinSizeCombo.enabled = true
+        }
+        else
+        {
+            autoExpoWinSizeCombo.opacity = 0.1
+            autoExpoWinSizeCombo.enabled = false
+        }
+    }
+
     See3CamCU81
     {
         id:see3camcu81
         onSendCameraModeValue:
         {
             if(cameraMode == See3CamCU81.HDR_MODE)
+            {
+                root.hdrModeSelected(true)
                 hdr_mode.checked = true
+            }
             else if(cameraMode == See3CamCU81.LINEAR_MODE)
+            {
+                root.hdrModeSelected(false)
                 linear_mode.checked = true
+            }
         }
         onSentEffectMode:
         {
             switch(effectMode)
             {
-                case See3CamCU81.EFFECT_NORMAL:
-                    rdoEffectNormal.checked = true
-                    break;
-                case See3CamCU81.EFFECT_BLACK_WHITE:
-                    rdoEffectBW.checked = true
-                    break;
-                case See3CamCU81.EFFECT_GREYSCALE:
-                    rdoEffectGreyScale.checked = true
-                    break;
-                case See3CamCU81.EFFECT_NEGATIVE:
-                    rdoEffectNegative.checked = true
-                    break;
-                case See3CamCU81.EFFECT_SKETCH:
-                    rdoEffectSketch.checked = true
-                    break;
+            case See3CamCU81.EFFECT_NORMAL:
+                rdoEffectNormal.checked = true
+                break;
+            case See3CamCU81.EFFECT_BLACK_WHITE:
+                rdoEffectBW.checked = true
+                break;
+            case See3CamCU81.EFFECT_GREYSCALE:
+                rdoEffectGreyScale.checked = true
+                break;
+            case See3CamCU81.EFFECT_NEGATIVE:
+                rdoEffectNegative.checked = true
+                break;
+            case See3CamCU81.EFFECT_SKETCH:
+                rdoEffectSketch.checked = true
+                break;
             }
         }
         onSendDenoiseValue:
@@ -836,22 +919,22 @@ Item
         {
             switch(flipMirrorMode)
             {
-                case See3CamCU81.FLIP_BOTHFLIP_ENABLE:
-                     flipCtrlVertical.checked = true
-                     flipCtrlHorizotal.checked = true
-                    break;
-                case See3CamCU81.FLIP_VERTFLIP:
-                    flipCtrlVertical.checked = true
-                    flipCtrlHorizotal.checked = false
-                    break;
-                case See3CamCU81.FLIP_HORZFLIP:
-                     flipCtrlVertical.checked = false
-                     flipCtrlHorizotal.checked = true
-                    break;
-                case See3CamCU81.FLIP_BOTHFLIP_DISABLE:
-                    flipCtrlVertical.checked = false
-                    flipCtrlHorizotal.checked = false
-                    break;
+            case See3CamCU81.FLIP_BOTHFLIP_ENABLE:
+                flipCtrlVertical.checked = true
+                flipCtrlHorizotal.checked = true
+                break;
+            case See3CamCU81.FLIP_VERTFLIP:
+                flipCtrlVertical.checked = true
+                flipCtrlHorizotal.checked = false
+                break;
+            case See3CamCU81.FLIP_HORZFLIP:
+                flipCtrlVertical.checked = false
+                flipCtrlHorizotal.checked = true
+                break;
+            case See3CamCU81.FLIP_BOTHFLIP_DISABLE:
+                flipCtrlVertical.checked = false
+                flipCtrlHorizotal.checked = false
+                break;
             }
         }
         onFrameRateCtrlValueReceived:
@@ -864,26 +947,26 @@ Item
         {
             switch(flickerMode)
             {
-                case See3CamCU81.AntiFlickerAuto:
-                    antiFlickerModeAuto.checked = true
-                    break
-                case See3CamCU81.AntiFlicker50Hz:
-                    antiFlickerModeManual.checked = true
-                    skipUpdateUIOnAntiFlickerMode = false
-                    antiFlickerCombo.currentIndex = 0
-                    skipUpdateUIOnAntiFlickerMode = true
-                    break
-                case See3CamCU81.AntiFlicker60Hz:
-                    antiFlickerModeManual.checked = true
-                    skipUpdateUIOnAntiFlickerMode = false
-                    antiFlickerCombo.currentIndex = 1
-                    skipUpdateUIOnAntiFlickerMode = true
-                    break
-             }
+            case See3CamCU81.AntiFlickerAuto:
+                antiFlickerModeAuto.checked = true
+                break
+            case See3CamCU81.AntiFlicker50Hz:
+                antiFlickerModeManual.checked = true
+                skipUpdateUIOnAntiFlickerMode = false
+                antiFlickerCombo.currentIndex = 0
+                skipUpdateUIOnAntiFlickerMode = true
+                break
+            case See3CamCU81.AntiFlicker60Hz:
+                antiFlickerModeManual.checked = true
+                skipUpdateUIOnAntiFlickerMode = false
+                antiFlickerCombo.currentIndex = 1
+                skipUpdateUIOnAntiFlickerMode = true
+                break
+            }
         }
         onExposureCompValueReceived:
         {
-             exposureCompValue.text = exposureCompensation
+            exposureCompValue.text = exposureCompensation
         }
     }
 
@@ -908,7 +991,7 @@ Item
         onTakeScreenShot:
         {
 
-                root.imageCapture(CommonEnums.BURST_SHOT);
+            root.imageCapture(CommonEnums.BURST_SHOT);
         }
         onGetVideoPinStatus:
         {
@@ -922,6 +1005,11 @@ Item
             stillImageFormat.push("raw")
             stillImageFormat.push("png")
             root.insertStillImageFormat(stillImageFormat);
+        }
+        onExtensionTabVisible:
+        {
+            if(visible)
+                extSettingsBasedOnAutoExposureSelectionInUVCSettings(JS.autoExposureSelected)
         }
     }
 
@@ -937,6 +1025,7 @@ Item
             see3camcu81.getQFactor()
             see3camcu81.getExposureCompensation()
             see3camcu81.getFrameRateCtrlValue()
+            extSettingsBasedOnAutoExposureSelectionInUVCSettings(JS.autoExposureSelected)
             stop()
         }
     }
@@ -944,6 +1033,7 @@ Item
     {
         //getting valid effect mode and scene mode takes some time.
         //So In timer, after 500 ms, getting effect mode and scene mode is done
+        root.disablePowerLineFreq()
         getCamValuesTimer.start()
         see3camcu81.getAutoExpROIModeAndWindowSize()
         see3camcu81.getBurstLength()
