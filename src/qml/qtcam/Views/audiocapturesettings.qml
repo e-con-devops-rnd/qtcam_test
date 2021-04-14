@@ -383,6 +383,7 @@ Item {
 
     function doMuteEnableDisable()
     {
+        console.log("inside doMuteEnableDisable")
         volume_value.enabled = false
         if(!skipSettingMuteState){ // To skip setting of mute state when getting mute state from camera.
             audioSettings.setMuteState(muteSelection.checked);

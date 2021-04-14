@@ -88,11 +88,13 @@ Item
                     onClicked: {
                         see3camcu81.setCameraMode(See3CamCU81.LINEAR_MODE)
                         root.disableManualExp(false)
+                        see3camcu81.getExposureCompensation()
                         extSettingsBasedOnAutoExposureSelectionInUVCSettings(JS.autoExposureSelected)
                     }
                     Keys.onReturnPressed: {
                         see3camcu81.setCameraMode(See3CamCU81.LINEAR_MODE)
                         root.disableManualExp(false)
+                        see3camcu81.getExposureCompensation()
                         extSettingsBasedOnAutoExposureSelectionInUVCSettings(JS.autoExposureSelected)
                     }
                 }
@@ -740,9 +742,8 @@ Item
             getSerialNumber()
         }
     }
-    function setToDefaultValues()
+    function getValuesFromCamera()
     {
-        see3camcu81.setToDefault()
         see3camcu81.getCameraMode()
         see3camcu81.getEffect()
         see3camcu81.getDenoise()
@@ -754,6 +755,12 @@ Item
         see3camcu81.getFrameRateCtrlValue()
         see3camcu81.getAntiFlickerMode()
         extSettingsBasedOnAutoExposureSelectionInUVCSettings(JS.autoExposureSelected)
+    }
+
+    function setToDefaultValues()
+    {
+        see3camcu81.setToDefault()
+        getValuesFromCamera()
     }
     function setAntiFlickerMode()
     {
@@ -1009,7 +1016,23 @@ Item
         onExtensionTabVisible:
         {
             if(visible)
-                extSettingsBasedOnAutoExposureSelectionInUVCSettings(JS.autoExposureSelected)
+            {
+                getValuesFromCamera()
+            }
+        }
+        onMouseRightClicked:{
+            if(autoexpManual.enabled && autoexpManual.checked){
+                see3camcu81.setROIAutoExposure(See3CamCU81.AutoExpManual,width, height, x, y, customAreaWindowSizeCombo.currentText)
+            }
+        }
+        onVideoResolutionChanged:{
+            see3camcu81.getFrameRateCtrlValue()
+        }
+        onPreviewFPSChanged:{
+            see3camcu81.getFrameRateCtrlValue()
+        }
+        onVideoColorSpaceChanged:{
+            see3camcu81.getFrameRateCtrlValue()
         }
     }
 
@@ -1024,21 +1047,13 @@ Item
             see3camcu81.getDenoise()
             see3camcu81.getQFactor()
             see3camcu81.getExposureCompensation()
-            see3camcu81.getFrameRateCtrlValue()
             extSettingsBasedOnAutoExposureSelectionInUVCSettings(JS.autoExposureSelected)
             stop()
         }
     }
     Component.onCompleted:
     {
-        //getting valid effect mode and scene mode takes some time.
-        //So In timer, after 500 ms, getting effect mode and scene mode is done
         root.disablePowerLineFreq()
-        getCamValuesTimer.start()
-        see3camcu81.getAutoExpROIModeAndWindowSize()
-        see3camcu81.getBurstLength()
-        see3camcu81.getFlipMode()
-        see3camcu81.getAntiFlickerMode()
     }
     Component
     {

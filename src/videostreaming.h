@@ -27,6 +27,7 @@
 #include <QStringList>
 #include <QStringListModel>
 #include <QDir>
+#include <QElapsedTimer>
 #include <sys/mman.h>
 #include <libv4l2.h>
 #include <QMutex>

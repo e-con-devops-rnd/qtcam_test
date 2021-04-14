@@ -944,6 +944,7 @@ bool AudioInput::updateSupportedInfo(uint currentIndex)
 
     // get mute status
     int muteState = alsa.getMuteStatus();
+    qDebug() << Q_FUNC_INFO << "mutestate:" << muteState;
     emit muteStateChanged(muteState);
 
     // Using Alsa, get volume
@@ -963,6 +964,7 @@ bool AudioInput::setVolume(int micVolume){
 }
 
 bool AudioInput::setMuteState(bool mute){
+    qDebug() << Q_FUNC_INFO << mute;
     if(mute)
     {
         alsa.setAlsaMute(true);

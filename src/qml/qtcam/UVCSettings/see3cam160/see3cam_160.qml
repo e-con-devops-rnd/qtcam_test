@@ -25,6 +25,7 @@ Item {
     property bool skipUpdateUIAEMeterMode: false
     property bool skipUpdateUICAFScanRangeMode: false
     property bool skipUpdateManualLensPositionMode: false
+    property bool skipUpdateUIOnBurstLength: false
 
     Action {
         id: setDefault
@@ -62,7 +63,7 @@ Item {
         target: root
         onTakeScreenShot:
         {
-            root.imageCapture(CommonEnums.SNAP_SHOT);
+            root.imageCapture(CommonEnums.BURST_SHOT);
         }
         onGetVideoPinStatus:
         {
@@ -78,30 +79,24 @@ Item {
             root.insertStillImageFormat(stillImageFormat);
         }
 
-        onMouseRightClicked:{
-            if(radiocustom.enabled && radiocustom.checked){
-                see3cam160.setCustomAreaAutoFocus(width, height, x, y, customAreaWindowSizeCombo.currentText)
-            }
-        }
-
         onAutoWhiteBalanceSelected:{
-            if(autoWhiteBalanceSelect){
-                awbLock.enabled = true
-                awbLock.opacity = 1
-                awbPresetModeText.opacity = 1
-                awbPresetsCombo.enabled = true
-                awbPresetsCombo.opacity = 1
-            }else{
-                awbLock.enabled = false
-                awbLock.opacity = 0.1
-                awbPresetModeText.opacity = 0.1
-                awbPresetsCombo.enabled = false
-                awbPresetsCombo.opacity = 0.1
-            }
+//            if(autoWhiteBalanceSelect){
+//                awbLock.enabled = true
+//                awbLock.opacity = 1
+//                awbPresetModeText.opacity = 1
+//                awbPresetsCombo.enabled = true
+//                awbPresetsCombo.opacity = 1
+//            }else{
+//                awbLock.enabled = false
+//                awbLock.opacity = 0.1
+//                awbPresetModeText.opacity = 0.1
+//                awbPresetsCombo.enabled = false
+//                awbPresetsCombo.opacity = 0.1
+//            }
         }
 
         onAutoFocusSelected:{
-            extSettingsBasedOnAutoFocusSelectionInUVCSettings(autoFocusSelect)
+            extSettingsBasedOnAutoFocusSelectionInUVCSettings(JS.autoFocusChecked)
         }
 
         onExtensionTabVisible:{
@@ -140,8 +135,8 @@ Item {
                 }
                 CheckBox {
                     id: awbLock
-                    enabled: JS.autoWhiteBalSelected ? true : false
-                    opacity: JS.autoWhiteBalSelected ? 1 : 0.1
+                    enabled: true
+                    opacity: 1
                     activeFocusOnPress : true
                     text: "AWB Lock"
                     style: econCheckBoxStyle
@@ -155,8 +150,8 @@ Item {
                 ComboBox
                 {
                     id: awbPresetsCombo
-                    enabled: JS.autoWhiteBalSelected ? true : false
-                    opacity: JS.autoWhiteBalSelected ? 1 : 0.1
+                    enabled: true
+                    opacity: 1
                     model: ListModel {
                         ListElement { text: "Cloudy" }
                         ListElement { text: "DayLight" }
@@ -174,6 +169,11 @@ Item {
                         if(skipUpdateUIAWbPreset){
                             // combo index starts from 0. AWB preset values start from 1.  So Add 1 to set the AWB preset mode
                             see3cam160.setAWBpresetMode(awbPresetsCombo.currentIndex + 1)
+                            if(awbPresetsCombo.currentIndex == 8)               //Auto mode
+                                root.disableAwb(true)
+                            else
+                                root.disableAwb(false)
+
                         }
                         skipUpdateUIAWbPreset = true
                     }
@@ -337,80 +337,6 @@ Item {
                 }
 
                 Text {
-                    id: autoFocusAreaText
-                    text: "--- Auto Focus Area ---"
-                    font.pixelSize: 14
-                    font.family: "Ubuntu"
-                    color: "#ffffff"
-                    smooth: true
-                    Layout.alignment: Qt.AlignCenter
-                    opacity: 0.50196078431373
-                }
-                RowLayout{
-                    spacing:25
-                    ExclusiveGroup { id: groupAF }
-                    RadioButton {
-                        exclusiveGroup: groupAF
-                        id: radiocenter
-                        text: "Center Weighted"
-                        activeFocusOnPress: true
-                        style: radioButtonWordWrapStyle
-                        enabled: true
-                        opacity: enabled ? 1 : 0.1
-                        onClicked:{
-                            centeredModeButtonClicked()
-                        }
-                        Keys.onReturnPressed: {
-                            centeredModeButtonClicked()
-                        }
-                    }
-                    RadioButton {
-                        exclusiveGroup: groupAF
-                        id: radiocustom
-                        text: "Custom Area"
-                        activeFocusOnPress: true
-                        style: radioButtonWordWrapStyle
-                        enabled: true
-                        opacity: enabled ? 1 : 0.1
-                        onClicked: {
-                            customModeButtonClicked()
-                        }
-                        Keys.onReturnPressed: {
-                            customModeButtonClicked()
-                        }
-                    }
-                }
-                Text {
-                    id: customAreaWindowSize
-                    text: "Window Size:"
-                    font.pixelSize: 14
-                    font.family: "Ubuntu"
-                    color: "#ffffff"
-                    smooth: true
-                    opacity: radiocustom.checked ? 1 : 0.1
-                }
-                ComboBox
-                {
-                    id: customAreaWindowSizeCombo
-                    opacity: radiocustom.checked ? 1 : 0.1
-                    enabled: radiocustom.checked ? true : false
-                    model: ListModel {
-                        ListElement { text: "1" }
-                        ListElement { text: "2" }
-                        ListElement { text: "3" }
-                        ListElement { text: "4" }
-                        ListElement { text: "5" }
-                        ListElement { text: "6" }
-                        ListElement { text: "7" }
-                        ListElement { text: "8" }
-                    }
-                    activeFocusOnPress: true
-                    style: econComboBoxStyle
-                    onCurrentIndexChanged: {
-                    }
-                }
-
-                Text {
                     id: qFactorText
                     text: "--- Q Factor ---"
                     font.pixelSize: 14
@@ -502,6 +428,48 @@ Item {
                 }
 
                 Text {
+                    id: imgCapText
+                    text: "--- Image Capture ---"
+                    font.pixelSize: 14
+                    font.family: "Ubuntu"
+                    color: "#ffffff"
+                    smooth: true
+                    Layout.alignment: Qt.AlignCenter
+                    opacity: 0.50196078431373
+                }
+                Text {
+                    id: burstLength
+                    text: "Burst Length :"
+                    font.pixelSize: 14
+                    font.family: "Ubuntu"
+                    color: "#ffffff"
+                    smooth: true
+                    opacity: 1
+                }
+                ComboBox
+                {
+                    id: burstLengthCombo
+                    opacity: 1
+                    enabled: true
+                    model: ListModel {
+                        ListElement { text: "1" }
+                        ListElement { text: "2" }
+                        ListElement { text: "3" }
+                        ListElement { text: "4" }
+                        ListElement { text: "5" }
+                    }
+                    activeFocusOnPress: true
+                    style: econComboBoxStyle
+                    onCurrentIndexChanged: {
+                        root.stillBurstLength(burstLengthCombo.currentIndex + 1) // combobox index starts from 0
+                        if(skipUpdateUIOnBurstLength){
+                            see3cam160.setBurstLength(burstLengthCombo.currentText)
+                        }
+                        skipUpdateUIOnBurstLength = true
+                    }
+                }
+
+                Text {
                     id: flickerctrlField
                     text: "-- Flicker Detection Control --"
                     font.pixelSize: 14
@@ -555,9 +523,9 @@ Item {
                         id:serial_no_selected
                         opacity: 1
                         activeFocusOnPress : true
-                        text: "SerialNo"
+                        text: "Serial Number"
                         action: serialNumber
-                        tooltip: "Click to view the Serial Number"
+                        tooltip: "Click to view the Unique ID"
                         style: econButtonStyle
                         Keys.onReturnPressed: {
                             getSerialNumber()
@@ -633,16 +601,12 @@ Item {
             manualLensPositionCombo.enabled = true
             manualLensPositionCombo.opacity = 1
             manualLensPositionText.opacity = 1
-            radiocenter.enabled = false
-            radiocustom.enabled = false
-            customAreaWindowSizeCombo.enabled = false
-            customAreaWindowSizeCombo.opacity = 0.1
-            customAreaWindowSize.opacity = 0.1
             afLock.enabled = false
             cafScanRangeCombo.enabled = false
             cafScanRangeCombo.opacity = 0.1
             cAFScanRange.opacity = 0.1
-            see3cam160.setAFstatus(See3cam160.AF_OFF)
+            see3cam160.setAFstatus(See3cam160.AF_ON)
+            root.disableAutoFocus(false)
         }
         else{
             focusModeText.opacity = 1
@@ -651,38 +615,19 @@ Item {
             manualLensPositionCombo.enabled = false
             manualLensPositionCombo.opacity = 0.1
             manualLensPositionText.opacity = 0.1
-            radiocenter.enabled = true
-            radiocustom.enabled = true
             afLock.enabled = true
             cafScanRangeCombo.enabled = true
             cafScanRangeCombo.opacity = 1
             cAFScanRange.opacity = 1
-            if(radiocustom.checked){
-                customAreaWindowSizeCombo.enabled = true
-                customAreaWindowSizeCombo.opacity = 1
-                customAreaWindowSize.opacity = 1
-            }else{
-                customAreaWindowSizeCombo.enabled = false
-                customAreaWindowSize.opacity = 0.1
-                customAreaWindowSizeCombo.opacity = 0.1
-            }
-            see3cam160.setAFstatus(See3cam160.AF_ON)
+            see3cam160.setAFstatus(See3cam160.AF_OFF)
+            root.disableAutoFocus(true)
         }
     }
 
     function setToDefaultValues(){
         see3cam160.setToDefault()
         getValuesFromCamera()
-        if(radiocustom.enabled && radiocustom.checked){
-            customAreaWindowSize.opacity = 1
-            customAreaWindowSizeCombo.enabled = true
-            customAreaWindowSizeCombo.opacity = 1
-        }else{
-            customAreaWindowSizeCombo.enabled = false
-            customAreaWindowSizeCombo.opacity = 0.1
-            customAreaWindowSize.opacity = 0.1
-        }
-        extSettingsBasedOnAutoFocusSelectionInUVCSettings(autoFocusChecked)
+        extSettingsBasedOnAutoFocusSelectionInUVCSettings(JS.autoFocusChecked)
     }
 
     function getFirmwareVersion() {
@@ -738,6 +683,11 @@ Item {
             aeMeteringMode = See3cam160.AE_LARGE_AREA
             break
         }
+        if(aeMeteringMode == See3cam160.AE_OFF)
+            root.disableManualExp(false)
+        else
+            root.disableManualExp(true)
+
         see3cam160.setAEMeterMode(aeMeteringMode)
     }
 
@@ -765,19 +715,6 @@ Item {
         see3cam160.setManualLensPositionMode(manualLensPosMode)
     }
 
-    function customModeButtonClicked(){
-        customAreaWindowSize.opacity = 1
-        customAreaWindowSizeCombo.opacity = 1
-        customAreaWindowSizeCombo.enabled = true
-        see3cam160.setCustomAreaAutoFocus(width, height, width/2, height/2, customAreaWindowSizeCombo.currentText)
-    }
-
-    function centeredModeButtonClicked(){
-        customAreaWindowSize.opacity = 0.1
-        customAreaWindowSizeCombo.opacity = 0.1
-        customAreaWindowSizeCombo.enabled = false
-        see3cam160.setCenteredAutoFocusMode();
-    }
 
     function setCAFScanRangeModeFn(){
         switch(cafScanRangeCombo.currentIndex){
@@ -815,19 +752,6 @@ Item {
             focusModeText.opacity = 1
             radioContin.enabled = true
             radioOneshot.enabled = true
-            radiocenter.enabled = true
-            radiocustom.enabled = true
-            if(radiocustom.checked){
-                customAreaWindowSize.opacity = 1
-                customAreaWindowSizeCombo.opacity = 1
-                customAreaWindowSizeCombo.enabled = true
-            }
-            else{
-                customAreaWindowSize.opacity = 0.1
-                customAreaWindowSizeCombo.opacity = 0.1
-                customAreaWindowSizeCombo.enabled = false
-            }
-
         }else{
             afOff.checked = true
             manualLensPositionCombo.enabled = true
@@ -840,11 +764,6 @@ Item {
             focusModeText.opacity = 0.1
             radioContin.enabled = false
             radioOneshot.enabled = false
-            radiocenter.enabled = false
-            radiocustom.enabled = false
-            customAreaWindowSize.opacity = 0.1
-            customAreaWindowSizeCombo.enabled = false
-            customAreaWindowSizeCombo.opacity = 0.1
         }
     }
 
@@ -861,12 +780,14 @@ Item {
         see3cam160.getManualLensPositionMode()
         see3cam160.getAFstatus()
         see3cam160.getAutoFocusROIMode()
+        see3cam160.getBurstLength()
     }
 
     function getSerialNumber() {
-        uvccamera.getSerialNumber()
+        uvccamera.getUniqueId()
         messageDialog.open()
     }
+
 
     Component {
         id: econTextFieldStyle
@@ -1061,11 +982,9 @@ Item {
             switch(afMode){
             case See3cam160.AF_CONTINUOUS:
                 radioContin.checked = true
-                afOff.checked = false
                 break
             case See3cam160.AF_ONESHOT:
                 radioOneshot.checked = true
-                afOff.checked = false
                 break
             }
         }
@@ -1095,13 +1014,13 @@ Item {
         }
 
         onAeLockStatusChanged: {
-            if(lockStatus)
+            if(!lockStatus)
             {
-                aeLock.checked = true
+                aeLock.checked = false
             }
             else
             {
-                aeLock.checked = false
+                aeLock.checked = true
             }
         }
 
@@ -1124,11 +1043,15 @@ Item {
                 aeMeteringModeCombo.currentIndex = 4
                 break
             }
+            if(aeMeteringModeCombo.currentIndex == 0)
+                root.disableManualExp(false)
+            else
+                root.disableManualExp(true)
             skipUpdateUIAEMeterMode = true
        }
 
         onAfLockStatusChanged: {
-            if(lockStatus)
+            if(lockStatus==0x01)
             {
                 afLock.checked = true
             }
@@ -1164,10 +1087,12 @@ Item {
             if(afstatus)
             {
                 afOff.checked = true
+                root.disableAutoFocus(true)
             }
             else
             {
                 afOff.checked = false
+                root.disableAutoFocus(false)
             }
         }
 
@@ -1196,29 +1121,31 @@ Item {
             skipUpdateManualLensPositionMode = true
         }
 
-        onAutoFocusRoiModeChanged: {
-            if(afRoiMode == See3cam160.ROI_CENTERED){
-                radiocenter.checked = true
-            }
-            else if(afRoiMode == See3cam160.ROI_CUSTOM){
-                radiocustom.checked = true
-            }
-        }
-
         onAwbPresetModeChanged: {
             skipUpdateUIAWbPreset = false
             awbPresetsCombo.currentIndex = awbMode - 1
+            if(awbPresetsCombo.currentIndex == 8)               //Auto mode
+                root.disableAwb(true)
+            else
+                root.disableAwb(false)
+            skipUpdateUIAWbPreset = true
         }
 
         onAwbLockStatusChanged: {
-            if(lockStatus)
-            {
-                awbLock.checked = true
-            }
-            else
+            if(!lockStatus)
             {
                 awbLock.checked = false
             }
+            else
+            {
+                awbLock.checked = true
+            }
+        }
+
+        onBurstLengthValue:{
+            skipUpdateUIOnBurstLength = false
+            burstLengthCombo.currentIndex = burstLength - 1
+            skipUpdateUIOnBurstLength = true
         }
 
     }
