@@ -38,7 +38,6 @@ bool See3CAM_160::getAFstatus()
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_160 &&
             g_in_packet_buf[1]==GET_AF_STATUS_160 &&
             g_in_packet_buf[6]==GET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << g_in_packet_buf[2];
             emit afStatusChanged(g_in_packet_buf[2]);
             return true;
         }
@@ -74,7 +73,6 @@ bool See3CAM_160::setAFstatus(afStatus afstatus)
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_160 &&
             g_in_packet_buf[1]==SET_AF_STATUS_160 &&
             g_in_packet_buf[6]==SET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << "value set" << afstatus;
             return true;
         }
     }
@@ -107,7 +105,6 @@ bool See3CAM_160::getManualLensPositionMode()
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_160 &&
             g_in_packet_buf[1]==GET_LENS_POSITION_160 &&
             g_in_packet_buf[6]==GET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << g_in_packet_buf[2];
             emit manualLensPositionModeChanged(g_in_packet_buf[2]);
             return true;
         }
@@ -143,7 +140,6 @@ bool See3CAM_160::setManualLensPositionMode(manualLensPositionMode lensPosition)
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_160 &&
             g_in_packet_buf[1]==SET_LENS_POSITION_160 &&
             g_in_packet_buf[6]==SET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << "value set" << lensPosition;
             return true;
         }
     }
@@ -176,7 +172,6 @@ bool See3CAM_160::getCAFScanRangeMode()
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_160 &&
             g_in_packet_buf[1]==GET_CAF_RANGE_160 &&
             g_in_packet_buf[6]==GET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << g_in_packet_buf[2];
             emit cafScanRangeModeChanged(g_in_packet_buf[2]);
             return true;
         }
@@ -212,7 +207,6 @@ bool See3CAM_160::setCAFScanRangeMode(cafScanRangeMode cafMode)
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_160 &&
             g_in_packet_buf[1]==SET_CAF_RANGE_160 &&
             g_in_packet_buf[6]==SET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << "value set" << cafMode;
             return true;
         }
     }
@@ -245,7 +239,6 @@ bool See3CAM_160::getAFlockstatus()
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_160 &&
             g_in_packet_buf[1]==GET_AF_LOCKSTATUS_160 &&
             g_in_packet_buf[6]==GET_SUCCESS) {
-            qDebug() <<Q_FUNC_INFO << g_in_packet_buf[2];
             emit afLockStatusChanged(g_in_packet_buf[2]);
             return true;
         }
@@ -281,7 +274,6 @@ bool See3CAM_160::setAFlockstatus(afLockStatus lockStatus)
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_160 &&
             g_in_packet_buf[1]==SET_AF_LOCKSTATUS_160 &&
             g_in_packet_buf[6]==SET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << "value set" << lockStatus;
             return true;
         }
     }
@@ -314,7 +306,6 @@ bool See3CAM_160::getAutoFocusMode()
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_160 &&
             g_in_packet_buf[1]==GET_AF_MODE_160 &&
             g_in_packet_buf[6]==GET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << g_in_packet_buf[2];
             emit afModeChanged(g_in_packet_buf[2]);
             return true;
         }
@@ -349,7 +340,6 @@ bool See3CAM_160::setAutoFocusMode(autoFocusModes afMode){
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_160 &&
             g_in_packet_buf[1]==SET_AF_MODE_160 &&
             g_in_packet_buf[6]==SET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << "value set" << afMode;
             return true;
         }
     }
@@ -383,7 +373,6 @@ bool See3CAM_160::getAutoFocusROIMode()
             g_in_packet_buf[1]==GET_AF_ROI_MODE_160 &&
             ((g_in_packet_buf[2]==CENTER_WEIGHTED_MODE_160 && g_in_packet_buf[7]==GET_SUCCESS) ||
              (g_in_packet_buf[2]==CUSTOM_AREA_MODE_160 && g_in_packet_buf[7]==GET_SUCCESS))) {
-            qDebug() << Q_FUNC_INFO << g_in_packet_buf[2];
             emit autoFocusRoiModeChanged(g_in_packet_buf[2]);
             return true;
         }
@@ -523,7 +512,6 @@ bool See3CAM_160::getQFactor()
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_160 &&
             g_in_packet_buf[1]==GET_Q_FACTOR_160 &&
             g_in_packet_buf[6]==GET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << g_in_packet_buf[2];
             emit qFactorValue(g_in_packet_buf[2]);
             return true;
         }
@@ -560,7 +548,6 @@ bool See3CAM_160::setQFactor(uint qFactor){
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_160 &&
             g_in_packet_buf[1]==SET_Q_FACTOR_160 &&
             g_in_packet_buf[6]==SET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << "value set" << qFactor;
             return true;
         }
     }
@@ -594,7 +581,6 @@ bool See3CAM_160::getFlickerMode()
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_160 &&
             g_in_packet_buf[1]==GET_FLICKER_DETECTION_160 &&
             g_in_packet_buf[6]==GET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << g_in_packet_buf[2];
             emit flickerModeChanged(g_in_packet_buf[2]);
             return true;
         }
@@ -632,7 +618,6 @@ bool See3CAM_160::setFlickerMode(camFlickerMode flickerMode)
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_160 &&
             g_in_packet_buf[1]==SET_FLICKER_DETECTION_160 &&
             g_in_packet_buf[6]==SET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << "value set" << flickerMode;
             return true;
         }
     }
@@ -666,7 +651,6 @@ bool See3CAM_160::getAElockstatus()
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_160 &&
             g_in_packet_buf[1]==GET_AE_LOCK_STATUS_160 &&
             g_in_packet_buf[6]==GET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << g_in_packet_buf[2];
             emit aeLockStatusChanged(g_in_packet_buf[2]);
             return true;
         }
@@ -702,7 +686,6 @@ bool See3CAM_160::setAElockstatus(aeLockStatus lockStatus)
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_160 &&
             g_in_packet_buf[1]==SET_AE_LOCK_STATUS_160 &&
             g_in_packet_buf[6]==SET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << "value set" << lockStatus;
             return true;
         }
     }
@@ -735,7 +718,6 @@ bool See3CAM_160::getAEMeterMode()
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_160 &&
             g_in_packet_buf[1]==GET_AE_METERING_MODE_160 &&
             g_in_packet_buf[6]==GET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << g_in_packet_buf[2];
             emit aeMeterModeChanged(g_in_packet_buf[2]);
             return true;
         }
@@ -771,7 +753,6 @@ bool See3CAM_160::setAEMeterMode(aeMeteringMode meterMode)
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_160 &&
             g_in_packet_buf[1]==SET_AE_METERING_MODE_160 &&
             g_in_packet_buf[6]==SET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << "value set" << meterMode;
             return true;
         }
     }
@@ -804,7 +785,6 @@ bool See3CAM_160::getAWBlockstatus()
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_160 &&
             g_in_packet_buf[1]==GET_AWB_LOCKSTATUS_160 &&
             g_in_packet_buf[6]==GET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << g_in_packet_buf[2];
             emit awbLockStatusChanged(g_in_packet_buf[2]);
             return true;
         }
@@ -840,7 +820,6 @@ bool See3CAM_160::setAWBlockstatus(awbLockStatus lockStatus)
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_160 &&
             g_in_packet_buf[1]==SET_AWB_LOCKSTATUS_160 &&
             g_in_packet_buf[6]==SET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << "value set" << lockStatus;
             return true;
         }
     }
@@ -873,7 +852,6 @@ bool See3CAM_160::getAWBpresetMode()
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_160 &&
             g_in_packet_buf[1]==GET_AWB_MODE_160 &&
             g_in_packet_buf[6]==GET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << g_in_packet_buf[2];
             emit awbPresetModeChanged(g_in_packet_buf[2]);
             return true;
         }
@@ -909,7 +887,6 @@ bool See3CAM_160::setAWBpresetMode(awbPresetMode awbMode)
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_160 &&
             g_in_packet_buf[1]==SET_AWB_MODE_160 &&
             g_in_packet_buf[6]==SET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << "value set" << awbMode;
             return true;
         }
     }
@@ -980,16 +957,13 @@ bool See3CAM_160::setToDefault(){
     // send request and get reply from camera
     if(uvc.sendHidCmd(g_out_packet_buf, g_in_packet_buf, BUFFER_LENGTH)){
         if (g_in_packet_buf[6]==SET_FAIL) {
-             qDebug() << Q_FUNC_INFO << "false";
             return false;
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_160 &&
             g_in_packet_buf[1]==SET_TO_DEFAULT_160 &&
             g_in_packet_buf[6]==SET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO;
             return true;
         }
     }
-    qDebug() << Q_FUNC_INFO << "false";
     return false;
 }
 
@@ -1020,7 +994,6 @@ bool See3CAM_160::setBurstLength(uint burstLength){
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_160 &&
             g_in_packet_buf[1]==SET_BURST_LENGTH_160 &&
             g_in_packet_buf[6]==SET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << "value set" << burstLength;
             return true;
         }
     }
@@ -1053,7 +1026,6 @@ bool See3CAM_160::getBurstLength()
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_160 &&
             g_in_packet_buf[1]==GET_BURST_LENGTH_160 &&
             g_in_packet_buf[6]==GET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << g_in_packet_buf[2];
             emit burstLengthValue(g_in_packet_buf[2]);
             return true;
         }

@@ -653,7 +653,7 @@ bool uvccamera::getUniqueId() {
         _text = tr("Device not available");
         return false;
     }
-    /* Read the Firmware Version from the device */
+    /* Read the Unique id from the device */
     start = getTickCount();
     while(timeout)
     {

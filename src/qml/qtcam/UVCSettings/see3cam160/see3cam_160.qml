@@ -18,6 +18,7 @@ Item {
     property int aeMeteringMode
     property int  manualLensPosMode
     property int  cafScanRangeMode
+    property int awbPresetAutoMode: 8
     // Flags to prevent setting values in camera when getting the values from camera
     property bool skipUpdateUIQFactor : false
     property bool skipUpdateUIFlickerMode:false
@@ -80,19 +81,7 @@ Item {
         }
 
         onAutoWhiteBalanceSelected:{
-//            if(autoWhiteBalanceSelect){
-//                awbLock.enabled = true
-//                awbLock.opacity = 1
-//                awbPresetModeText.opacity = 1
-//                awbPresetsCombo.enabled = true
-//                awbPresetsCombo.opacity = 1
-//            }else{
-//                awbLock.enabled = false
-//                awbLock.opacity = 0.1
-//                awbPresetModeText.opacity = 0.1
-//                awbPresetsCombo.enabled = false
-//                awbPresetsCombo.opacity = 0.1
-//            }
+
         }
 
         onAutoFocusSelected:{
@@ -146,12 +135,24 @@ Item {
                     Keys.onReturnPressed: {
                         see3cam160.setAWBlockstatus(awbLock.checked)
                     }
+                    onCheckedChanged: {
+                        if(checked)
+                        {
+                            awbPresetsCombo.enabled = false
+                            awbPresetsCombo.opacity = 0.1
+                        }
+                        else
+                        {
+                            awbPresetsCombo.enabled = true
+                            awbPresetsCombo.opacity = 1
+                        }
+                    }
                 }
                 ComboBox
                 {
                     id: awbPresetsCombo
+                    opacity: awbLock.checked ? 0.1 : 1
                     enabled: true
-                    opacity: 1
                     model: ListModel {
                         ListElement { text: "Cloudy" }
                         ListElement { text: "DayLight" }
@@ -169,7 +170,7 @@ Item {
                         if(skipUpdateUIAWbPreset){
                             // combo index starts from 0. AWB preset values start from 1.  So Add 1 to set the AWB preset mode
                             see3cam160.setAWBpresetMode(awbPresetsCombo.currentIndex + 1)
-                            if(awbPresetsCombo.currentIndex == 8)               //Auto mode
+                            if(awbPresetsCombo.currentIndex == awbPresetAutoMode)               //Auto mode
                                 root.disableAwb(true)
                             else
                                 root.disableAwb(false)
@@ -249,6 +250,18 @@ Item {
                     Keys.onReturnPressed:{
                         see3cam160.setAFlockstatus(afLock.checked)
                     }
+                    onCheckedChanged: {
+                        if(checked)
+                        {
+                            cafScanRangeCombo.enabled = false
+                            cafScanRangeCombo.opacity = 0.1
+                        }
+                        else
+                        {
+                            cafScanRangeCombo.enabled = true
+                            cafScanRangeCombo.opacity = 1
+                        }
+                    }
                 }
 
                 Text {
@@ -257,8 +270,8 @@ Item {
                     font.pixelSize: 14
                     font.family: "Ubuntu"
                     color: "#ffffff"
-                    enabled: afLock.enabled ? true : false
-                    opacity: enabled ? 1 : 0.1
+                    opacity: afLock.checked ? 0.1 : 1
+                    enabled: true
                 }
 
                 ComboBox
@@ -404,6 +417,18 @@ Item {
                     Keys.onReturnPressed: {
                         see3cam160.setAElockstatus(aeLock.checked)
                     }
+                    onCheckedChanged: {
+                        if(checked)
+                        {
+                            aeMeteringModeCombo.enabled = false
+                            aeMeteringModeCombo.opacity = 0.1
+                        }
+                        else
+                        {
+                            aeMeteringModeCombo.enabled = true
+                            aeMeteringModeCombo.opacity = 1
+                        }
+                    }
                 }
                 ComboBox
                 {
@@ -523,9 +548,9 @@ Item {
                         id:serial_no_selected
                         opacity: 1
                         activeFocusOnPress : true
-                        text: "Serial Number"
+                        text: "SerialNo"
                         action: serialNumber
-                        tooltip: "Click to view the Unique ID"
+                        tooltip: "Click to view the Serial Number"
                         style: econButtonStyle
                         Keys.onReturnPressed: {
                             getSerialNumber()
@@ -1124,7 +1149,7 @@ Item {
         onAwbPresetModeChanged: {
             skipUpdateUIAWbPreset = false
             awbPresetsCombo.currentIndex = awbMode - 1
-            if(awbPresetsCombo.currentIndex == 8)               //Auto mode
+            if(awbPresetsCombo.currentIndex == awbPresetAutoMode)               //Auto mode
                 root.disableAwb(true)
             else
                 root.disableAwb(false)

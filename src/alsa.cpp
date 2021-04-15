@@ -18,7 +18,7 @@ Alsa::~Alsa()
  * @return -ve if failure, 0 if success
  */
 int Alsa::initializeMixer(QString cardName){
-    qDebug() << Q_FUNC_INFO;
+
     int err;
     QByteArray ba = cardName.toLocal8Bit(); // QString to QBytearray
     const char *card = ba.data(); // QBytearray to const char *
@@ -57,12 +57,8 @@ int Alsa::initializeMixer(QString cardName){
 
     for (cap_elem = snd_mixer_first_elem(mixer); cap_elem; cap_elem = snd_mixer_elem_next(cap_elem))
     {
-         qDebug() << cap_elem;
-               if(strcmp (snd_mixer_selem_get_name(cap_elem), "Capture") == 0)
-               {
-                   qDebug() << Q_FUNC_INFO << "inside cap_Elem break";
+               if(strcmp (snd_mixer_selem_get_name (cap_elem), "Capture") == 0)
                      break;
-               }
     }
 
     return 0;
@@ -109,21 +105,18 @@ int Alsa::setAlsaVolume(long volume)
  */
 int Alsa::setAlsaMute(bool mute)
 {
-    qDebug() << Q_FUNC_INFO << "mute:"<<mute;
+
     int err;
 
     if(mixer == NULL){
-        qDebug() << "inside mixer return";
         return -1;
     }
 
     if(cap_elem == NULL){
-        qDebug() << "inside capelem null";
         return -1;
     }
 
     if (snd_mixer_selem_has_capture_switch(cap_elem)) {
-        qDebug() << "inside snd_mixer";
         if(mute){            
             err=snd_mixer_selem_set_capture_switch_all(cap_elem, 0);
         }else{             
@@ -135,7 +128,6 @@ int Alsa::setAlsaMute(bool mute)
             return err;
         }
     }
-    qDebug() << "end of"<<Q_FUNC_INFO;
     return 0;
 }
 
@@ -164,7 +156,7 @@ int Alsa::getMuteStatus()
         qDebug()<<"Failed to get capture mute status:"<<err;
         return err;
     }
-    qDebug() << Q_FUNC_INFO << value;
+
     return value;
 }
 
