@@ -618,6 +618,7 @@ bool See3CAM_160::setFlickerMode(camFlickerMode flickerMode)
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_160 &&
             g_in_packet_buf[1]==SET_FLICKER_DETECTION_160 &&
             g_in_packet_buf[6]==SET_SUCCESS) {
+
             return true;
         }
     }
@@ -686,6 +687,7 @@ bool See3CAM_160::setAElockstatus(aeLockStatus lockStatus)
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_160 &&
             g_in_packet_buf[1]==SET_AE_LOCK_STATUS_160 &&
             g_in_packet_buf[6]==SET_SUCCESS) {
+
             return true;
         }
     }
@@ -753,6 +755,7 @@ bool See3CAM_160::setAEMeterMode(aeMeteringMode meterMode)
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_160 &&
             g_in_packet_buf[1]==SET_AE_METERING_MODE_160 &&
             g_in_packet_buf[6]==SET_SUCCESS) {
+
             return true;
         }
     }
@@ -887,6 +890,7 @@ bool See3CAM_160::setAWBpresetMode(awbPresetMode awbMode)
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_160 &&
             g_in_packet_buf[1]==SET_AWB_MODE_160 &&
             g_in_packet_buf[6]==SET_SUCCESS) {
+
             return true;
         }
     }

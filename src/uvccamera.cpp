@@ -662,7 +662,6 @@ bool uvccamera::getUniqueId() {
         if (ret < 0) {
         } else {
             if(g_in_packet_buf[0] == GETCAMERA_UNIQUEID) {
-                qDebug() << g_in_packet_buf[1] << g_in_packet_buf[2] << g_in_packet_buf[3] << g_in_packet_buf[4];
                 uniqueId.sprintf("%02x%02x%02x%02x",g_in_packet_buf[1],g_in_packet_buf[2],g_in_packet_buf[3],g_in_packet_buf[4]);
                 timeout = false;
             }

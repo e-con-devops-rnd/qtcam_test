@@ -19,6 +19,7 @@ Item {
     property int  manualLensPosMode
     property int  cafScanRangeMode
     property int awbPresetAutoMode: 8
+    property int afLockON : 0x01
     // Flags to prevent setting values in camera when getting the values from camera
     property bool skipUpdateUIQFactor : false
     property bool skipUpdateUIFlickerMode:false
@@ -804,7 +805,6 @@ Item {
         see3cam160.getAFlockstatus()
         see3cam160.getManualLensPositionMode()
         see3cam160.getAFstatus()
-        see3cam160.getAutoFocusROIMode()
         see3cam160.getBurstLength()
     }
 
@@ -1076,7 +1076,7 @@ Item {
        }
 
         onAfLockStatusChanged: {
-            if(lockStatus==0x01)
+            if(lockStatus==afLockON)
             {
                 afLock.checked = true
             }
