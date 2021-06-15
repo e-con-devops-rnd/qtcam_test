@@ -648,6 +648,7 @@ Item {
             see3cam160.setAFstatus(See3cam160.AF_OFF)
             root.disableAutoFocus(true)
         }
+	see3cam160.getAFlockstatus()
     }
 
     function setToDefaultValues(){
@@ -794,10 +795,10 @@ Item {
     }
 
     function getValuesFromCamera(){
+        see3cam160.getAEMeterMode()
         see3cam160.getAutoFocusMode()
         see3cam160.getAWBpresetMode()
         see3cam160.getAWBlockstatus()
-        see3cam160.getAEMeterMode()
         see3cam160.getAElockstatus()
         see3cam160.getFlickerMode()
         see3cam160.getQFactor()

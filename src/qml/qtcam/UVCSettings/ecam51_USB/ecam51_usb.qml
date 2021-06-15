@@ -12,6 +12,7 @@ Item
 //    width:268
 //    height:750
     property int selectedDevice;
+    property bool skipUpdateUIAFStatus : false;
 
     Action
     {
@@ -40,6 +41,13 @@ Item
             stillImageFormat.push("raw")
             stillImageFormat.push("png")
             root.insertStillImageFormat(stillImageFormat);
+        }
+	onExtensionTabVisible:
+        {
+            if(visible)
+            {
+                ecam51USBId.rungetAFStatus()
+            }
         }
     }
     ScrollView
@@ -108,6 +116,7 @@ Item
                         auto_focus_grid.opacity = 1
                         maualFocus_grid.enabled = false
                         maualFocus_grid.opacity = 0.1
+                        autofocus_txt_field.text = ""
                       }
                     Keys.onReturnPressed:  {
                         ecam51USBId.selectFocusMode(Ecam51USB.SINGLE_TRIGGER_AUTO_FOCUS_SELECT)
@@ -115,6 +124,7 @@ Item
                         auto_focus_grid.opacity = 1
                         maualFocus_grid.enabled = false
                         maualFocus_grid.opacity = 0.1
+                        autofocus_txt_field.text = ""
                     }
                 }
             }
@@ -138,13 +148,13 @@ Item
                         onClicked:
                         {
                             ecam51USBId.selectFocusMode(Ecam51USB.SINGLE_TRIGGER_AUTO_FOCUS_SELECT)
-                            ecam51USBId.rungetAFStatus()
+                            autofocus_txt_field.text = ""
                         }
 
                         Keys.onReturnPressed:
                         {
                             ecam51USBId.selectFocusMode(Ecam51USB.SINGLE_TRIGGER_AUTO_FOCUS_SELECT)
-                            ecam51USBId.rungetAFStatus()
+                            autofocus_txt_field.text = ""
                         }
                     }
                     Button
@@ -220,7 +230,7 @@ Item
                     {
                         id: manualfocusSlider_textfield
                         text: manualfocusSlider.value
-                        font.pixelSize: 10
+                        font.pixelSize: 11
                         font.family: "Ubuntu"
                         smooth: true
                         horizontalAlignment: TextInput.AlignHCenter
@@ -480,7 +490,11 @@ Item
                 auto_focus_grid.opacity = 1
                 maualFocus_grid.enabled = false
                 maualFocus_grid.opacity = 0.1
-                autofocus_txt_field.text =(AFStatus === Ecam51USB.AF_SINGLE_TRIGGER_FOCUSED)?"Focused":"Focusing"
+                if(skipUpdateUIAFStatus)
+                {
+                    autofocus_txt_field.text =(AFStatus === Ecam51USB.AF_SINGLE_TRIGGER_FOCUSED)?"Focused":"Focusing"
+                }
+                skipUpdateUIAFStatus = true;
             }
         }
         onManualFocusPosition:
@@ -695,9 +709,9 @@ Item
         interval: 500
         onTriggered:
         {
-            ecam51USBId.rungetAFStatus()
             ecam51USBId.getGPIStatus()
             ecam51USBId.getFocusPosition()
+            ecam51USBId.rungetAFStatus()
             stop()
         }
     }
