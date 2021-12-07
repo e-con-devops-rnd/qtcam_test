@@ -86,6 +86,16 @@ Item {
         }
     }
 
+    Timer {
+        id:getFrameRateCtrlValueTimer
+        interval: 500
+        onTriggered:
+        {
+            see3cam30.getFrameRateCtrlValue()
+            stop()
+        }
+    }
+
     ScrollView{
         id: scrollview
         x: 10
@@ -495,11 +505,11 @@ Item {
                     style: econRadioButtonStyle
                     opacity: enabled ? 1 : 0.1
                     onClicked: {
-                        see3cam30.setROIAutoExposure(See3Cam30.AutoExpManual, 0, 0, 0, 0, 0);
+                        see3cam30.setROIAutoExposure(See3Cam30.AutoExpManual, 0, 0, 0, 0, autoExpoWinSizeCombo.currentText);
                         autoExpoWinSizeCombo.enabled = true
                     }
                     Keys.onReturnPressed: {
-                        see3cam30.setROIAutoExposure(See3Cam30.AutoExpManual, 0, 0, 0, 0, 0);
+                        see3cam30.setROIAutoExposure(See3Cam30.AutoExpManual, 0, 0, 0, 0, autoExpoWinSizeCombo.currentText);
                         autoExpoWinSizeCombo.enabled = true
                     }
                 }
@@ -664,6 +674,73 @@ Item {
                     onTextChanged: {
                         if(text.length > 0){
                             qFactorSlider.value = qFactorTextField.text
+                        }
+                    }
+                }
+            }
+            Text{
+                id: flashCtrlText
+                x: 85
+                y: 200
+                text: "--- Flash Control ---"
+                font.pixelSize: 14
+                font.family: "Ubuntu"
+                color: "#ffffff"
+                smooth: true
+                Layout.alignment: Qt.AlignCenter
+                opacity: 0.50196078431373
+            }
+
+            RowLayout{
+                x:25
+                y:230
+                spacing: 25
+                ExclusiveGroup { id: flashGrp }
+                Column{
+                    RadioButton {
+                        exclusiveGroup: flashGrp
+                        checked: false
+                        id: flashModeStrobe
+                        text: "Strobe"
+                        activeFocusOnPress: true
+                        style: econRadioButtonStyle
+                        onClicked: {
+                            see3cam30.setFlashState(See3Cam30.FLASHMODE_STROBE)
+                        }
+                        Keys.onReturnPressed: {
+                            see3cam30.setFlashState(See3Cam30.FLASHMODE_STROBE)
+                        }
+                    }
+                }
+                Column{
+                    RadioButton {
+                        exclusiveGroup: flashGrp
+                        checked: false
+                        id: flashModeTorch
+                        text: "Torch"
+                        activeFocusOnPress: true
+                        style: econRadioButtonStyle
+                        onClicked: {
+                            see3cam30.setFlashState(See3Cam30.FLASHMODE_TORCH)
+                        }
+                        Keys.onReturnPressed: {
+                            see3cam30.setFlashState(See3Cam30.FLASHMODE_TORCH)
+                        }
+                    }
+                }
+                Column{
+                    RadioButton {
+                        exclusiveGroup: flashGrp
+                        checked: false
+                        id: flashModeOff
+                        text: "OFF"
+                        activeFocusOnPress: true
+                        style: econRadioButtonStyle
+                        onClicked: {
+                            see3cam30.setFlashState(See3Cam30.FLASHMODE_OFF)
+                        }
+                        Keys.onReturnPressed: {
+                            see3cam30.setFlashState(See3Cam30.FLASHMODE_OFF)
                         }
                     }
                 }
@@ -1217,6 +1294,19 @@ Item {
                 }
             }
         }
+        onFlashModeValue:{
+            switch(flashMode){
+            case See3Cam30.FLASHMODE_TORCH:
+                flashModeTorch.checked = true
+                break;
+            case See3Cam30.FLASHMODE_STROBE:
+                flashModeStrobe.checked = true
+                break;
+            case See3Cam30.FLASHMODE_OFF:
+                flashModeOff.checked = true
+                break;
+            }
+        }
         
     }
 
@@ -1249,7 +1339,8 @@ Item {
         see3cam30.getExposureCompensation()
         see3cam30.getFaceDetectMode()
         see3cam30.getSmileDetectMode()
-        see3cam30.getFrameRateCtrlValue()
+        getFrameRateCtrlValueTimer.start()
+        see3cam30.getFlashState()
     }
 
     function displayMessageBox(title, text){
@@ -1338,6 +1429,7 @@ Item {
         see3cam30.getSceneMode()
         see3cam30.getExposureCompensation()
         see3cam30.getFrameRateCtrlValue()
+        see3cam30.getFlashState()
         defaultValue.enabled = true
     }
 

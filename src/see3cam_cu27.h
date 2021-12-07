@@ -4,7 +4,7 @@
 #include <QObject>
 #include "uvccamera.h"
 
-#define CAMERA_CONTROL_CU27          0xAD
+#define CAMERA_CONTROL_CU27          0xAF
 
 #define SET_FAIL                    0x00
 #define SET_SUCCESS                 0x01
@@ -32,6 +32,9 @@
 
 #define GET_BURST_LENGTH_CU27        0x1A
 #define SET_BURST_LENGTH_CU27        0x1B
+
+#define GET_DENOISE_MODE_CU27        0x1C
+#define SET_DENOISE_MODE_CU27        0x1D
 
 #define MAX_WINDOW_SIZE             8
 
@@ -96,6 +99,12 @@ public:
     };
     Q_ENUMS(camFlickerMode)
 
+    enum denoiseModes {
+        DenoiseDisable = 0x00,
+        DenoiseEnable = 0x01
+    };
+    Q_ENUMS(denoiseModes)
+
     QString _title;
     QString _text;
 
@@ -108,6 +117,8 @@ signals:
     void aeLockStatusChanged(uint lockStatus);
     void aeMeterModeChanged(uint meterMode);
     void burstLengthValue(uint burstLength);
+    void denoiseModeChanged(uint denoiseMode);
+
 
 public slots:
 
@@ -134,6 +145,9 @@ public slots:
 
     bool setBurstLength(uint burstLength);
     bool getBurstLength();
+
+    bool setDenoiseCtrlMode(denoiseModes deNoiseMode);
+    bool getDenoiseCtrlMode();
 };
 
 #endif // SEE3CAM_CU27_H
