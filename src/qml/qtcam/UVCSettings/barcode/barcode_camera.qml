@@ -916,7 +916,6 @@ Item {
                     activeFocusOnPress : true
                     text: "Save Settings"
                     tooltip: "Click to save settings in extension controls"
-                    action: setDefault
                     style: econButtonStyle
                     onClicked: {
                         barcodecam.saveSettings()

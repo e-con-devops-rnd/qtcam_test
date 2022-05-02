@@ -95,6 +95,9 @@ Then double click the downloaded binary and install it to your local system.
 
  In ubuntu 18.04,
  $sudo apt-get install libv4l-dev libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libavresample-dev libudev-dev libavcodec-extra qt5-default qtdeclarative5-dev freeglut3 freeglut3-dev libjpeg-turbo8-dev libusb-1.0-0-dev libusb-dev libevdev-dev libpulse-dev qtmultimedia5-dev qtdeclarative5-window-plugin qml-module-qtquick-controls qml-module-qtquick-dialogs qml-module-qtquick-extras qml-module-qtquick-privatewidgets qtdeclarative5-qtquick2-plugin libasound2-dev libturbojpeg0-dev qtquickcontrols5-doc g++-5 lsb-release
+ 
+  In ubuntu 20.04,
+ $sudo apt-get install libv4l-dev libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libavresample-dev libudev-dev libavcodec-extra qt5-default qtdeclarative5-dev freeglut3 freeglut3-dev libjpeg-turbo8-dev libusb-1.0-0-dev libusb-dev libevdev-dev libpulse-dev qtmultimedia5-dev qml-module-qtquick-controls qml-module-qtquick-dialogs qml-module-qtquick-extras qml-module-qtquick-privatewidgets libasound2-dev libturbojpeg0-dev qtquickcontrols5-doc g++ g++-10 lsb-release
 
 
 3.3 Build the application
