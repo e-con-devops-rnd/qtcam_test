@@ -7,6 +7,9 @@
 
 #define CAMERA_CONTROL_NILECAM20_USB 0xB9
 
+#define EXPOSURECOMP_MIN 8000
+#define EXPOSURECOMP_MAX 1000000
+
 #define GET_SENSOR_MODE_NILECAM20_USB 0x01
 #define SET_SENSOR_MODE_NILECAM20_USB 0x02
 
@@ -26,7 +29,6 @@
 #define VERTICAL_FLIP_NILECAM20_USB 0x02
 #define HORIZONTAL_MIRROR_NILECAM20_USB 0x03
 #define ROTATE_NILECAM20_USB 180
-
 
 #define GET_STROBE_MODE_NILECAM20_USB 0x0B
 #define SET_STROBE_MODE_NILECAM20_USB 0x0C
@@ -63,147 +65,139 @@ private:
 
     void initializeBuffers();
 
+    NILECAM20_USB();
+
 public:
-    enum camROIAutoExpMode {
-        Centered = 0x01,
-        Manual = 0x02
+    enum ROIAutoExpMode {
+        CENTERED = 0x01,
+        AUTO_EXP_MANNUAL = 0x02
     };
-    Q_ENUMS(camROIAutoExpMode)
+    Q_ENUMS(ROIAutoExpMode)
 
-    enum GetSpecialEffect{
-        NormalMode=0x01,
-        GrayscaleMode=0x02
+    enum specialModes {
+        SPECIAL_NORMAL = 0x01,
+        SPECIAL_GREYSCALE  = 0x02
     };
-    Q_ENUMS(GetSpecialEffect)
+    Q_ENUMS(specialModes)
 
-    enum SetSpecialEffect{
-        NormalMode=0x01,
-        GrayscaleMode=0x02
-    };
-    Q_ENUMS(SetSpecialEffect)
-
-    enum GetOrientation{
+    enum Orientation{
         Normal = 0x01,
         VerticalFlip=0x02,
         HorizontalMirror=0x03,
         Rotate180 =0x04
     };
-    Q_ENUMS(GetOrientation)
+    Q_ENUMS(Orientation)
 
-    enum SetOrientation{
-        Normal =0x01,
-        VerticalFlip=0x02,
-        HorizontalMirror=0x03,
-        Rotate180 =0x04
+    enum strobeValues{
+        FLASH_FOR_VIDEO_STREAMING = 0x01,
+        FLASH_FOR_EXT_STILL_TRIGGER = 0x02,
+        TORCH =0x03,
+        OFF =0x04
     };
-    Q_ENUMS(SetOrientation)
+    Q_ENUMS(strobeValues)
 
-
-    enum GetStrobe{
-        FlashForVideoStreaming = 0x01,
-        FlashForExtStillTrigger = 0x02,
-        Torch =0x03,
-        Off =0x04
+    enum ColorKillValue{
+        ColorKillValue = 0x0D
     };
-    Q_ENUMS(GetStrobe)
+    Q_ENUMS(ColorKillValue)
 
-    enum SetStrobe{
-        FlashForVideoStreaming = 0x01,
-        FlashForExtStillTrigger = 0x02,
-        Torch =0x03,
-        Off =0x04
+    enum ImageCapture{
+        ImageBurst = 0x0F
     };
-    Q_ENUMS(SetStrobe)
+    Q_ENUMS(ImageCapture)
 
-    enum GetColorKillValue{
-        getColorKillValue = 0x0D
-    };
-    Q_ENUMS(GetColorKillValue)
-
-    enum SetColorKillValue{
-        getColorKillValue = 0x0E
-    };
-    Q_ENUMS(SetColorKillValue)
-
-    enum GetImageCapture{
-        getImageBurst = 0x0F
-    };
-    Q_ENUMS(GetImageCapture)
-
-    enum SetImageCapture{
-        setImageBurst = 0x10
-    };
-    Q_ENUMS(SetImageCapture)
-
-    enum GetFlickerMode{
-        Auto =0x01,
+    enum FlickerMode{
+        FlickerAuto =0x01,
         Manual50Hz = 0x02,
         Manual60Hz = 0x03
     };
-    Q_ENUMS(GetFlickerMode)
+    Q_ENUMS(FlickerMode)
 
-    enum SetFlickerMode{
-        Auto =0x01,
-        Manual50Hz = 0x02,
-        Manual60Hz = 0x03
-    };
-    Q_ENUMS(SetFlickerMode)
-
-
-    enum GetLSCModes{
-        Auto = 0x01,
+    enum lscModes {
+        LSCModesAuto = 0x01,
         DayLight = 0x02,
         CWFLight =0x03,
         ALight = 0x04
     };
-    Q_ENUMS(GetLSCModes)
+    Q_ENUMS(lscModes)
 
-    enum SetLSCModes{
-        Auto = 0x01,
-        DayLight = 0x02,
-        CWFLight =0x03,
-        ALight = 0x04
-    };
-    Q_ENUMS(SetLSCModes)
-
-    enum GetDenoise{
+    enum Denoise{
         Enable = 0x01,
         Disable = 0x02
     };
-    Q_ENUMS(GetDenoise)
+    Q_ENUMS(Denoise)
 
-    enum SetDenoise{
-        Enable = 0x01,
-        Disable = 0x02
+
+    enum ExposureCompensation{
+        ExposureCompensation = 0x17
     };
-    Q_ENUMS(SetDenoise)
+    Q_ENUMS(ExposureCompensation)
 
 
-    enum camExposureCompensation{
-        GetExposureCompensation = 0x17
+    enum sensorModes {
+        SENSOR_STANDARD = 0x01,
+        SENSOR_HDR  = 0x02
     };
-    Q_ENUMS(camExposureCompensation)
+    Q_ENUMS(sensorModes)
 
-    enum SetExposureCompensation{
-       setExposureCompensation = 0x18
+    enum cameraModes {
+        CAMERA_MASTER = 0x01,
+        CAMERA_SLAVE  = 0x02
     };
-    Q_ENUMS(setExposureCompensation)
+    Q_ENUMS(cameraModes)
 
-
-
+    signals:
+        void sensorModeReceived(int effectMode);
+        void cameraModeReceived(int cameraModes);
+        void specialEffectMode(int effectMode);
+        void flipMirrorModeChanged(int flipMirrorMode);
+        void strobeModeChanged(int strobeValues);
+        void sendDenoiseValue(int denoiseValue);
+        void indicateCommandStatus(QString title, QString text);
+        void exposureCompValueReceived(int exposureCompensation);
+        void burstLengthValue(int burstLength);
+        void colorKillValueChanged(int ColorKillValue);
+        void roiAutoExpModeValue(int roiMode, int winSize);
+        void lscModeChanged(int lscMode);
+        void flickerDetectionMode(int flickerMode);
+        void indicateExposureValueRangeFailure(QString title, QString text);
 
     public slots:
-        bool setDenoiseValueNileCam20USB(int deNoiseVal);
+        bool setDenoiseCtrlMode(int deNoiseVal);
         bool getDenoiseValueNileCam20USB();
 
-        bool setSpecialEffectsNileCam20USB(const specialEffects &specialEffect);
+        bool setSpecialMode(specialModes specialEffect);
         bool getSpecialEffectsNileCam20USB();
 
-        bool setExpRoiModeNileCam20USB(camROIAutoExpMode see3camAutoexpROIMode, uint vidResolnWidth, uint vidResolnHeight, uint xCord, uint yCord, QString winSize);
-        bool getExpRoiModeNileCam20USB();
+        bool getStrobeModeNileCam20USB();
+        bool setStrobeModeNileCam20USB(strobeValues strobeMode);
 
-        bool setExposureCompensationNileCam20USB(unsigned int exposureCompValue);
-        bool getExposureCompensationNileCam20USB();
+        bool setROIAutoExposure(ROIAutoExpMode see3camAutoexpROIMode, uint vidResolnWidth, uint vidResolnHeight, uint xCord, uint yCord, QString winSize);
+        bool getAutoExpROIModeAndWindowSize();
+
+        bool setSensorMode(sensorModes sensorMode);
+        bool getSensorModeNileCam20USB();
+
+        bool setCameraMode(cameraModes cameraMode);
+        bool getCameraModeNileCam20USB();
+
+        bool setOrientation(int orientationMode);
+        bool getOrientation();
+
+        bool getImageCaptureNileCam20USB();
+        bool setBurstLength(int burstLength);
+
+        bool setExposureCompensation(unsigned int exposureCompValue);
+        bool getExposureCompensation();
+
+        bool getColourKillModeNileCam20USB();
+        bool setColourKill(uint colourKillValue);
+
+        bool getFlickerModeNileCam20USB();
+        bool setAntiFlickerMode(FlickerMode flickerMode);
+
+        bool setLSCMode(lscModes lscMode);
+        bool getLSCModeNileCam20USB();
 
         bool restoreDefaultNileCam20USB();
 
