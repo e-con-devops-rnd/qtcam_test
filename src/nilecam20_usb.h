@@ -165,7 +165,7 @@ public:
         bool setCameraMode(cameraModes cameraMode);
         bool getCameraMode();
 
-        bool setROIAutoExposure(ROIAutoExpMode see3camAutoexpROIMode, uint vidResolnWidth, uint vidResolnHeight, uint xCord, uint yCord, QString winSize);
+        bool setROIAutoExposure(ROIAutoExpMode AutoexpROIMode, uint vidResolnWidth, uint vidResolnHeight, uint xCord, uint yCord, QString winSize);
         bool getROIAutoExposure();
 
         bool setSpecialMode(specialModes specialEffect);

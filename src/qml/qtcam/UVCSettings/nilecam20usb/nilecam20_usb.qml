@@ -1,4 +1,4 @@
-/*
+﻿/*
  * uvc_cu30.qml -- extension settings for other cameras
  * Copyright © 2015  e-con Systems India Pvt. Limited
  *
@@ -276,6 +276,7 @@ Item {
                     opacity: 0.50196078431373
                 }
                 Grid{
+                    ExclusiveGroup { id: flipModeInputGroup }
                     columns:2
                     spacing: 40
 
@@ -283,6 +284,7 @@ Item {
                         id: flipNormal
                         activeFocusOnPress : true
                         text: "Normal"
+                        exclusiveGroup: flipModeInputGroup
                         style: econCheckBoxStyle
                         onClicked:{
                             defaultValue.enabled = true
@@ -297,6 +299,7 @@ Item {
                         id: flipCtrlHorizotal
                         activeFocusOnPress : true
                         text: "Horizontal"
+                        exclusiveGroup: flipModeInputGroup
                         style: econCheckBoxStyle
                         onClicked:{
                             defaultValue.enabled = true
@@ -312,6 +315,7 @@ Item {
                         activeFocusOnPress : true
                         text: "Vertical"
                         style: econCheckBoxStyle
+                        exclusiveGroup: flipModeInputGroup
                         onClicked:{
                             defaultValue.enabled = true
                             nilecam20usb.setOrientation(NileCam20_USB.VerticalFlip)
@@ -327,6 +331,7 @@ Item {
                         activeFocusOnPress : true
                         text: "Rotate180"
                         style: econCheckBoxStyle
+                        exclusiveGroup: flipModeInputGroup
                         onClicked:{
                             defaultValue.enabled = true
                             nilecam20usb.setOrientation(NileCam20_USB.Rotate180)
@@ -497,7 +502,7 @@ Item {
                         skipUpdateUIOnExpWindowSize = true
                     }
                 }
-                // Added by Sankari: 14 Feb 2018 - Added exposure compensation
+
 
                 Text {
                     id: exposureCompTextTitle
@@ -645,10 +650,10 @@ Item {
                         exclusiveGroup: denoiseControlGroup
                         activeFocusOnPress: true
                         onClicked: {
-                            nilecam20usb.setDenoiseCtrlMode(NileCam20_USB.denoiseEnable)
+                            nilecam20usb.setDenoiseCtrlMode(NileCam20_USB.DenoiseEnable)
                         }
                         Keys.onReturnPressed: {
-                            nilecam20usb.setDenoiseCtrlMode(NileCam20_USB.denoiseEnable)
+                            nilecam20usb.setDenoiseCtrlMode(NileCam20_USB.DenoiseEnable)
                         }
                     }
                     RadioButton {
