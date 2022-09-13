@@ -49,7 +49,7 @@ Item {
         id:autoExpROITimer
         interval: 2000
         onTriggered: {
-            nilecam20usb.getAutoExpROIModeAndWindowSize()
+            nilecam20usb.getROIAutoExposure()
         }
     }
 
@@ -347,16 +347,15 @@ Item {
                     Layout.alignment: Qt.AlignCenter
                     opacity: 0.50196078431373
                 }
-                Grid{
-                    columns: 2
-                    spacing: 15
+                ColumnLayout{
+                    spacing: 10
                     ExclusiveGroup { id: strobesGrp }
 
                     RadioButton {
                         exclusiveGroup: strobesGrp
                         checked: false
                         id: strobeFlashVidoStreaming
-                        text: "Flash for Video Streaming"
+                        text: "Flash For Video Streaming"
                         activeFocusOnPress: true
                         style: econRadioButtonStyle
                         onClicked: {
@@ -373,7 +372,7 @@ Item {
                         exclusiveGroup: strobesGrp
                         checked: false
                         id: strobeStillTrigger
-                        text: "StillTrigger"
+                        text: "Still Trigger"
                         activeFocusOnPress: true
                         style: econRadioButtonStyle
                         onClicked: {
@@ -414,7 +413,6 @@ Item {
                         }
                     }
                 }
-
 
                 Text {
                     id: roiAutoExpMode
@@ -647,10 +645,10 @@ Item {
                         exclusiveGroup: denoiseControlGroup
                         activeFocusOnPress: true
                         onClicked: {
-                            nilecam20usb.setDenoiseCtrlMode(NileCam20_USB.Enable)
+                            nilecam20usb.setDenoiseCtrlMode(NileCam20_USB.denoiseEnable)
                         }
                         Keys.onReturnPressed: {
-                            nilecam20usb.setDenoiseCtrlMode(NileCam20_USB.Enable)
+                            nilecam20usb.setDenoiseCtrlMode(NileCam20_USB.denoiseEnable)
                         }
                     }
                     RadioButton {
@@ -660,10 +658,10 @@ Item {
                         exclusiveGroup: denoiseControlGroup
                         activeFocusOnPress: true
                         onClicked: {
-                            nilecam20usb.setDenoiseCtrlMode(NileCam20_USB.Disable)
+                            nilecam20usb.setDenoiseCtrlMode(NileCam20_USB.DenoiseDisable)
                         }
                         Keys.onReturnPressed: {
-                            nilecam20usb.setDenoiseCtrlMode(NileCam20_USB.Disable)
+                            nilecam20usb.setDenoiseCtrlMode(NileCam20_USB.DenoiseDisable)
                         }
                     }
                 }
@@ -1018,85 +1016,82 @@ Item {
 
     NileCam20_USB {
         id: nilecam20usb
-        //        onDenoiseModeChanged:{
-        //            if(denoiseMode == nilecam20usb.DenoiseEnable){
-        //                denoiseEnable.checked = true
-        //            }else if(denoiseMode == nilecam20usb.DenoiseDisable){
-        //                denoiseDisable.checked = true
-        //            }
-        //        }
+             onSensorModeReceived:{
+                  if(sensorModes == NileCam20_USB.SENSOR_STANDARD){
+                        sensorStandard.checked = true
+                        exposureCompSlider.enabled = true
+                        exposureCompSlider.opacity = 1
+                        exposureCompTextValue.opacity = 1
+                  }else if(sensorModes == NileCam20_USB.SENSOR_HDR){
+                        sensorHdrDlo.checked = true
+                        exposureCompSlider.enabled = false
+                        exposureCompSlider.opacity = 0.1
+                        exposureCompTextValue.opacity = 0.1
+                    }
+                }
 
-        //        onSensorModeReceived:{
-        //            if(sensorMode == nilecam20usb.SENSOR_STANDARD){
-        //                sensorStandard.checked = true
-        //                exposureCompSlider.enabled = true
-        //                exposureCompSlider.opacity = 1
-        //                exposureCompTextValue.opacity = 1
-        //            }else if(sensorMode == nilecam20usb.SENSOR_HDR_DLO){
-        //                sensorHdrDlo.checked = true
-        //                exposureCompSlider.enabled = false
-        //                exposureCompSlider.opacity = 0.1
-        //                exposureCompTextValue.opacity = 0.1
-        //            }
-        //        }
-        //        onCameraModeReceived:{
-        //            if(cameraMode == nilecam20usb.CAMERA_MASTER){
-        //                cameraModeMaster.checked = true
-        //            }else if(cameraMode == nilecam20usb.CAMERA_SLAVE){
-        //                cameraModeSlave.checked = true
-        //            }
-        //        }
-        //        onSpecialModeReceived:{
-        //            if(specialMode == nilecam20usb.SPECIAL_NORMAL){
-        //                specialModeNormal.checked = true
-        //            }else if(specialMode == nilecam20usb.SPECIAL_GREYSCALE){
-        //                specialModeGreyscale.checked = true
-        //            }
-        //        }
-        //        onFlipMirrorModeChanged:{
-        //            currentFlipMirrorMode(flipMirrorMode)
-        //        }
-        //        onStrobeModeChanged:{
-        //            currentStrobeMode(strobeMode)
-        //        }
-        //        onRoiAutoExpModeChanged:{
-        //            if(roiMode == nilecam20usb.AutoExpCentered){
-        //                autoexpCentered.checked = true
-        //            }else if(roiMode == nilecam20usb.AutoExpManual){
-        //                skipUpdateUIOnExpWindowSize = false
-        //                autoexpManual.checked = true
-        //                autoExpoWinSizeCombo.currentIndex = winSize - 1
-        //                skipUpdateUIOnExpWindowSize = true
-        //            }
-        //            else if(roiMode == nilecam20usb.AutoExpDisabled){
-        //                autoexpCentered.enabled = false
-        //                autoexpManual.enabled = false
-        //                autoExpoWinSizeCombo.enabled = false
-        //            }
-        //        }
-        //        onColorKillValueChanged:{
-        //            skipUpdateUIOnColorKillVal = false
-        //            colourKillValSlider.value = colorKillValue
-        //            skipUpdateUIOnColorKillVal = true
-        //        }
-        //        onBurstLengthChanged:{
-        //            skipUpdateUIOnBurstLength = false
-        //            burstLengthCombo.currentIndex = burstLength - 1
-        //        }
-        //        onAntiFlickerModeChanged:{
-        //            currentAntiFlickerMode(flickerMode)
-        //        }
-        //        onLscModeChanged:{
-        //            currentLSCMode(lscMode)
-        //        }
-        //        onSetdefaultValueFailed:{
-        //            displayMessageBox(qsTr("Failure"), qsTr("Setting default value is failed"))
-        //        }
-        //        onExposureCompValue:{
-        //            skipUpdateUIOnExpComp = false
-        //            exposureCompSlider.value = exposureCompensation
-        //            skipUpdateUIOnExpComp = true
-        //        }
+                onCameraModeReceived:{
+                    if(cameraModes == NileCam20_USB.CAMERA_MASTER){
+                        cameraModeMaster.checked = true
+                    }else if(cameraModes == NileCam20_USB.CAMERA_SLAVE){
+                        cameraModeSlave.checked = true
+                    }
+                }
+                onRoiAutoExpModeValue:{
+                    if(roiMode == NileCam20_USB.CENTERED){
+                        autoexpCentered.checked = true
+                    }else if(roiMode == NileCam20_USB.AUTO_EXP_MANNUAL){
+                        skipUpdateUIOnExpWindowSize = false
+                        autoexpManual.checked = true
+                        autoExpoWinSizeCombo.currentIndex = winSize - 1
+                        skipUpdateUIOnExpWindowSize = true
+                    }
+                    else if(roiMode == NileCam20_USB.AUTO_EXP_DISABLED){
+                        autoexpCentered.enabled = false
+                        autoexpManual.enabled = false
+                        autoExpoWinSizeCombo.enabled = false
+                    }
+                }
+                onSpecialEffectMode:{
+                    if(specialModes == NileCam20_USB.SPECIAL_NORMAL){
+                        specialModeNormal.checked = true
+                    }else if(specialModes == NileCam20_USB.SPECIAL_GREYSCALE){
+                        specialModeGreyscale.checked = true
+                    }
+                }
+                onFlipMirrorModeChanged:{
+                    currentFlipMirrorMode(flipMirrorMode)
+                }
+                onStrobeModeChanged:{
+                    currentStrobeMode(strobeValues)
+                }
+                onColorKillValueChanged:{
+                    skipUpdateUIOnColorKillVal = false
+                    colourKillValSlider.value = ColorKillValue
+                    skipUpdateUIOnColorKillVal = true
+                }
+                onBurstLengthValue:{
+                    skipUpdateUIOnBurstLength = false
+                    burstLengthCombo.currentIndex = burstLength - 1
+                }
+                onFlickerDetectionMode:{
+                    currentAntiFlickerMode(flickerMode)
+                }
+                onLscModeChanged:{
+                    currentLSCMode(lscMode)
+                }
+                onSendDenoiseValue:{
+                    if(denoiseValue == NileCam20_USB.DenoiseEnable){
+                        denoiseEnable.checked = true
+                    }else if(denoiseValue == NileCam20_USB.DenoiseDisable){
+                        denoiseDisable.checked = true
+                    }
+                }
+                onExposureCompValueReceived:{
+                    skipUpdateUIOnExpComp = false
+                    exposureCompSlider.value = exposureCompensation
+                    skipUpdateUIOnExpComp = true
+                }
     }
 
     function displayMessageBox(title, text){
@@ -1258,25 +1253,29 @@ Item {
         root.captureBtnEnable(true)
         root.videoRecordBtnEnable(true)
         defaultValue.enabled = false
-//        if(nilecam20usb.setToDefaultValues()){
-//            nilecam20usb.getAutoExpROIModeAndWindowSize()
-//            getCurrentValuesFromCamera()
-//        }
+        if(nilecam20usb.setToDefaultValues()){
+            nilecam20usb.getROIAutoExposure()
+            getCurrentValuesFromCamera()
+        }
         defaultValue.enabled = true
     }
 
     function getCurrentValuesFromCamera(){
-//        nilecam20usb.getSensorMode()
-//        nilecam20usb.getCameraMode()
-//        nilecam20usb.getSpecialMode()
-//        nilecam20usb.getOrientation()
-//        nilecam20usb.getStrobeMode()
-//        nilecam20usb.getColourKill()
-//        nilecam20usb.getExposureCompensation()
-//        nilecam20usb.getBurstLength()
-//        nilecam20usb.getAntiFlickerMode()
-//        nilecam20usb.getDenoiseCtrlMode()
-//        nilecam20usb.getLSCMode()
+        nilecam20usb.getSensorMode()
+        nilecam20usb.getCameraMode()
+        nilecam20usb.getSpecialMode()
+        nilecam20usb.getROIAutoExposure()
+
+        nilecam20usb.getOrientation()
+        nilecam20usb.getStrobeMode()
+        nilecam20usb.getColourKill()
+
+        nilecam20usb.getExposureCompensation()
+        nilecam20usb.getBurstLength()
+        nilecam20usb.getAntiFlickerMode()
+
+        nilecam20usb.getDenoiseCtrlMode()
+        nilecam20usb.getLSCMode()
     }
 
     Component.onCompleted:{
