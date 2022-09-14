@@ -256,11 +256,9 @@ Item {
                         exclusiveGroup: specialModeGroup
                         activeFocusOnPress: true
                         onClicked: {
-                            defaultValue.enabled = true
                             nilecam20usb.setSpecialMode(NileCam20_USB.SPECIAL_GREYSCALE)
                         }
                         Keys.onReturnPressed: {
-                            defaultValue.enabled = true
                             nilecam20usb.setSpecialMode(NileCam20_USB.SPECIAL_GREYSCALE)
                         }
                     }
@@ -286,12 +284,10 @@ Item {
                         text: "Normal"
                         exclusiveGroup: flipModeInputGroup
                         style: econCheckBoxStyle
-                        onClicked:{
-                            defaultValue.enabled = true
+                        onClicked:{             
                             nilecam20usb.setOrientation(NileCam20_USB.Normal)
                         }
                         Keys.onReturnPressed: {
-                            defaultValue.enabled = true
                             nilecam20usb.setOrientation(NileCam20_USB.Normal)
                         }
                     }
@@ -302,11 +298,9 @@ Item {
                         exclusiveGroup: flipModeInputGroup
                         style: econCheckBoxStyle
                         onClicked:{
-                            defaultValue.enabled = true
                             nilecam20usb.setOrientation(NileCam20_USB.HorizontalMirror)
                         }
                         Keys.onReturnPressed: {
-                            defaultValue.enabled = true
                             nilecam20usb.setOrientation(NileCam20_USB.HorizontalMirror)
                         }
                     }
@@ -317,11 +311,9 @@ Item {
                         style: econCheckBoxStyle
                         exclusiveGroup: flipModeInputGroup
                         onClicked:{
-                            defaultValue.enabled = true
                             nilecam20usb.setOrientation(NileCam20_USB.VerticalFlip)
                         }
                         Keys.onReturnPressed: {
-                            defaultValue.enabled = true
                             nilecam20usb.setOrientation(NileCam20_USB.VerticalFlip)
                         }
                     }
@@ -333,11 +325,9 @@ Item {
                         style: econCheckBoxStyle
                         exclusiveGroup: flipModeInputGroup
                         onClicked:{
-                            defaultValue.enabled = true
                             nilecam20usb.setOrientation(NileCam20_USB.Rotate180)
                         }
                         Keys.onReturnPressed: {
-                            defaultValue.enabled = true
                             nilecam20usb.setOrientation(NileCam20_USB.Rotate180)
                         }
                     }
@@ -355,7 +345,6 @@ Item {
                 ColumnLayout{
                     spacing: 10
                     ExclusiveGroup { id: strobesGrp }
-
                     RadioButton {
                         exclusiveGroup: strobesGrp
                         checked: false
@@ -364,11 +353,9 @@ Item {
                         activeFocusOnPress: true
                         style: econRadioButtonStyle
                         onClicked: {
-                            defaultValue.enabled = true
                             nilecam20usb.setStrobeMode(NileCam20_USB.FLASH_FOR_VIDEO_STREAMING)
                         }
                         Keys.onReturnPressed: {
-                            defaultValue.enabled = true
                             nilecam20usb.setStrobeMode(NileCam20_USB.FLASH_FOR_VIDEO_STREAMING)
                         }
                     }
@@ -440,9 +427,11 @@ Item {
                         activeFocusOnPress: true
                         style: econRadioButtonStyle
                         opacity: enabled ? 1 : 0.1
-                        // setROIAutoExposure() args:  mode, videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord, WinSize]
-                        // videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord - these parameters are required only when click in preview]
-                        // winSize is required only for manual mode
+
+                        /* setROIAutoExposure() args:  mode, videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord, WinSize]
+                           videoresolnWidth, videoresolnHeight, mouseXCord, mouseYCord - these parameters are required only when click in preview]
+                           winSize is required only for manual mode*/
+
                         onClicked: {
                             nilecam20usb.setROIAutoExposure(NileCam20_USB.CENTERED, 0, 0, 0, 0, 0);
                             autoExpoWinSizeCombo.enabled = false
@@ -1266,19 +1255,16 @@ Item {
     }
 
     function getCurrentValuesFromCamera(){
+        nilecam20usb.getOrientation()
         nilecam20usb.getSensorMode()
         nilecam20usb.getCameraMode()
         nilecam20usb.getSpecialMode()
         nilecam20usb.getROIAutoExposure()
-
-        nilecam20usb.getOrientation()
         nilecam20usb.getStrobeMode()
         nilecam20usb.getColourKill()
-
         nilecam20usb.getExposureCompensation()
         nilecam20usb.getBurstLength()
         nilecam20usb.getAntiFlickerMode()
-
         nilecam20usb.getDenoiseCtrlMode()
         nilecam20usb.getLSCMode()
     }

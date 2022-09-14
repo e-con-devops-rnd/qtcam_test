@@ -30,7 +30,6 @@ NILECAM20_USB::NILECAM20_USB()
  */
 bool NILECAM20_USB::setSensorMode(sensorModes sensorMode)
 {
-    qDebug() << Q_FUNC_INFO;
     // hid validation
     if(uvccamera::hid_fd < 0)
     {
@@ -43,7 +42,7 @@ bool NILECAM20_USB::setSensorMode(sensorModes sensorMode)
     // fill buffer values
     g_out_packet_buf[1] = CAMERA_CONTROL_NILECAM20_USB; /* camera id */
     g_out_packet_buf[2] = SET_SENSOR_MODE_NILECAM20_USB; /* set sensor command  */
-    g_out_packet_buf[3] = sensorMode; /* pass camera mode value */
+    g_out_packet_buf[3] = sensorMode; /* pass sensor mode value */
 
     // send request and get reply from camera
     if(uvc.sendHidCmd(g_out_packet_buf, g_in_packet_buf, BUFFER_LENGTH)){
@@ -52,7 +51,6 @@ bool NILECAM20_USB::setSensorMode(sensorModes sensorMode)
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_NILECAM20_USB &&
             g_in_packet_buf[1]==SET_SENSOR_MODE_NILECAM20_USB &&
             g_in_packet_buf[6]==SET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << sensorMode;
             return true;
         }
     }
@@ -65,7 +63,6 @@ bool NILECAM20_USB::setSensorMode(sensorModes sensorMode)
  */
 bool NILECAM20_USB::getSensorMode()
 {
-    qDebug() << Q_FUNC_INFO;
     // hid validation
     if(uvccamera::hid_fd < 0)
     {
@@ -86,7 +83,6 @@ bool NILECAM20_USB::getSensorMode()
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_NILECAM20_USB &&
             g_in_packet_buf[1]==GET_SENSOR_MODE_NILECAM20_USB &&
             g_in_packet_buf[6]==GET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << g_in_packet_buf[2];
             emit sensorModeReceived(g_in_packet_buf[2]);
             return true;
         }
@@ -100,9 +96,8 @@ bool NILECAM20_USB::getSensorMode()
  * @param cameraMode - master/slave
  * @return true/false
  */
-bool NILECAM20_USB::setCameraMode(cameraModes  cameraMode)
+bool NILECAM20_USB::setCameraMode(cameraModes cameraMode)
 {
-    qDebug() << Q_FUNC_INFO;
     // hid validation
     if(uvccamera::hid_fd < 0)
     {
@@ -124,7 +119,6 @@ bool NILECAM20_USB::setCameraMode(cameraModes  cameraMode)
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_NILECAM20_USB &&
             g_in_packet_buf[1] == SET_CAMERA_MODE_NILECAM20_USB &&
             g_in_packet_buf[6] == SET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << cameraMode;
             return true;
         }
     }
@@ -137,7 +131,6 @@ bool NILECAM20_USB::setCameraMode(cameraModes  cameraMode)
  */
 bool NILECAM20_USB::getCameraMode()
 {
-    qDebug() << Q_FUNC_INFO;
     // hid validation
     if(uvccamera::hid_fd < 0)
     {
@@ -158,7 +151,6 @@ bool NILECAM20_USB::getCameraMode()
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_NILECAM20_USB &&
             g_in_packet_buf[1]==GET_CAMERA_MODE_NILECAM20_USB &&
             g_in_packet_buf[6]==GET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << g_in_packet_buf[2];
             emit cameraModeReceived(g_in_packet_buf[2]);
             return true;
         }
@@ -167,13 +159,11 @@ bool NILECAM20_USB::getCameraMode()
 }
 
 /**
- * @brief NILECAM20_USB::getSpecialEffects - get effect mode set in camera
+ * @brief NILECAM20_USB::getSpecialMode - get effect mode set in camera
  * return true - success /false - failure
  */
 bool NILECAM20_USB::getSpecialMode()
 {
-    qDebug() << Q_FUNC_INFO;
-
     // hid validation
     if(uvccamera::hid_fd < 0)
     {
@@ -197,7 +187,6 @@ bool NILECAM20_USB::getSpecialMode()
             g_in_packet_buf[1]==GET_SPECIAL_MODE_NILECAM20_USB &&
             g_in_packet_buf[6]==GET_SUCCESS)
         {
-            qDebug() << Q_FUNC_INFO << g_in_packet_buf[2];
             emit specialEffectMode(g_in_packet_buf[2]);
             return true;
         }
@@ -207,13 +196,11 @@ bool NILECAM20_USB::getSpecialMode()
 
 
 /**
- * @brief NILECAM20_USB::setSpecialEffectsNileCam - setting special effects to the camera
+ * @brief NILECAM20_USB::setSpecialMode - setting special effects to the camera
  * return true - success /false - failure
  */
 bool NILECAM20_USB::setSpecialMode(specialModes specialEffect)
 {
-    qDebug() << Q_FUNC_INFO;
-
     // hid validation
     if(uvccamera::hid_fd < 0)
     {
@@ -225,7 +212,7 @@ bool NILECAM20_USB::setSpecialMode(specialModes specialEffect)
 
     // fill buffer values
     g_out_packet_buf[1] = CAMERA_CONTROL_NILECAM20_USB; /* set camera control code */
-    g_out_packet_buf[2] = SET_SPECIAL_MODE_NILECAM20_USB; /* set special effect code */
+    g_out_packet_buf[2] = SET_SPECIAL_MODE_NILECAM20_USB; /* set special effect Mode */
     g_out_packet_buf[3] = specialEffect; /* set special effect */
 
     // send request and get reply from camera
@@ -235,7 +222,6 @@ bool NILECAM20_USB::setSpecialMode(specialModes specialEffect)
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_NILECAM20_USB &&
             g_in_packet_buf[1]==SET_SPECIAL_MODE_NILECAM20_USB &&
             g_in_packet_buf[6]==SET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << specialEffect;
             return true;
         }
     }
@@ -244,15 +230,13 @@ bool NILECAM20_USB::setSpecialMode(specialModes specialEffect)
 
 
 /*
- * @brief NILECAM20_USB::setOrientation - Setting orientation - set horizontal/vertical/both flip
+ * @brief NILECAM20_USB::setOrientation - Setting orientation - set Normal/horizontal/vertical/Rotate180
  * @param - horizontal flip selection
  * @param - vertical flip selection
  * return true/false
 */
 bool NILECAM20_USB::setOrientation(int orientationMode)
 {
-    qDebug() << Q_FUNC_INFO;
-
     // hid validation
     if(uvccamera::hid_fd < 0)
     {
@@ -263,8 +247,8 @@ bool NILECAM20_USB::setOrientation(int orientationMode)
     initializeBuffers();
 
     // fill buffer values
-    g_out_packet_buf[1] = CAMERA_CONTROL_NILECAM20_USB; /* camera control for NILECAM20_USB camera */
-    g_out_packet_buf[2] = SET_ORIENTATION_NILECAM20_USB; /* set flip mode for 30 camera */
+    g_out_packet_buf[1] = CAMERA_CONTROL_NILECAM20_USB; /* Camera control id */
+    g_out_packet_buf[2] = SET_ORIENTATION_NILECAM20_USB; /* set flip mode Command*/
     g_out_packet_buf[3] = orientationMode;
 
     // send request and get reply from camera
@@ -274,7 +258,6 @@ bool NILECAM20_USB::setOrientation(int orientationMode)
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_NILECAM20_USB &&
             g_in_packet_buf[1]==SET_ORIENTATION_NILECAM20_USB &&
             g_in_packet_buf[6]==SET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << orientationMode;
             return true;
         }
     }
@@ -287,8 +270,6 @@ bool NILECAM20_USB::setOrientation(int orientationMode)
  */
 bool NILECAM20_USB::getOrientation()
 {
-    qDebug() << Q_FUNC_INFO;
-
     // hid validation
     if(uvccamera::hid_fd < 0)
     {
@@ -309,7 +290,6 @@ bool NILECAM20_USB::getOrientation()
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_NILECAM20_USB &&
             g_in_packet_buf[1]==GET_ORIENTATION_NILECAM20_USB &&
             g_in_packet_buf[6]==GET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << g_in_packet_buf[2];
             emit flipMirrorModeChanged(g_in_packet_buf[2]);
             return true;
         }
@@ -319,8 +299,6 @@ bool NILECAM20_USB::getOrientation()
 
 bool NILECAM20_USB::setStrobeMode(strobeValues strobeMode)
 {
-    qDebug() << Q_FUNC_INFO;
-
     // hid validation
     if(uvccamera::hid_fd < 0)
     {
@@ -332,7 +310,7 @@ bool NILECAM20_USB::setStrobeMode(strobeValues strobeMode)
 
     // fill buffer values
     g_out_packet_buf[1] = CAMERA_CONTROL_NILECAM20_USB; /* camera id */
-    g_out_packet_buf[2] = SET_STROBE_MODE_NILECAM20_USB; /* set strobe mode command  */
+    g_out_packet_buf[2] = SET_STROBE_MODE_NILECAM20_USB; /* set strobe mode command id */
     g_out_packet_buf[3] = strobeMode; /* pass strobe mode value */
 
     // send request and get reply from camera
@@ -342,7 +320,6 @@ bool NILECAM20_USB::setStrobeMode(strobeValues strobeMode)
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_NILECAM20_USB &&
             g_in_packet_buf[1] == SET_STROBE_MODE_NILECAM20_USB &&
             g_in_packet_buf[6] == SET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << strobeMode;
             return true;
         }
     }
@@ -355,8 +332,6 @@ bool NILECAM20_USB::setStrobeMode(strobeValues strobeMode)
  */
 bool NILECAM20_USB::getStrobeMode()
 {
-    qDebug() << Q_FUNC_INFO;
-
     // hid validation
     if(uvccamera::hid_fd < 0)
     {
@@ -377,7 +352,6 @@ bool NILECAM20_USB::getStrobeMode()
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_NILECAM20_USB &&
             g_in_packet_buf[1] == GET_STROBE_MODE_NILECAM20_USB &&
             g_in_packet_buf[6] == GET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << g_in_packet_buf[2];
             emit strobeModeChanged(g_in_packet_buf[2]);
             return true;
         }
@@ -386,14 +360,12 @@ bool NILECAM20_USB::getStrobeMode()
 }
 
 /**
- * @brief NILECAM20_USB::setDenoiseValueNileCam - setting denoise value to the camera
+ * @brief NILECAM20_USB::setDenoiseCtrlMode - setting denoise value to the camera
  * @param deNoiseVal - denoise value
  * return true - success /false - failure
  */
 bool NILECAM20_USB::setDenoiseCtrlMode(int deNoiseVal)
 {
-    qDebug() << Q_FUNC_INFO;
-
     // hid validation
     if(uvccamera::hid_fd < 0)
     {
@@ -415,7 +387,6 @@ bool NILECAM20_USB::setDenoiseCtrlMode(int deNoiseVal)
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_NILECAM20_USB &&
             g_in_packet_buf[1]==SET_DENOISE_NILECAM20_USB &&
             g_in_packet_buf[6]==SET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << deNoiseVal;
             return true;
         }
     }
@@ -424,13 +395,11 @@ bool NILECAM20_USB::setDenoiseCtrlMode(int deNoiseVal)
 
 
 /**
- * @brief NILECAM20_USB::getDenoiseValueNileCam - get denoise value from camera
+ * @brief NILECAM20_USB::getDenoiseCtrlMode - get denoise value from camera
  * return true - success /false - failure
  */
 bool NILECAM20_USB::getDenoiseCtrlMode()
 {
-    qDebug() << Q_FUNC_INFO;
-
     // hid validation
     if(uvccamera::hid_fd < 0)
     {
@@ -451,7 +420,6 @@ bool NILECAM20_USB::getDenoiseCtrlMode()
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_NILECAM20_USB &&
             g_in_packet_buf[1]==GET_DENOISE_NILECAM20_USB &&
             g_in_packet_buf[6]==GET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << g_in_packet_buf[2];
             emit sendDenoiseValue(g_in_packet_buf[2]);
             return true;
         }
@@ -461,12 +429,11 @@ bool NILECAM20_USB::getDenoiseCtrlMode()
 
 
 /**
- * @brief NILECAM20_USB::setExposureCompensationNileCam - setting exposure compensation
+ * @brief NILECAM20_USB::setExposureCompensation - setting exposure compensation
  * @param exposureCompValue - exposure compensation value
  * @return true/false
  */
 bool NILECAM20_USB::setExposureCompensation(unsigned int exposureCompValue){
-    qDebug() << Q_FUNC_INFO;
     // hid validation
     if(uvccamera::hid_fd < 0)
     {
@@ -495,13 +462,11 @@ bool NILECAM20_USB::setExposureCompensation(unsigned int exposureCompValue){
 
 
 /**
- * @brief NILECAM20_USB::getExposureCompensationNileCam - getting exposure compensation
+ * @brief NILECAM20_USB::getExposureCompensation - getting exposure compensation
  * @return true/false
  */
 bool NILECAM20_USB::getExposureCompensation()
 {
-    qDebug() << Q_FUNC_INFO;
-
     // hid validation
     if(uvccamera::hid_fd < 0)
     {
@@ -529,17 +494,13 @@ bool NILECAM20_USB::getExposureCompensation()
 }
 
 
-
-
 /**
- * @brief NILECAM20_USB::setImageCaptureNileCam20USB - set burst length in camera
+ * @brief NILECAM20_USB::setBurstLength - set burst length in camera
  * @param burstLength - burst length - no of images to be taken.
  * return true - success /false - failure
  */
 bool NILECAM20_USB::setBurstLength(int burstLength)
 {
-    qDebug() << Q_FUNC_INFO;
-
     // hid validation
     if(uvccamera::hid_fd < 0)
     {
@@ -561,7 +522,6 @@ bool NILECAM20_USB::setBurstLength(int burstLength)
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_NILECAM20_USB &&
             g_in_packet_buf[1]==SET_IMAGE_BURST_NILECAM20_USB &&
             g_in_packet_buf[6]==SET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << burstLength;
             return true;
         }
     }
@@ -569,13 +529,11 @@ bool NILECAM20_USB::setBurstLength(int burstLength)
 }
 
 /**
- * @brief NILECAM20_USB::getImageCaptureNileCam20USB - get burst length from camera
+ * @brief NILECAM20_USB::getBurstLength - get burst length from camera
  * return true - success /false - failure
  */
 bool NILECAM20_USB::getBurstLength()
 {
-    qDebug() << Q_FUNC_INFO;
-
     // hid validation
     if(uvccamera::hid_fd < 0)
     {
@@ -596,7 +554,6 @@ bool NILECAM20_USB::getBurstLength()
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_NILECAM20_USB &&
             g_in_packet_buf[1]==GET_IMAGE_BURST_NILECAM20_USB &&
             g_in_packet_buf[6]==GET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << g_in_packet_buf[2];
             emit burstLengthValue(g_in_packet_buf[2]);
             return true;
         }
@@ -606,14 +563,12 @@ bool NILECAM20_USB::getBurstLength()
 
 
 /**
- * @brief NILECAM20_USB::setColourKillModeNileCam20USB - set Colour Kill value
+ * @brief NILECAM20_USB::setColourKill - set Colour Kill value
  * @param colourKillValue - value to set
  * @return true/false
  */
 bool NILECAM20_USB::setColourKill(uint colourKillValue)
 {
-    qDebug() << Q_FUNC_INFO;
-
     // hid validation
     if(uvccamera::hid_fd < 0)
     {
@@ -635,7 +590,6 @@ bool NILECAM20_USB::setColourKill(uint colourKillValue)
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_NILECAM20_USB &&
             g_in_packet_buf[1] == SET_COLOR_KILL_MODE_NILECAM20_USB &&
             g_in_packet_buf[6] == SET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << colourKillValue;
             return true;
         }
     }
@@ -643,13 +597,11 @@ bool NILECAM20_USB::setColourKill(uint colourKillValue)
 }
 
 /**
- * @brief NILECAM20_USB::getColourKillModeNileCam20USB - get color kill status value
+ * @brief NILECAM20_USB::getColourKill - get color kill status value
  * @return true/false
  */
 bool NILECAM20_USB::getColourKill()
 {
-    qDebug() << Q_FUNC_INFO;
-
     // hid validation
     if(uvccamera::hid_fd < 0)
     {
@@ -670,7 +622,6 @@ bool NILECAM20_USB::getColourKill()
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_NILECAM20_USB &&
             g_in_packet_buf[1] == GET_COLOR_KILL_MODE_NILECAM20_USB &&
             g_in_packet_buf[6] == GET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << g_in_packet_buf[2];
             emit colorKillValueChanged(g_in_packet_buf[2]);
             return true;
         }
@@ -691,8 +642,6 @@ bool NILECAM20_USB::getColourKill()
  */
 bool NILECAM20_USB::setROIAutoExposure(ROIAutoExpMode nileCam20USBAutoexpROIMode, uint vidResolnWidth, uint vidResolnHeight, uint xCord, uint yCord, QString winSize)
 {
-    qDebug() << Q_FUNC_INFO;
-
     // hid validation
     if(uvccamera::hid_fd < 0)
     {
@@ -733,7 +682,6 @@ bool NILECAM20_USB::setROIAutoExposure(ROIAutoExpMode nileCam20USBAutoexpROIMode
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_NILECAM20_USB &&
             g_in_packet_buf[1]==SET_AUTO_EXPOSURE_ROI_MODE_NILECAM20_USB &&
             g_in_packet_buf[6]==SET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << nileCam20USBAutoexpROIMode;
             return true;
         }
     }
@@ -741,13 +689,11 @@ bool NILECAM20_USB::setROIAutoExposure(ROIAutoExpMode nileCam20USBAutoexpROIMode
 }
 
 /**
- * @brief NILECAM20_USB::getROIAutoExposureNileCam20USB - get ROI auto exposure mode
+ * @brief NILECAM20_USB::getROIAutoExposure - get ROI auto exposure mode
  * return true - success /false - failure
  */
 bool NILECAM20_USB::getROIAutoExposure()
 {
-    qDebug() << Q_FUNC_INFO;
-
     // hid validation
     if(uvccamera::hid_fd < 0)
     {
@@ -768,7 +714,6 @@ bool NILECAM20_USB::getROIAutoExposure()
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_NILECAM20_USB &&
             g_in_packet_buf[1]==GET_AUTO_EXPOSURE_ROI_MODE_NILECAM20_USB &&
             g_in_packet_buf[6]==GET_SUCCESS) {
-                qDebug() << Q_FUNC_INFO << g_in_packet_buf[2];
                 emit roiAutoExpModeValue(g_in_packet_buf[2], g_in_packet_buf[5]);
                 return true;
         }
@@ -778,14 +723,12 @@ bool NILECAM20_USB::getROIAutoExposure()
 
 
 /**
- * @brief NILECAM20_USB::setLSCModeNileCam20USB - set LSC mode
+ * @brief NILECAM20_USB::setLSCMode - set LSC mode
  * @param LSC mode to set
  * @return true/false
  */
 bool NILECAM20_USB::setLSCMode(lscModes lscMode)
 {
-    qDebug() << Q_FUNC_INFO;
-
     // hid validation
     if(uvccamera::hid_fd < 0)
     {
@@ -807,7 +750,6 @@ bool NILECAM20_USB::setLSCMode(lscModes lscMode)
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_NILECAM20_USB &&
             g_in_packet_buf[1] == SET_LSC_MODES_NILECAM20_USB &&
             g_in_packet_buf[6] == SET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << lscMode;
             return true;
         }
     }
@@ -815,13 +757,11 @@ bool NILECAM20_USB::setLSCMode(lscModes lscMode)
 }
 
 /**
- * @brief NILECAM20_USB::getLSCModeNileCam20USB - get current LSC mode from camera
+ * @brief NILECAM20_USB::getLSCMode - get current LSC mode from camera
  * @return true/false
  */
 bool NILECAM20_USB::getLSCMode()
 {
-    qDebug() << Q_FUNC_INFO;
-
     // hid validation
     if(uvccamera::hid_fd < 0)
     {
@@ -844,7 +784,6 @@ bool NILECAM20_USB::getLSCMode()
         else if(g_in_packet_buf[0] == CAMERA_CONTROL_NILECAM20_USB &&
             g_in_packet_buf[1] == GET_LSC_MODES_NILECAM20_USB &&
             g_in_packet_buf[6] == GET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << g_in_packet_buf[2];
             emit lscModeChanged(g_in_packet_buf[2]);
             return true;
         }
@@ -854,15 +793,13 @@ bool NILECAM20_USB::getLSCMode()
 
 
 /**
- * @brief NILECAM20_USB::setFlickerModeNileCam20USB - setting the flicker control.
+ * @brief NILECAM20_USB::setAntiFlickerMode - setting the flicker control.
  * @param flickerMode - mode we set for camera
  * @return true/false
  */
 
 bool NILECAM20_USB::setAntiFlickerMode(FlickerMode flickerMode)
 {
-    qDebug() << Q_FUNC_INFO;
-
     // hid validation
     if(uvccamera::hid_fd < 0)
     {
@@ -885,7 +822,6 @@ bool NILECAM20_USB::setAntiFlickerMode(FlickerMode flickerMode)
         else if(g_in_packet_buf[0] == CAMERA_CONTROL_NILECAM20_USB &&
             g_in_packet_buf[1]==SET_FLICKER_MODE_NILECAM20_USB &&
             g_in_packet_buf[6]==SET_SUCCESS) {
-            qDebug() << Q_FUNC_INFO << flickerMode;
             return true;
         }
     }
@@ -893,14 +829,12 @@ bool NILECAM20_USB::setAntiFlickerMode(FlickerMode flickerMode)
 }
 
  /*
-  * @brief NILECAM20_USB::getFlickerModeNileCam20USB - getting the flicker control we set,from the camera.
+  * @brief NILECAM20_USB::getAntiFlickerMode - getting the flicker control we set,from the camera.
   * @return true/false
  */
 
 bool NILECAM20_USB::getAntiFlickerMode()
 {
-    qDebug() << Q_FUNC_INFO;
-
     // hid validation
     if(uvccamera::hid_fd < 0)
     {
@@ -923,7 +857,6 @@ bool NILECAM20_USB::getAntiFlickerMode()
         else if(g_in_packet_buf[0] == CAMERA_CONTROL_NILECAM20_USB &&
             g_in_packet_buf[1]==GET_FLICKER_MODE_NILECAM20_USB &&
             g_in_packet_buf[6]==GET_SUCCESS){
-                qDebug() << Q_FUNC_INFO << g_in_packet_buf[2];
                 emit flickerDetectionMode(g_in_packet_buf[2]);
                 return true;
         }
@@ -933,13 +866,11 @@ bool NILECAM20_USB::getAntiFlickerMode()
 
 
 /**
- * @brief NILECAM20_USB::restoreDefaultNileCam20USB - set all the values to default in camera
+ * @brief NILECAM20_USB::setToDefaultValues - set all the values to default in camera
  * @return true/false
  */
 bool NILECAM20_USB::setToDefaultValues()
 {
-    qDebug() << Q_FUNC_INFO;
-
     // hid validation
     if(uvccamera::hid_fd < 0)
     {

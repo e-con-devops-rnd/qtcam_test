@@ -155,9 +155,6 @@ public:
         void sendDenoiseValue(int denoiseValue);
         void exposureCompValueReceived(int exposureCompensation);
 
-        void indicateCommandStatus(QString title, QString text);
-        void indicateExposureValueRangeFailure(QString title, QString text);
-
     public slots:
         bool setSensorMode(sensorModes sensorMode);
         bool getSensorMode();
@@ -198,4 +195,4 @@ public:
         bool setToDefaultValues();
 
 };
-#endif // NILECAM20_USB_H
+#endif
