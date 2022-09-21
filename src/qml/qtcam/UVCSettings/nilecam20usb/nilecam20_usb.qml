@@ -83,7 +83,7 @@ Item {
         }
         onMouseRightClicked:{
             if(autoexpManual.enabled && autoexpManual.checked){
-                nilecam20usb.setROIAutoExposure(nilecam20usb.AutoExpManual, width, height, x, y, autoExpoWinSizeCombo.currentText)
+                nilecam20usb.setROIAutoExposure(nilecam20usb.AUTO_EXP_MANNUAL, width, height, x, y, autoExpoWinSizeCombo.currentText)
             }
         }
         onVideoResolutionChanged:{
@@ -458,7 +458,7 @@ Item {
                     style: econComboBoxStyle
                     onCurrentIndexChanged: {
                         if(skipUpdateUIOnExpWindowSize){
-                            nilecam20usb.setROIAutoExposure(NileCam20_USB.AutoExpManual, 0, 0, 0, 0, autoExpoWinSizeCombo.currentText)
+                            nilecam20usb.setROIAutoExposure(NileCam20_USB.AUTO_EXP_MANNUAL, 0, 0, 0, 0, autoExpoWinSizeCombo.currentText)
                         }
                         skipUpdateUIOnExpWindowSize = true
                     }
@@ -1185,16 +1185,20 @@ Item {
         switch(mode)
         {
         case NileCam20_USB.Normal:
-            flipNormal.checked = true
+            flipCtrlVertical.checked = false
+            flipCtrlHorizotal.checked = false
             break;
         case NileCam20_USB.VerticalFlip:
             flipCtrlVertical.checked = true
+            flipCtrlHorizotal.checked = false
             break;
         case NileCam20_USB.HorizontalMirror:
+            flipCtrlVertical.checked = false
             flipCtrlHorizotal.checked = true
             break;
         case NileCam20_USB.Rotate180:
-            flipRotate180.checked=true
+            flipCtrlVertical.checked = true
+            flipCtrlHorizotal.checked = true
             break;
         }
     }
@@ -1243,6 +1247,7 @@ Item {
 
     Component.onCompleted:{
         autoExpROITimer.start()
+        lscModeCombo.currentIndex=0
         getCurrentValuesFromCamera()
     }
 }

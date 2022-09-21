@@ -167,7 +167,6 @@ public:
         bool setSpecialMode(specialModes specialEffect);
         bool getSpecialMode();
 
-//        bool setOrientation(int orientationMode);
         bool setOrientation(bool horzModeSel, bool vertiModeSel);
         bool getOrientation();
 
