@@ -235,7 +235,77 @@ bool NILECAM20_USB::setSpecialMode(specialModes specialEffect)
  * @param - vertical flip selection
  * return true/false
 */
-bool NILECAM20_USB::setOrientation(int orientationMode)
+//bool NILECAM20_USB::setOrientation(int orientationMode)
+//{
+//    // hid validation
+//    if(uvccamera::hid_fd < 0)
+//    {
+//        return false;
+//    }
+
+//    //Initialize buffers
+//    initializeBuffers();
+
+//    // fill buffer values
+//    g_out_packet_buf[1] = CAMERA_CONTROL_NILECAM20_USB; /* Camera control id */
+//    g_out_packet_buf[2] = SET_ORIENTATION_NILECAM20_USB; /* set flip mode Command*/
+//    g_out_packet_buf[3] = orientationMode;
+
+//    // send request and get reply from camera
+//    if(uvc.sendHidCmd(g_out_packet_buf, g_in_packet_buf, BUFFER_LENGTH)){
+//        if (g_in_packet_buf[6]==SET_FAIL) {
+//            return false;
+//        } else if(g_in_packet_buf[0] == CAMERA_CONTROL_NILECAM20_USB &&
+//            g_in_packet_buf[1]==SET_ORIENTATION_NILECAM20_USB &&
+//            g_in_packet_buf[6]==SET_SUCCESS) {
+//            return true;
+//        }
+//    }
+//    return false;
+//}
+
+/**
+ * @brief NILECAM20_USB::getOrientation - getting flip mode from the camera
+ * return true - success /false - failure
+ */
+//bool NILECAM20_USB::getOrientation()
+//{
+//    // hid validation
+//    if(uvccamera::hid_fd < 0)
+//    {
+//        return false;
+//    }
+
+//    //Initialize buffers
+//    initializeBuffers();
+
+//    // fill buffer values
+//    g_out_packet_buf[1] = CAMERA_CONTROL_NILECAM20_USB; /* Camera control id */
+//    g_out_packet_buf[2] = GET_ORIENTATION_NILECAM20_USB; /* get orientation command */
+
+//    // send request and get reply from camera
+//    if(uvc.sendHidCmd(g_out_packet_buf, g_in_packet_buf, BUFFER_LENGTH)){
+//        if (g_in_packet_buf[6]==SET_FAIL) {
+//            return false;
+//        } else if(g_in_packet_buf[0] == CAMERA_CONTROL_NILECAM20_USB &&
+//            g_in_packet_buf[1]==GET_ORIENTATION_NILECAM20_USB &&
+//            g_in_packet_buf[6]==GET_SUCCESS) {
+//            emit flipMirrorModeChanged(g_in_packet_buf[2]);
+//            return true;
+//        }
+//    }
+//    return false;
+//}
+
+
+
+/*
+ * @brief NILECAM20_USB::setOrientation - Setting orientation - set Normal/horizontal/vertical/Rotate180
+ * @param - horizontal flip selection
+ * @param - vertical flip selection
+ * return true/false
+*/
+bool NILECAM20_USB::setOrientation(bool horzModeSel, bool vertiModeSel)
 {
     // hid validation
     if(uvccamera::hid_fd < 0)
@@ -247,22 +317,33 @@ bool NILECAM20_USB::setOrientation(int orientationMode)
     initializeBuffers();
 
     // fill buffer values
-    g_out_packet_buf[1] = CAMERA_CONTROL_NILECAM20_USB; /* Camera control id */
-    g_out_packet_buf[2] = SET_ORIENTATION_NILECAM20_USB; /* set flip mode Command*/
-    g_out_packet_buf[3] = orientationMode;
+    g_out_packet_buf[1] = CAMERA_CONTROL_NILECAM20_USB; /* camera id */
+    g_out_packet_buf[2] = SET_ORIENTATION_NILECAM20_USB; /* set orientation command  */
+
+    if(horzModeSel && vertiModeSel){
+        g_out_packet_buf[3] = Rotate180; /* both flip enable */
+    }else if(horzModeSel && !vertiModeSel){
+        g_out_packet_buf[3] = HorizontalMirror; /* horizontal flip only mode */
+    }else if(!horzModeSel && vertiModeSel){
+        g_out_packet_buf[3] = VerticalFlip; /* vertical flip only mode */
+    }else
+        g_out_packet_buf[3] = Normal; /* both flip disable */
 
     // send request and get reply from camera
     if(uvc.sendHidCmd(g_out_packet_buf, g_in_packet_buf, BUFFER_LENGTH)){
         if (g_in_packet_buf[6]==SET_FAIL) {
             return false;
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_NILECAM20_USB &&
-            g_in_packet_buf[1]==SET_ORIENTATION_NILECAM20_USB &&
-            g_in_packet_buf[6]==SET_SUCCESS) {
+            g_in_packet_buf[1] == SET_ORIENTATION_NILECAM20_USB &&
+            g_in_packet_buf[6] == SET_SUCCESS) {
             return true;
         }
     }
     return false;
 }
+
+
+
 
 /**
  * @brief NILECAM20_USB::getOrientation - getting flip mode from the camera
@@ -280,22 +361,23 @@ bool NILECAM20_USB::getOrientation()
     initializeBuffers();
 
     // fill buffer values
-    g_out_packet_buf[1] = CAMERA_CONTROL_NILECAM20_USB; /* Camera control id */
-    g_out_packet_buf[2] = GET_ORIENTATION_NILECAM20_USB; /* get orientation command */
+    g_out_packet_buf[1] = CAMERA_CONTROL_NILECAM20_USB; /* camera id */
+    g_out_packet_buf[2] = GET_ORIENTATION_NILECAM20_USB; /* get orientation command  */
 
     // send request and get reply from camera
     if(uvc.sendHidCmd(g_out_packet_buf, g_in_packet_buf, BUFFER_LENGTH)){
-        if (g_in_packet_buf[6]==SET_FAIL) {
+        if (g_in_packet_buf[6]==GET_FAIL) {
             return false;
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_NILECAM20_USB &&
-            g_in_packet_buf[1]==GET_ORIENTATION_NILECAM20_USB &&
-            g_in_packet_buf[6]==GET_SUCCESS) {
+            g_in_packet_buf[1] == GET_ORIENTATION_NILECAM20_USB &&
+            g_in_packet_buf[6] == GET_SUCCESS) {\
             emit flipMirrorModeChanged(g_in_packet_buf[2]);
             return true;
         }
     }
     return false;
 }
+
 
 bool NILECAM20_USB::setStrobeMode(strobeValues strobeMode)
 {

@@ -60,9 +60,8 @@ private:
 
     void initializeBuffers();
 
-    NILECAM20_USB();
-
 public:
+    NILECAM20_USB();
 
     enum sensorModes {
         SENSOR_STANDARD = 0x01,
@@ -90,10 +89,10 @@ public:
     Q_ENUMS(specialModes)
 
     enum Orientation{
-        Normal = 0x01,
+        Normal=0x01,
         VerticalFlip=0x02,
         HorizontalMirror=0x03,
-        Rotate180 =0x04
+        Rotate180=0x04
     };
     Q_ENUMS(Orientation)
 
@@ -168,7 +167,8 @@ public:
         bool setSpecialMode(specialModes specialEffect);
         bool getSpecialMode();
 
-        bool setOrientation(int orientationMode);
+//        bool setOrientation(int orientationMode);
+        bool setOrientation(bool horzModeSel, bool vertiModeSel);
         bool getOrientation();
 
         bool getStrobeMode();
