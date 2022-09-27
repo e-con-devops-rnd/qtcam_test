@@ -100,8 +100,8 @@ int main(int argc, char *argv[])
     qmlRegisterType<CamKeyEventReceive>("econ.camera.keyEvent", 1, 0, "KeyEventRecv");
     qmlRegisterType<uvccamera>("econ.camera.uvcsettings", 1, 0, "Uvccamera");
     qmlRegisterType<UVCExtCx3SNI>("econ.camera.uvcExtsettings", 1, 0, "UvcExtcamera");
-    qmlRegisterType<See3CAM_11CUG>("econ.camera.see3cam11", 1, 0, "See3Cam11");
-    qmlRegisterType<See3CAM_AR130>("econ.camera.see3camar0130", 1, 0, "See3Camar0130");
+    qmlRegisterType<See3CAM_11CUG>("econ.camera.see3cam11", 1, 0, "See3Cam11");    
+    qmlRegisterType<See3CAM_AR130>("econ.camera.see3camar0130", 1, 0, "See3Camar0130");    
     qmlRegisterType<See3CAM_10CUG_Bayer>("econ.camera.see3cam10Bayer", 1, 0, "See3Cam10Bayer");
     qmlRegisterType<See3CAM_10CUG_Mono>("econ.camera.see3cam10Mono", 1, 0, "See3Cam10Mono");
     qmlRegisterType<See3CAM_80>("econ.camera.see3cam80", 1, 0, "See3Cam80");
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
  // Added by Sankari: 17 Dec 2016
     qmlRegisterType<See3CAM_81>("econ.camera.see3cam81", 1, 0, "See3Cam81");
 
-    qmlRegisterType<See3CAM_CU50>("econ.camera.see3cam50", 1, 0, "See3Cam50");
+    qmlRegisterType<See3CAM_CU50>("econ.camera.see3cam50", 1, 0, "See3Cam50");    
     qmlRegisterType<See3CAM_CU130>("econ.camera.see3camcu130", 1, 0, "See3CamCu130");
 
     // Added by Sankari : 22 Feb 2017
@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
     qmlRegisterType<See3CAM_CU22>("econ.camera.see3camcu22", 1, 0, "See3Camcu22");
     qmlRegisterType<See3CAM_CU51>("econ.camera.see3cam51", 1, 0, "See3Cam51");
     // Added by Sankari - 5 Oct 2018
-    qmlRegisterType<H264Camera>("econ.camera.h264cam", 1, 0, "H264camera"); //ecam22_usb
+    qmlRegisterType<H264Camera>("econ.camera.h264cam", 1, 0, "H264camera"); //ecam22_usb 
     qmlRegisterType<ASCELLA>("econ.camera.ascella", 1, 0, "Ascella");
     qmlRegisterType<See3CAM_Control>("econ.camera.see3camControl", 1, 0, "See3CamCtrl");
     qmlRegisterType<See3CAM_GPIOControl>("econ.camera.see3camGpioControl", 1, 0, "See3CamGpio");
@@ -170,7 +170,7 @@ int main(int argc, char *argv[])
     QtQuick2ApplicationViewer viewer;
 
     //Create a object for Camera property
-    Cameraproperty camProperty;
+    Cameraproperty camProperty;    
 
     if(argc > 1){
         if(strcmp(argv[1],"-l") == 0 || strcmp(argv[1],"--log") == 0){
@@ -185,9 +185,9 @@ int main(int argc, char *argv[])
 
     viewer.rootContext()->setContextProperty("camModels", &camProperty.modelCam);
 
-    Videostreaming vs;
+    Videostreaming vs;   
     AudioInput audio;
-
+    
     if(is20_04detected)
     {
         viewer.rootContext()->setContextProperty("is20_04detcted", QVariant(true));
