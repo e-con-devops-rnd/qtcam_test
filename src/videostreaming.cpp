@@ -1505,7 +1505,7 @@ void Videostreaming::capFrame()
     memset(planes, 0, sizeof(planes));
     buf.length = VIDEO_MAX_PLANES;
     buf.m.planes = planes;
-    
+
     if (!dqbuf_mmap(buf, buftype, again)) {
         // stop the timer when device is unplugged
         if(!retrieveFrame)
@@ -3501,6 +3501,8 @@ bool Videostreaming::startCapture()
         }
     }
     createWindow = true;
+    //To disable clearBuffer after crossResolution still capture to start the paint - Added by Sushanth
+    clearBuffer = false;
     // Added by Navya : 11 Feb 2020 -- Enabling capturing images once after streamon
     emit signalToSwitchResoln(true);
 
@@ -3609,6 +3611,12 @@ void Videostreaming::makeShot(QString filePath,QString imgFormatType) {
             frameIntervalChanged(lastFPSValue.toUInt(),changeFPSForHyperyon);
         }
         startAgain();
+
+        //Added by Sushanth
+        if(currentlySelectedCameraEnum == CommonEnums::SEE3CAM_27CUG)
+        {
+            clearBuffer = true; // to clear buffer in IR preview while cross resolution stillCapture
+        }
 
         //Added by Sushanth - autoExposureMode in UVC settings
         if(autoExposureMode)
@@ -4849,7 +4857,7 @@ void Videostreaming::switchToStillPreviewSettings(bool stillSettings)
             vidCapFormatChanged(stillOutFormat);
 
             setResoultion(stillSize);
-            
+
             m_renderer->renderBufferFormat = CommonEnums::NO_RENDER;
         }
         else{
