@@ -1,5 +1,5 @@
-import QtQuick 2.6
-import QtQuick.Window 2.2
+import QtQuick 2.0
+import QtQuick.Window 2.0
 import econ.camera.qimagerenderer 1.0
 import econ.camera.stream 1.0
 
@@ -7,8 +7,8 @@ Window {
     id:irPreview
     title: qsTr("IR Preview")
     visible: true
-    width: 1600
-    height: 1300
+    width: 640
+    height: 480
     color: "black"
 
     property int camMode
@@ -24,6 +24,10 @@ Window {
                 irPreview.close()
             }
         }
+        onWindowCloseAfterUnplug:
+        {
+            irPreview.close()
+        }
     }
 
     Connections{
@@ -38,6 +42,12 @@ Window {
         id: liveImageItem
          height: parent.height
          width: parent.width
+    }
+
+    Component.onCompleted:
+    {
+            x = Screen.width / 2 - width / 2
+            y = Screen.height / 2 - height / 2
     }
 
 }
