@@ -882,12 +882,12 @@ void FrameRenderer::drawY8BUffer(){
         if(currentlySelectedEnumValue == CommonEnums::SEE3CAM_CU83){
             if((videoResolutionwidth == Y16_1350p_WIDTH)&&(videoResolutionHeight == Y16_1350p_HEIGHT)){
                 if(ir1350pBuffer != NULL){
-                    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, videoResolutionwidth ,videoResolutionHeight, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, ir1350pBuffer);
+                    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, videoResolutionwidth ,Y16_1350p_HEIGHT_MODIFIED, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, ir1350pBuffer);
                 }
             }
             else if((videoResolutionwidth == Y16_675p_WIDTH)&&(videoResolutionHeight == Y16_675p_HEIGHT)){
                 if(ir675pBuffer != NULL){
-                    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, videoResolutionwidth ,videoResolutionHeight, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, ir675pBuffer);
+                    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, videoResolutionwidth ,Y16_675p_HEIGHT_MODIFIED, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, ir675pBuffer);
                 }
             }
             else{
@@ -1894,7 +1894,7 @@ void Videostreaming::capFrame()
             if(m_renderer->y16BayerFormat){
                 bufferToSave = y16BayerDestBuffer;
             }
-            else{
+            else if(validFilePath){//Capturing image only when the given filepath is valid - Added by Sushanth
                 bufferToSave = m_capImage->bits(); // image data converted using v4l2convert
 
                 if(currentlySelectedCameraEnum == CommonEnums::SEE3CAM_CU83)
@@ -2972,8 +2972,14 @@ bool Videostreaming::prepareCu83Buffer(uint8_t *inputbuffer)
             IRsize      -= 5;
         }
 
-       //Convert buffer into QImage to render in another window
-       QImage qImage3((outputIrBuffer), Y16_2160p_Y8_WIDTH, Y16_2160p_Y8_HEIGHT, QImage::Format_Grayscale8);
+        //Convert buffer into QImage to render in another window
+        QImage qImage3(outputIrBuffer, Y16_2160p_Y8_WIDTH, Y16_2160p_Y8_HEIGHT, QImage::Format_Grayscale8);
+
+        //set black color in the preview window, when device is in trigger mode
+        if(clearBuffer)
+        {
+            qImage3.fill(Qt::black);
+        }
 
        //passing QImage to the setImage() defined in renderer class
        helperObj.setImage(qImage3);
@@ -3163,11 +3169,25 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
 
             case V4L2_PIX_FMT_GREY:{  // directly giving y8 data for rendering
                 m_renderer->renderBufferFormat = CommonEnums::GREY_BUFFER_RENDER;
+
+                //Added By Sushanth - To enable wakeonMotion in GREY format
+                if(currentlySelectedCameraEnum == CommonEnums::SEE3CAM_CU83)
+                {
+                    emit wakeOnMotion(true);
+                }
+
                 memcpy(m_renderer->greyBuffer, (uint8_t*)inputbuffer, width*height);
             }
                 break;
 
             case V4L2_PIX_FMT_UYVY:{   // directly giving uyvy data for rendering
+
+                //Added By Sushanth - To disable wakeonMotion in UVVY format
+                if(currentlySelectedCameraEnum == CommonEnums::SEE3CAM_CU83)
+                {
+                    emit wakeOnMotion(false);
+                }
+
                 if(width == 640 && (height == 480 | height == 360 | height == 482))
                 {
                     m_renderer->renderBufferFormat = CommonEnums::BUFFER_RENDER_360P;
@@ -3251,6 +3271,9 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
                 //Splitting of UYVY & Y8 buffer for See3Cam_CU83
                 if(currentlySelectedCameraEnum == CommonEnums::SEE3CAM_CU83)
                 {
+                    //Added By Sushanth - To enable wakeonMotion in Y16 format
+                    emit wakeOnMotion(true);
+
                     if(!prepareCu83Buffer((uint8_t*)inputbuffer))
                     {
                         return false;
@@ -3576,7 +3599,6 @@ void Videostreaming::makeShot(QString filePath,QString imgFormatType) {
     // Added by Sankari : to set still skip
     emit stillSkipCount(stillSize, lastPreviewSize, stillOutFormat);
     m_snapShot = true;
-    createWindow = false;
     retrieveShot =true;
     m_burstShot = false;
     m_burstNumber = 1;
@@ -3599,7 +3621,15 @@ void Videostreaming::makeShot(QString filePath,QString imgFormatType) {
     if(currentlySelectedCameraEnum == CommonEnums::SEE3CAM_24CUG&&trigger_mode)
         return;
 
-    if (!((stillSize == lastPreviewSize) && (stillOutFormat == lastFormat)))
+    //Added by Sushanth - Capturing frame only if the filePath is valid
+    if(!validFilePath)
+    {
+        _title = "Failure";
+        _text = "Location doesn't exist";
+        validFilePath = false;
+        emit titleTextChanged(_title,_text);
+    }
+    else if (!((stillSize == lastPreviewSize) && (stillOutFormat == lastFormat)))
     {
         m_renderer->updateStop = true;
         stopCapture();
@@ -3720,7 +3750,6 @@ void Videostreaming::getFileName(QString filePath,QString imgFormatType){
     QDateTime dateTime = QDateTime::currentDateTime();
     QDir tmpDir;
 
-    bool validFilePath = true;
     //Added By Sushanth - Validating the filePath
     struct stat validateFilePath;
     // Calls the function with path as argument
@@ -3729,10 +3758,11 @@ void Videostreaming::getFileName(QString filePath,QString imgFormatType){
     const char *charFilePath = byteArray.data();
     if (stat(charFilePath, &validateFilePath) != 0)
     {
-        _title = "Failure";
-        _text = "Location doesn't exist";
         validFilePath = false;
-        emit titleTextChanged(_title,_text);
+    }
+    else
+    {
+        validFilePath = true;
     }
 
     if(tmpDir.cd(filePath)) {
@@ -3771,12 +3801,8 @@ void Videostreaming::getFileName(QString filePath,QString imgFormatType){
         }
     }
 
-    //if the filePath is valid
-    if(validFilePath)
-    {
-        setFilePath(filePath);
-        setImageFormatType(imgFormatType);
-    }
+    setFilePath(filePath);
+    setImageFormatType(imgFormatType);
 }
 
 void Videostreaming::setFilePath(QString filePath){
@@ -3819,6 +3845,11 @@ void Videostreaming::makeBurstShot(QString filePath,QString imgFormatType, uint 
     retrieveShot = false;
     imgSaveSuccessCount = 0;
 
+    if(currentlySelectedCameraEnum == CommonEnums::SEE3CAM_CU83)
+    {
+        createWindow = false; // To stop creating IR window while cross resolution stillCapture
+    }
+
     // emit signal to set still skip count
     emit stillSkipCount(stillSize, lastPreviewSize, stillOutFormat);
 
@@ -3831,7 +3862,16 @@ void Videostreaming::makeBurstShot(QString filePath,QString imgFormatType, uint 
     triggerShot = false;
     m_displayCaptureDialog = true;
     m_saveImage = true;
-    if (!((stillSize == lastPreviewSize) && (stillOutFormat == lastFormat)))
+
+    //Added by Sushanth - Capturing frame only if the filePath is valid
+    if(!validFilePath)
+    {
+        _title = "Failure";
+        _text = "Location doesn't exist";
+        validFilePath = false;
+        emit titleTextChanged(_title,_text);
+    }
+    else if (!((stillSize == lastPreviewSize) && (stillOutFormat == lastFormat)))
     {
         // Added by Sankari: disable paint in preview while capturing image when still and preview resolution
         //are different
@@ -3840,6 +3880,17 @@ void Videostreaming::makeBurstShot(QString filePath,QString imgFormatType, uint 
         vidCapFormatChanged(stillOutFormat);
         setResoultion(stillSize);
         startAgain();
+
+        if(currentlySelectedCameraEnum == CommonEnums::SEE3CAM_CU83)
+        {
+            clearBuffer = true; // to clear buffer in IR preview while cross resolution stillCapture
+        }
+        //Added by Sushanth - autoExposureMode in UVC settings
+        if(autoExposureMode)
+        {
+             //to set exposure compensation after capturing still in cross resolution.
+             emit setExpAfterCrossStill();
+        }
     }
 }
 
@@ -4132,6 +4183,8 @@ void Videostreaming::stopCapture() {
 }
 
 void Videostreaming::closeDevice() {
+
+    //To close the Ir window when the device is unplugged
     emit deviceUnPlug();
     emit logDebugHandle("Closing the current camera device");
     if (fd() >= 0) {
@@ -4896,8 +4949,11 @@ void Videostreaming::enableDisableExpCompensation(bool isEnable)
   if(isEnable)
   {
     autoExposureMode = true;
-    //To set Min & Max exposure after cross resolution still capture in manual mode (when switched to auto mode)
-    emit setExpAfterCrossStill();
+    if(currentlySelectedCameraEnum == CommonEnums::SEE3CAM_27CUG)
+    {
+        //To set exposure after cross resolution still capture in manual mode (when switched to auto mode)
+        emit setExpAfterCrossStill();
+    }
   }
   else{
     autoExposureMode = false;
