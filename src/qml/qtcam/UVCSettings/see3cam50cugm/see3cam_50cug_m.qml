@@ -34,6 +34,11 @@ Item{
     property int imageBurstMin: 0
     property int imageBurstMax: 5
 
+    property int blackLevelMin: 0
+    property int blackLevelMax: 4095
+
+    property bool skipUpdateBlackLevelMode  : false
+
     property bool skipUpdateUIOnBurstLength: false
     property bool skipUpdateUIFlickerCtrl:false
     property int  triggerCtrl
@@ -164,7 +169,7 @@ Item{
 
                 Text {
                     id: flipMode
-                    text: "--- Flip Mode ---"
+                    text: "--- Orientation Mode ---"
                     font.pixelSize: 14
                     font.family: "Ubuntu"
                     color: "#ffffff"
@@ -224,10 +229,22 @@ Item{
                        exclusiveGroup: blackLeverAdjGroup
                        activeFocusOnPress: true
                        onClicked: {
-                           see3cam50cugm.setBlackLevelAdjustment(SEE3CAM_50CUGM.ENABLE)
+
+                           see3cam50cugm.setBlackLevelAdjustment(SEE3CAM_50CUGM.ENABLE,blackLevelSlider.value)
+
+                           blackLevelSlider.enabled    = true
+                           blackLevelSlider.opacity    = 1
+                           blackLevelTextField.enabled = true
+                           blackLevelTextField.opacity = 1
                        }
                        Keys.onReturnPressed: {
-                           see3cam50cugm.setBlackLevelAdjustment(SEE3CAM_50CUGM.ENABLE)
+
+                           see3cam50cugm.setBlackLevelAdjustment(SEE3CAM_50CUGM.ENABLE,blackLevelSlider.value)
+
+                           blackLevelSlider.enabled    = true
+                           blackLevelSlider.opacity    = 1
+                           blackLevelTextField.enabled = true
+                           blackLevelTextField.opacity = 1
                        }
                    }
                    RadioButton {
@@ -237,17 +254,68 @@ Item{
                        exclusiveGroup: blackLeverAdjGroup
                        activeFocusOnPress: true
                        onClicked: {
-                           see3cam50cugm.setBlackLevelAdjustment(SEE3CAM_50CUGM.DISABLE)
+
+                           see3cam50cugm.setBlackLevelAdjustment(SEE3CAM_50CUGM.DISABLE,blackLevelSlider.value)
+
+                           blackLevelSlider.enabled    = false
+                           blackLevelSlider.opacity    = 0.1
+                           blackLevelTextField.enabled = false
+                           blackLevelTextField.opacity = 0.1
                        }
+
                        Keys.onReturnPressed: {
-                           see3cam50cugm.setBlackLevelAdjustment(SEE3CAM_50CUGM.DISABLE)
+                           see3cam50cugm.setBlackLevelAdjustment(SEE3CAM_50CUGM.DISABLE,blackLevelSlider.value)
+
+                           blackLevelSlider.enabled    = false
+                           blackLevelSlider.opacity    = 0.1
+                           blackLevelTextField.enabled = false
+                           blackLevelTextField.opacity = 0.1
                        }
                    }
                }
 
+                Row
+                {
+                    spacing: 35
+                    Slider
+                    {
+                        activeFocusOnPress: true
+                        updateValueWhileDragging: false
+                        id: blackLevelSlider
+                        width: 150
+                        stepSize: 1
+                        style:econSliderStyle
+                        minimumValue: blackLevelMin
+                        maximumValue: blackLevelMax
+                        onValueChanged:  {
+                            blackLevelTextField.text = blackLevelSlider.value
+                            if(skipUpdateBlackLevelMode){
+                                see3cam50cugm.setBlackLevelAdjustment(SEE3CAM_50CUGM.ENABLE,blackLevelSlider.value)
+                            }
+                            skipUpdateBlackLevelMode = true
+                        }
+                    }
+                    TextField
+                    {
+                        id: blackLevelTextField
+                        text: blackLevelSlider.value
+                        font.pixelSize: 10
+                        font.family: "Ubuntu"
+                        smooth: true
+                        horizontalAlignment: TextInput.AlignHCenter
+                        style: econTextFieldStyle
+                        validator: IntValidator {bottom: blackLevelSlider.minimumValue; top: blackLevelSlider.maximumValue}
+                        onTextChanged: {
+                            if(text.length > 0){
+                                blackLevelSlider.value = blackLevelTextField.text
+                            }
+                        }
+                    }
+                }
+
                 Text {
                     id: strobe
-                    text: "--- Strobe Mode---"
+                    text: "--- Strobe ---"
                     font.pixelSize: 14
                     font.family: "Ubuntu"
                     color: "#ffffff"
@@ -262,7 +330,7 @@ Item{
                         exclusiveGroup: strobesGrp
                         checked: false
                         id: strobeFlash
-                        text: "Flash"
+                        text: "On"
                         activeFocusOnPress: true
                         style: econRadioButtonStyle
                         onClicked: {
@@ -292,7 +360,7 @@ Item{
                         Layout.alignment: Qt.AlignCenter
                         Text {
                             id: imgCapText
-                            text: "--- Image Capture ---"
+                            text: "--- Image Burst ---"
                             font.pixelSize: 14
                             font.family: "Ubuntu"
                             color: "#ffffff"
@@ -621,19 +689,35 @@ Item{
             }
         }
 
-        onBlackLevelAdjustmentChanged:
+        onBlackLevelModeChanged:
         {
-            if(blacklevel == SEE3CAM_50CUGM.ENABLE)
+            if(blacklevelMode == SEE3CAM_50CUGM.ENABLE)
             {
                 enableBlackLevel.checked = true
                 disableBlackLevel.checked = false
+
+                blackLevelSlider.enabled    = true
+                blackLevelSlider.opacity    = 1
+                blackLevelTextField.enabled = true
+                blackLevelTextField.opacity = 1
             }
-            else if(blacklevel == SEE3CAM_50CUGM.DISABLE)
+            else if(blacklevelMode == SEE3CAM_50CUGM.DISABLE)
             {
                 enableBlackLevel.checked = false
                 disableBlackLevel.checked = true
+
+                blackLevelSlider.enabled    = false
+                blackLevelSlider.opacity    = 0.1
+                blackLevelTextField.enabled = false
+                blackLevelTextField.opacity = 0.1
             }
         }
+
+        onBlackLevelValueChanged:{
+            skipUpdateBlackLevelMode = false
+            blackLevelSlider.value = blackLevelValue
+        }
+
         onImageBurstChanged:{
             skipUpdateUIOnBurstLength = false
             burstLengthCombo.currentIndex = burstLength - 1
