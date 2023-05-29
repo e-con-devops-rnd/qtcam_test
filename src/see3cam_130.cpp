@@ -602,6 +602,7 @@ bool See3CAM_130::getAutoFocusROIModeAndWindowSize(){
  */
 bool See3CAM_130::setROIAutoExposure(camROIAutoExpMode see3camAutoexpROIMode, uint vidResolnWidth, uint vidResolnHeight, uint xCord, uint yCord, QString winSize)
 {
+    qDebug()<<Q_FUNC_INFO;
     // hid validation
     if(uvccamera::hid_fd < 0)
     {
