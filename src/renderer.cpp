@@ -35,7 +35,7 @@ void ImageItem::setImage(const QImage &image)
 {
     m_image = image;
     emit imageChanged();
-//    update();
+   update();
 }
 
 void ImageItem::paint(QPainter *painter)
