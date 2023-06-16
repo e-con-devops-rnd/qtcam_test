@@ -16,16 +16,6 @@ Item {
     property bool skipUpdateUIFrameRate        : false
     property bool skipUpdateBlackLevelMode     : false
 
-
-//    Timer {
-//        id: getCamValuesTimer
-//        interval: 500
-//        onTriggered: {
-//            see3cam16cugm.getFpsValue()
-//            stop()
-//        }
-//    }
-
     Action {
         id: firmwareVersion
         onTriggered:
@@ -70,15 +60,6 @@ Item {
             stillImageFormat.push("raw")
             stillImageFormat.push("png")
             root.insertStillImageFormat(stillImageFormat);
-        }
-        onVideoResolutionChanged:{
-//            getCamValuesTimer.start()
-        }
-        onPreviewFPSChanged:{
-//            getCamValuesTimer.start()
-        }
-        onVideoColorSpaceChanged:{
-//            getCamValuesTimer.start()
         }
     }
 
@@ -189,8 +170,7 @@ Item {
                     }
                 }
 
-                //Flip Mode
-                Text {
+               Text {
                     id: flipMode
                     text: "--- Flip Mode ---"
                     font.pixelSize: 14
@@ -310,54 +290,6 @@ Item {
                     }
                 }
 
-
-//                Text
-//                {
-//                    id: frameRateText
-//                    text: "--- Frame Rate Control ---"
-//                    font.pixelSize: 14
-//                    font.family: "Ubuntu"
-//                    color: "#ffffff"
-//                    smooth: true
-//                    Layout.alignment: Qt.AlignCenter
-//                    opacity: 0.50196078431373
-//                }
-//                Row{
-//                    spacing: 35
-//                    Slider {
-//                        activeFocusOnPress: true
-//                        updateValueWhileDragging: false
-//                        id: frameRateSlider
-//                        width: 150
-//                        stepSize: 1
-//                        style:econSliderStyle
-//                        minimumValue: frameRateSlider.minimumValue
-//                        maximumValue: frameRateSlider.maximumValue
-//                        onValueChanged:  {
-//                            frameRateTextField.text = frameRateSlider.value
-//                            if(skipUpdateUIFrameRate){
-//                                see3cam16cugm.setFpsValue(frameRateSlider.value)
-//                            }
-//                            skipUpdateUIFrameRate = true
-//                        }
-//                    }
-//                    TextField {
-//                        id: frameRateTextField
-//                        text: frameRateSlider.value
-//                        font.pixelSize: 10
-//                        font.family: "Ubuntu"
-//                        smooth: true
-//                        horizontalAlignment: TextInput.AlignHCenter
-//                        style: econTextFieldStyle
-//                        validator: IntValidator {bottom: frameRateSlider.minimumValue; top: frameRateSlider.maximumValue}
-//                        onTextChanged: {
-//                            if(text.length > 0){
-//                                frameRateSlider.value = frameRateTextField.text
-//                            }
-//                        }
-//                    }
-//                }
-
                 Text {
                     id: hdrMode
                     text: "--- HDR Mode ---"
@@ -402,7 +334,6 @@ Item {
                 }
 
 
-                //stream mode
                 Text {
                     id: streamMode
                     text: "--- Stream Mode ---"
@@ -464,7 +395,6 @@ Item {
                 }
 
                Row{
-                   // Layout.alignment: Qt.AlignCenter
                     Button {
                         id: f_wversion_selected130
                         opacity: 1
@@ -509,9 +439,9 @@ Item {
                     }
                 }
 
-            }//Coloumn Layout
-        }//Item in Scroll View
-    }//ScrollView
+            }
+        }
+    }
 
    See3CAM_16CUGM{
      id:see3cam16cugm
@@ -820,11 +750,9 @@ Item {
         see3cam16cugm.getHDRMode()
         see3cam16cugm.getStreamMode()
         see3cam16cugm.getBlackLevelCorrection()
-//        getCamValuesTimer.start()
     }
 
     Component.onCompleted: {
         getValuesFromCamera();
     }
-
-}//Item
+}

@@ -115,8 +115,8 @@ bool SEE3CAM_16CUGM::setStrobeMode(STROBE_MODE strobeMode)
     // fill buffer values
     g_out_packet_buf[1] = CAMERA_CONTROL_ID1_SEE3CAM_16CUGM; /* set camera control code */
     g_out_packet_buf[2] = CAMERA_CONTROL_ID2_SEE3CAM_16CUGM; /* set camera control code */
-    g_out_packet_buf[3] = SET_SHUTTER_MODE_SEE3CAM_16CUGM; /* set shutter mode */
-    g_out_packet_buf[4] = strobeMode; /* set shutter mode*/
+    g_out_packet_buf[3] = SET_SHUTTER_MODE_SEE3CAM_16CUGM; /* set strobe mode */
+    g_out_packet_buf[4] = strobeMode; /* set strobe mode*/
 
     // send request and get reply from camera
     if(uvc.sendHidCmd(g_out_packet_buf, g_in_packet_buf, BUFFER_LENGTH)){
@@ -151,7 +151,7 @@ bool SEE3CAM_16CUGM::getStrobeMode()
     // fill buffer values
     g_out_packet_buf[1] = CAMERA_CONTROL_ID1_SEE3CAM_16CUGM; /* set camera control id_1 */
     g_out_packet_buf[2] = CAMERA_CONTROL_ID2_SEE3CAM_16CUGM; /* set camera control id_2 */
-    g_out_packet_buf[3] = GET_SHUTTER_MODE_SEE3CAM_16CUGM; /* get shutter mode */
+    g_out_packet_buf[3] = GET_SHUTTER_MODE_SEE3CAM_16CUGM; /* get strobe mode */
 
     // send request and get reply from camera
     if(uvc.sendHidCmd(g_out_packet_buf, g_in_packet_buf, BUFFER_LENGTH)){
@@ -187,8 +187,8 @@ bool SEE3CAM_16CUGM::setBlackLevelCorrection(BLACKLEVEL_CORRECTION blackLevelMod
     initializeBuffers();
 
     // fill buffer values
-    g_out_packet_buf[1] = CAMERA_CONTROL_ID1_SEE3CAM_16CUGM; /* set camera control code */
-    g_out_packet_buf[2] = CAMERA_CONTROL_ID2_SEE3CAM_16CUGM; /* set camera control code */
+    g_out_packet_buf[1] = CAMERA_CONTROL_ID1_SEE3CAM_16CUGM; /* set camera control id_1 */
+    g_out_packet_buf[2] = CAMERA_CONTROL_ID2_SEE3CAM_16CUGM; /* set camera control id_2 */
     g_out_packet_buf[3] = SET_BLACKLEVEL_MODE_SEE3CAM_16CUGM;  /* set Black level */
     g_out_packet_buf[4] = blackLevelMode;
 
@@ -271,8 +271,8 @@ bool SEE3CAM_16CUGM::setOrientation(bool horzModeSel, bool vertiModeSel)
     initializeBuffers();
 
     // fill buffer values
-    g_out_packet_buf[1] = CAMERA_CONTROL_ID1_SEE3CAM_16CUGM; /* camera id_1 */
-    g_out_packet_buf[2] = CAMERA_CONTROL_ID2_SEE3CAM_16CUGM; /* camera id_2 */
+    g_out_packet_buf[1] = CAMERA_CONTROL_ID1_SEE3CAM_16CUGM; /* set camera control id_1 */
+    g_out_packet_buf[2] = CAMERA_CONTROL_ID2_SEE3CAM_16CUGM; /* set camera control id_2 */
     g_out_packet_buf[3] = SET_ORIENTATION_MODE_SEE3CAM_16CUGM; /* set orientation command  */
 
     if(horzModeSel && vertiModeSel){
@@ -315,8 +315,8 @@ bool SEE3CAM_16CUGM::getOrientation()
     initializeBuffers();
 
     // fill buffer values
-    g_out_packet_buf[1] = CAMERA_CONTROL_ID1_SEE3CAM_16CUGM; /* camera id_1 */
-    g_out_packet_buf[2] = CAMERA_CONTROL_ID2_SEE3CAM_16CUGM; /* camera id_2 */
+    g_out_packet_buf[1] = CAMERA_CONTROL_ID1_SEE3CAM_16CUGM; /* set camera control id_1 */
+    g_out_packet_buf[2] = CAMERA_CONTROL_ID2_SEE3CAM_16CUGM; /* set camera control id_2 */
     g_out_packet_buf[3] = GET_ORIENTATION_MODE_SEE3CAM_16CUGM; /* get orientation command  */
 
     // send request and get reply from camera
@@ -352,10 +352,10 @@ bool SEE3CAM_16CUGM::setHDRMode(HDR_MODE hdrMode)
     initializeBuffers();
 
     // fill buffer values
-    g_out_packet_buf[1] = CAMERA_CONTROL_ID1_SEE3CAM_16CUGM; /* set camera control code */
-    g_out_packet_buf[2] = CAMERA_CONTROL_ID2_SEE3CAM_16CUGM; /* set camera control code */
-    g_out_packet_buf[3] = SET_HDR_MODE_SEE3CAM_16CUGM; /* set shutter mode */
-    g_out_packet_buf[4] = hdrMode; /* set shutter mode*/
+    g_out_packet_buf[1] = CAMERA_CONTROL_ID1_SEE3CAM_16CUGM; /* set camera control id_1 */
+    g_out_packet_buf[2] = CAMERA_CONTROL_ID2_SEE3CAM_16CUGM; /* set camera control id_2 */
+    g_out_packet_buf[3] = SET_HDR_MODE_SEE3CAM_16CUGM; /* set HDR mode */
+    g_out_packet_buf[4] = hdrMode; /* set HDR mode*/
 
     // send request and get reply from camera
     if(uvc.sendHidCmd(g_out_packet_buf, g_in_packet_buf, BUFFER_LENGTH)){
@@ -363,8 +363,8 @@ bool SEE3CAM_16CUGM::setHDRMode(HDR_MODE hdrMode)
             return false;
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_ID1_SEE3CAM_16CUGM &&
             g_in_packet_buf[1] == CAMERA_CONTROL_ID2_SEE3CAM_16CUGM &&
-            g_in_packet_buf[2]== SET_HDR_MODE_SEE3CAM_16CUGM &&
-            g_in_packet_buf[6]== SET_SUCCESS) {
+            g_in_packet_buf[2] == SET_HDR_MODE_SEE3CAM_16CUGM &&
+            g_in_packet_buf[6] == SET_SUCCESS) {
             return true;
         }
     }
@@ -397,8 +397,8 @@ bool SEE3CAM_16CUGM::getHDRMode()
             return false;
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_ID1_SEE3CAM_16CUGM &&
             g_in_packet_buf[1] == CAMERA_CONTROL_ID2_SEE3CAM_16CUGM &&
-            g_in_packet_buf[2]==GET_HDR_MODE_SEE3CAM_16CUGM &&
-            g_in_packet_buf[6]==GET_SUCCESS) {
+            g_in_packet_buf[2] == GET_HDR_MODE_SEE3CAM_16CUGM &&
+            g_in_packet_buf[6] == GET_SUCCESS) {
             emit hdrModeReceived(g_in_packet_buf[3]);
             return true;
         }
@@ -408,7 +408,7 @@ bool SEE3CAM_16CUGM::getHDRMode()
 
 /**
  * @brief SEE3CAM_16CUGM::setStreamMode - setting stream mode to the camera
- * @param streamMode - Type of strobe mode
+ * @param streamMode - Type of stream mode
  * return true - success /false - failure
  */
 bool SEE3CAM_16CUGM::setStreamMode(STREAM_MODE streamMode)
@@ -423,8 +423,8 @@ bool SEE3CAM_16CUGM::setStreamMode(STREAM_MODE streamMode)
     initializeBuffers();
 
     // fill buffer values
-    g_out_packet_buf[1] = CAMERA_CONTROL_ID1_SEE3CAM_16CUGM; /* set camera control code */
-    g_out_packet_buf[2] = CAMERA_CONTROL_ID2_SEE3CAM_16CUGM; /* set camera control code */
+    g_out_packet_buf[1] = CAMERA_CONTROL_ID1_SEE3CAM_16CUGM; /* set camera control id_1 */
+    g_out_packet_buf[2] = CAMERA_CONTROL_ID2_SEE3CAM_16CUGM; /* set camera control id_2 */
     g_out_packet_buf[3] = SET_STREAM_MODE_SEE3CAM_16CUGM; /* set stream mode */
     g_out_packet_buf[4] = streamMode; /* set stream mode*/
 
@@ -434,8 +434,8 @@ bool SEE3CAM_16CUGM::setStreamMode(STREAM_MODE streamMode)
             return false;
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_ID1_SEE3CAM_16CUGM &&
             g_in_packet_buf[1] == CAMERA_CONTROL_ID2_SEE3CAM_16CUGM &&
-            g_in_packet_buf[2]== SET_STREAM_MODE_SEE3CAM_16CUGM &&
-            g_in_packet_buf[6]== SET_SUCCESS) {
+            g_in_packet_buf[2] == SET_STREAM_MODE_SEE3CAM_16CUGM &&
+            g_in_packet_buf[6] == SET_SUCCESS) {
             return true;
         }
     }
