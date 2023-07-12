@@ -692,7 +692,7 @@ Item {
                         opacity: 0
                         //Just for layout purpose
                     }
-                    Text {
+                    Text {//Exposure,Auto here
                         id: exposure_auto
                         text: "Exposure,\nAuto"
                         font.pixelSize: 12
