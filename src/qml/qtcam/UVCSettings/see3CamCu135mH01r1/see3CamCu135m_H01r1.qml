@@ -24,9 +24,6 @@ Item {
     property int brightnessMin: 0
     property int brightnessMax: 15
 
-//    property int xCoordinate: 0
-//    property int yCoordinate: 0
-
     property int gainMin: 1
     property int gainMax: 83
 
@@ -1027,7 +1024,7 @@ Item {
                 spacing: 35
                 Text {
                     id: gainLabel
-                    text: "Gain value (10^-2x)"
+                    text: "Gain value (10^-2 x)"
                     font.pixelSize: 14
                     font.family: "Ubuntu"
                     color: "#ffffff"
