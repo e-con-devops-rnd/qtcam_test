@@ -580,7 +580,16 @@ Item {
                         }
                     }
                 }
-
+                Text {
+                    id: manualGainSlider
+                    text: "--- Manual Gain Slider ---"
+                    font.pixelSize: 14
+                    font.family: "Ubuntu"
+                    color: "#ffffff"
+                    smooth: true
+                    Layout.alignment: Qt.AlignCenter
+                    opacity: 0.50196078431373
+                }
                 Row
                 {
                     spacing: 35
@@ -655,7 +664,6 @@ Item {
                         onValueChanged:  {
                             gainLowerLimitTextField.text = gainLowerLimitSlider.value
                             if(skipUpdateLowerLimitSlider){
-                                setButtonClicked = true
                                 see3camcu135mH01r1.setGainLimit(gainLowerLimitSlider.value, gainUpperLimitSlider.value)
                             }
                             skipUpdateLowerLimitSlider = true
@@ -700,7 +708,6 @@ Item {
                         onValueChanged:  {
                             gainUpperLimitTextField.text = gainUpperLimitSlider.value
                             if(skipUpdateUpperLimitSlider){
-                                setButtonClicked = true
                                 see3camcu135mH01r1.setGainLimit(gainLowerLimitSlider.value, gainUpperLimitSlider.value)
                             }
                             skipUpdateUpperLimitSlider = true
@@ -1260,10 +1267,7 @@ Item {
         }
 
         onIndicateGainValueRangeFailure:{
-            if(setButtonClicked){
-                setButtonClicked = false
-                see3camcu135mH01r1.getGainLimit()
-            }
+            see3camcu135mH01r1.getGainLimit()
         }
         onIndicateExposureValueRangeFailure:{
             if(setButtonClicked){
@@ -1538,7 +1542,7 @@ Item {
             gainTextField.opacity = 0.1
 
             //To enable gain limit sliders in auto gain mode
-            gainUpperLimitSlider.enabled = true
+            gainLowerLimitSlider.enabled = true
             gainLowerLimitSlider.opacity = 1
             gainLowerLimitTextField.enabled = true
             gainLowerLimitTextField.opacity = 1
@@ -1573,7 +1577,7 @@ Item {
             gainTextField.opacity = 1
 
             //To disable gain limit sliders in manual Gain mode
-            gainUpperLimitSlider.enabled    = false
+            gainLowerLimitSlider.enabled    = false
             gainLowerLimitSlider.opacity    = 0.1
             gainLowerLimitTextField.enabled = false
             gainLowerLimitTextField.opacity = 0.1
