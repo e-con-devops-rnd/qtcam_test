@@ -3626,7 +3626,7 @@ void Videostreaming::allocBuffers()
     m_renderer->rgbFromY16Buffer = (uint8_t*)realloc(m_renderer->rgbFromY16Buffer, (Y16_1080p_WIDTH*Y16_1080p_HEIGHT*BYTES_PER_PIXEL_Y16)); //3120*1080*2 - RGB frame
 
     //Splitted IR Data from Y16
-    m_renderer->inputIrBuffer = (uint8_t*)realloc(m_renderer->inputIrBuffer,2592000);
+    m_renderer->inputIrBuffer = (uint8_t*)realloc(m_renderer->inputIrBuffer,Y16_1080p_WIDTH*Y16_1080p_HEIGHT*BYTES_PER_PIXEL_Y16);
 
     //To Render IR data
     m_renderer->outputIrBuffer = (uint8_t*)realloc(m_renderer->outputIrBuffer ,Y16_1080p_WIDTH*Y16_1080p_HEIGHT);
