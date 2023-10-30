@@ -91,6 +91,9 @@ Item {
     property var menuitems:[]
 
     property int adjustedExposure
+    property int seconds
+    property int milliSeconds
+    property int microSeconds
 
     // It needs some time to get exposure control correct index value recently set in image quality settings when selecting camera in UI.
     Timer {
@@ -762,7 +765,6 @@ Item {
                                     //To set Auto/Manual exposure mode
                                     if(currentText.toString() != "Auto Mode" && currentText.toString() != "Aperture Priority Mode") {
                                         root.changeCameraSettings(exposurecontrolId,exposure_Slider.value.toString())
-
                                         root.autoExposureSelected(false)
                                         JS.autoExposureSelected = false
                                         exposure_absolute.opacity = 1
@@ -809,6 +811,8 @@ Item {
                             //Sending UVC value to HID
                             adjustedExposure = exposure_Slider.value * 100
                             root.getExposureUVC(adjustedExposure)
+
+//                            root.getExposureComponentsUVC(seconds, milliSeconds, microSeconds)
 
                             if((exposureCombo.currentText == "Manual Mode") && (root.selectedDeviceEnumValue == CommonEnums.CX3_UVC_CAM)){
                                 exposureValueAscella = exposureOrigAscella[value]
@@ -1291,6 +1295,17 @@ Item {
         }
         onGetExposureFromHID:{
             exposure_Slider.value = exposureFromHID
+        }
+        onGetExposureStatusFromHID:{
+            if(isAutoEnable)
+            {
+                exposureCombo.currentIndex = 0
+            }
+            else
+            {
+                exposureCombo.currentIndex = 1
+                exposure_Slider.value = exposure
+            }
         }
     }
     Connections

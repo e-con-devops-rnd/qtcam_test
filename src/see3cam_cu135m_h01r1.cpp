@@ -612,8 +612,6 @@ bool See3CAM_CU135M_H01R1 ::setTargetBrightness(uint targetBrightness)
     //Initialize buffers
     initializeBuffers();
 
-    uint16_t brightness;
-
     // fill buffer values
     g_out_packet_buf[1] = CAMERA_CONTROL_ID_SEE3CAM_CU135M_H01R1_H; /* set camera control code */
     g_out_packet_buf[2] = SET_TARGET_BRIGHTNESS_SEE3CAM_CU135M_H01R1_H ;
