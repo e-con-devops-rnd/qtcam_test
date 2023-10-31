@@ -1671,9 +1671,7 @@ Item {
               qFactorSlider.value = qFactor
               skipUpdateUIQFactor = true
         }
-//        onAfRectModeValueReceived:{
-//            currentAutoFocusValue(afRectMode)
-//        }
+
         onStreamModeValueReceived:{
             currentStreamMode(streamMode)
         }

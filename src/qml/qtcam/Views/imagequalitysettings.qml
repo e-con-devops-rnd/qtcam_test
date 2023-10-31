@@ -91,9 +91,10 @@ Item {
     property var menuitems:[]
 
     property int adjustedExposure
-    property int seconds
-    property int milliSeconds
-    property int microSeconds
+    property int exposureInt
+    property int seconds : 0
+    property int milliSeconds : 0
+    property int microSeconds : 0
 
     // It needs some time to get exposure control correct index value recently set in image quality settings when selecting camera in UI.
     Timer {
@@ -812,7 +813,11 @@ Item {
                             adjustedExposure = exposure_Slider.value * 100
                             root.getExposureUVC(adjustedExposure)
 
-//                            root.getExposureComponentsUVC(seconds, milliSeconds, microSeconds)
+                            exposureInt = parseInt(exposure_Slider.value)
+
+                            seconds = exposureInt / 1000000
+                            milliSeconds = (exposureInt/1000) - (seconds * 1000)
+                            microSeconds = exposureInt - ((seconds * 1000000) + (milliSeconds * 1000))
 
                             if((exposureCombo.currentText == "Manual Mode") && (root.selectedDeviceEnumValue == CommonEnums.CX3_UVC_CAM)){
                                 exposureValueAscella = exposureOrigAscella[value]
@@ -823,6 +828,8 @@ Item {
                                 root.changeCameraSettings(exposurecontrolId,value.toString())
                             }else{
                                 if((exposureCombo.currentText == "Shutter Priority Mode" || exposureCombo.currentText == "Manual Mode")) {
+                                    root.getExposureComponentsUVC(seconds, milliSeconds, microSeconds)
+
                                     if(exposureSliderSetEnable){
                                         root.changeCameraSettings(exposurecontrolId,value.toString())
                                     }
@@ -1293,9 +1300,6 @@ Item {
         onGetColorTempFromHID:{
             white_balance_Slider.value = colorTempFromHID
         }
-        onGetExposureFromHID:{
-            exposure_Slider.value = exposureFromHID
-        }
         onGetExposureStatusFromHID:{
             if(isAutoEnable)
             {
@@ -1307,7 +1311,11 @@ Item {
                 exposure_Slider.value = exposure
             }
         }
+        onGetExposureFromHID:{
+            exposure_Slider.value = exposureFromHID
+        }
     }
+
     Connections
     {
         target: root
