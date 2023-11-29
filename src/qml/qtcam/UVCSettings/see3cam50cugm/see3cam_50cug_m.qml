@@ -22,7 +22,7 @@ import QtQuick.Controls 1.1
 import QtQuick.Controls.Styles 1.0
 import QtQuick.Dialogs 1.1
 import econ.camera.uvcsettings 1.0
-import econ.camera.see3cam_50cug_m 1.0
+import econ.camera.see3cam_50cugm 1.0
 import QtQuick.Layouts 1.1
 import cameraenum 1.0
 
@@ -53,7 +53,6 @@ Item{
     property bool skipUpdateGainMode            : false
 
     property bool setButtonClicked: false
-
 
     property bool skipUpdateUIOnBurstLength: false
     property bool skipUpdateUIFlickerCtrl:false
@@ -153,6 +152,9 @@ Item{
                        id: masterMode
                        style:  econRadioButtonStyle
                        text: qsTr("Master")
+                       tooltip: " Master Mode :
+ After choosing master mode, the application starts streaming.
+ This is a simple mode of operation for the camera without any external trigger capability."
                        exclusiveGroup: cameraModeGroup
                        activeFocusOnPress: true
                        onClicked: {
@@ -166,6 +168,16 @@ Item{
                        id: triggerMode
                        style:  econRadioButtonStyle
                        text: qsTr("Trigger")
+                       tooltip: "Trigger Mode:
+ 1.Exposure trigger:
+     In this mode, the sensor integration time is decided by the pulse width input (low level) to the trigger pin.
+     For example :
+     If the width of the low level trigger pulse is 15.6 ms then the exposure configured in the sensor is 15.6 ms.
+     In this mode strobe function is not supported.
+
+ 2.Acquisition trigger:
+     High to low transition of the trigger pulse will initiate the capture of the image with the exposure configured in the exposure slider."
+
                        exclusiveGroup: cameraModeGroup
                        activeFocusOnPress: true
                        onClicked: {
@@ -263,6 +275,7 @@ Item{
                         exclusiveGroup: gainModeGroup
                         checked: false
                         text: "Auto"
+                        tooltip: "This control will enables auto gain features"
                         activeFocusOnPress: true
                         style: econRadioButtonStyle
                         onClicked: {
@@ -278,6 +291,7 @@ Item{
                         exclusiveGroup: gainModeGroup
                         checked: false
                         text: "Manual"
+                        tooltip: "This control will change the sensor gain. 0dB to 48dB is supported range."
                         activeFocusOnPress: true
                         style: econRadioButtonStyle
                         onClicked: {
@@ -383,7 +397,22 @@ Item{
                             root.getGainValueFromHID(gainSlider.value)
 
                             if(skipUpdateGainMode){
-                                see3cam50cugm.setGainMode(SEE3CAM_50CUGM.MANUAL_GAIN_MODE, 0, gainSlider.value)
+
+                                if(manualGainMode.checked == true)
+                                {
+                                    see3cam50cugm.setGainMode(SEE3CAM_50CUGM.MANUAL_GAIN_MODE, 0, gainSlider.value)
+                                }
+                                else if(autoGainMode.checked == true)
+                                {
+                                    if(gainContinuous.checked == true)
+                                    {
+                                        see3cam50cugm.setGainMode(SEE3CAM_50CUGM.AUTO_GAIN,SEE3CAM_50CUGM.CONTINIOUS_GAIN, gainSlider.value)
+                                    }
+                                    else if(gainSingleShot.checked == true)
+                                    {
+                                        see3cam50cugm.setGainMode(SEE3CAM_50CUGM.AUTO_GAIN,SEE3CAM_50CUGM.SINGLE_SHOT_GAIN, gainSlider.value)
+                                    }
+                                }
                             }
                             skipUpdateGainMode = true
                         }
@@ -415,6 +444,11 @@ Item{
                     smooth: true
                     Layout.alignment: Qt.AlignCenter
                     opacity: 0.50196078431373
+                    ToolButton{
+                        tooltip: "This is used to the set the minimum gain range for the auto gain function."
+                        width: 200
+                        opacity: 0
+                    }
                 }
 
                 Row{
@@ -459,6 +493,11 @@ Item{
                     smooth: true
                     Layout.alignment: Qt.AlignCenter
                     opacity: 0.50196078431373
+                    ToolButton{
+                        tooltip: "This is used to the set the maximum gain range for the auto gain function."
+                        width: 200
+                        opacity: 0
+                    }
                 }
 
                 Row{
@@ -504,6 +543,11 @@ Item{
                     smooth: true
                     Layout.alignment: Qt.AlignCenter
                     opacity: 0.50196078431373
+                    ToolButton{
+                        tooltip: "This is used to manually set the Black Level Adjustment for the Camera."
+                        width: 200
+                        opacity: 0
+                    }
                 }
                 Row
                 {
@@ -553,6 +597,14 @@ Item{
                     smooth: true
                     Layout.alignment: Qt.AlignCenter
                     opacity: 0.50196078431373
+
+                    ToolButton{
+                        tooltip: "Strobe Mode :
+ The transition from low to high and high to low of strobe pulses will directly indicate the start and stop of the sensor exposure.
+ This feature is supported in Acquisition trigger."
+                        width: 200
+                        opacity: 0
+                    }
                 }
                 ColumnLayout{
                     spacing: 10
@@ -599,6 +651,12 @@ Item{
                             smooth: true
                             Layout.alignment: Qt.AlignCenter
                             opacity: 0.50196078431373
+                            ToolButton{
+                                tooltip: "It can be selected from minimum value of 1 to 5 from a drop down list box,
+and the exact number of images will be captured and stored in the location specified by the user."
+                                width: 200
+                                opacity: 0
+                            }
                         }
                     }
                     Text {
@@ -654,16 +712,18 @@ Item{
                             exclusiveGroup: exposureModeGroup
                             checked: false
                             text: "Auto"
+                            tooltip: "This control is used to set auto exposure mode and enables auto exposure features."
                             activeFocusOnPress: true
                             style: econRadioButtonStyle
                             onClicked: {
-                                root.sendExposureStatusToUVC(1 , convertedExposure)
-
                                 setAutoExposure()
+
+                                sendConvertedExpToUVC()
                             }
                             Keys.onReturnPressed: {
-                                root.sendExposureStatusToUVC(1 , convertedExposure)
                                 setAutoExposure()
+
+                                sendConvertedExpToUVC()
                             }
                         }
 
@@ -672,18 +732,20 @@ Item{
                             exclusiveGroup: exposureModeGroup
                             checked: false
                             text: "Manual"
+                            tooltip: "This control is used to vary the exposure time of the sensor. If you set greater than 2 sec in HID exposure and when you switch to UVC 2 sec will be set as maximum.
+HID exposure range: 100Usec to 14 sec.
+UVC exposure range: 100uSec to 2 sec."
                             activeFocusOnPress: true
                             style: econRadioButtonStyle
                             onClicked: {
-                                //Sending exposure value from HID to UVC
-                                sendConvertedExpToUVC()
                                 setManualExposure()
+
+                                sendConvertedExpToUVC()
                             }
                             Keys.onReturnPressed: {
-                                //Sending exposure value from HID to UVC
-                                sendConvertedExpToUVC()
-
                                 setManualExposure()
+
+                                sendConvertedExpToUVC()
                             }
                         }
                     }
@@ -755,7 +817,7 @@ Item{
 
                     Text {
                         id: manualExpTitle
-                        text: "--- Manual Exposure Fields ---"
+                        text: "--- Manual Exposure ---"
                         font.pixelSize: 14
                         font.family: "Ubuntu"
                         color: "#ffffff"
@@ -794,7 +856,6 @@ Item{
                                 }
                                 validator: IntValidator {bottom: minExpInSeconds; top: maxExpInSeconds}
                             }
-
 
                             TextField
                             {
@@ -850,16 +911,16 @@ Item{
                                 implicitHeight: 25
                                 implicitWidth: 50
                                 onClicked: {
+                                    see3cam50cugm.setExposure(SEE3CAM_50CUGM.MANUAL_EXPOSURE_MODE, 0, expInSecondsTextField.text, expInMilliSecTextField.text, expInMicroSecTextField.text)
+
                                     //Sending exposure value from HID to UVC
                                     sendConvertedExpToUVC()
-
-                                    see3cam50cugm.setExposure(SEE3CAM_50CUGM.MANUAL_EXPOSURE_MODE, 0, expInSecondsTextField.text, expInMilliSecTextField.text, expInMicroSecTextField.text)
                                 }
                                 Keys.onReturnPressed: {
+                                    see3cam50cugm.setExposure(SEE3CAM_50CUGM.MANUAL_EXPOSURE_MODE, 0, expInSecondsTextField.text, expInMilliSecTextField.text, expInMicroSecTextField.text)
+
                                     //Sending exposure value from HID to UVC
                                     sendConvertedExpToUVC()
-
-                                    see3cam50cugm.setExposure(SEE3CAM_50CUGM.MANUAL_EXPOSURE_MODE, 0, expInSecondsTextField.text, expInMilliSecTextField.text, expInMicroSecTextField.text)
                                 }
                             }
                         }
@@ -874,6 +935,11 @@ Item{
                         smooth: true
                         Layout.alignment: Qt.AlignCenter
                         opacity: 0.50196078431373
+                        ToolButton{
+                            tooltip: "This is used to set the minimum Exposure range for the Auto exposure function."
+                            width: 200
+                            opacity: 0
+                        }
                     }
 
                     ColumnLayout{
@@ -961,6 +1027,11 @@ Item{
                         smooth: true
                         Layout.alignment: Qt.AlignCenter
                         opacity: 0.50196078431373
+                        ToolButton{
+                            tooltip: "This is used to set the maximum Exposure range for the Auto exposure function."
+                            width: 200
+                            opacity: 0
+                        }
                     }
 
                     ColumnLayout{
@@ -1045,6 +1116,7 @@ Item{
                             id: limitSetBtn
                             activeFocusOnPress : true
                             text: "Set Limit"
+                            tooltip: "This is used to set the maximum and minimum Exposure range for the Auto exposure function."
                             style: econButtonStyle
                             enabled: (autoExpMode.checked && autoExpMode.enabled) ? true : false
                             opacity: (autoExpMode.checked && autoExpMode.enabled) ? 1 : 0.1
@@ -1071,6 +1143,11 @@ Item{
                         smooth: true
                         Layout.alignment: Qt.AlignCenter
                         opacity: 0.50196078431373
+                        ToolButton{
+                            tooltip: "This control is used to calculate maximum brightness for internal ISP purpose."
+                            width: 200
+                            opacity: 0
+                        }
                     }
                     Row{
                         spacing: 35
@@ -1118,6 +1195,11 @@ Item{
                         smooth: true
                         Layout.alignment: Qt.AlignCenter
                         opacity: 0.50196078431373
+                        ToolButton{
+                            tooltip: "This control is used to flicker avoidance in the preview. 50Hz and 60Hz options are available in the Auto exposure function only."
+                            width: 200
+                            opacity: 0
+                        }
                     }
 
                     Text {
@@ -1278,6 +1360,7 @@ Item{
                         Button {
                             id: getStatisticsBtn
                             activeFocusOnPress : true
+                            tooltip: "This control is used to read the current exposure and gain value in the auto exposure and auto gain function respectively. In manual mode this control is not used."
                             text: "Get Statistics"
                             style: econButtonStyle
                             enabled: ((gainStatTextField.enabled || microSecExpStat.enabled) || (gainStatTextField.enabled && microSecExpStat.enabled)) ? true : false
@@ -1327,6 +1410,7 @@ Item{
                         }
                         Button {
                             id: readTempBtn
+                            tooltip: "This control is used to read the Approximate junction temperature of the sensor."
                             activeFocusOnPress : true
                             text: "Get"
                             style: econButtonStyle
@@ -1363,6 +1447,7 @@ Item{
                             exclusiveGroup: multiExpTriggerGroup
                             checked: false
                             text: "Disable"
+                            tooltip: "To disable Multi exposure trigger"
                             activeFocusOnPress: true
                             style: econRadioButtonStyle
                             onClicked: {
@@ -1376,50 +1461,50 @@ Item{
                         Row{
                             spacing: 15
 
-                                RadioButton {
-                                    id: enableMultiExp
-                                    exclusiveGroup: multiExpTriggerGroup
-                                    checked: false
-                                    text: "Enable"
-                                    activeFocusOnPress: true
-                                    style: econRadioButtonStyle
-                                    onClicked: {
-                                        see3cam50cugm.setMultiExposureTrigger(SEE3CAM_50CUGM.MET_ENABLE, multiExpTextField.text)
-                                    }
-                                    Keys.onReturnPressed: {
-                                        see3cam50cugm.setMultiExposureTrigger(SEE3CAM_50CUGM.MET_ENABLE, multiExpTextField.text)
-                                    }
+                            RadioButton {
+                                id: enableMultiExp
+                                exclusiveGroup: multiExpTriggerGroup
+                                checked: false
+                                tooltip: "This control is used to expose the sensor to N number of times and then read out will out happen.
+N- number of times the exposure needs to be happened. (2-4095) is the valid range."
+                                text: "Enable"
+                                activeFocusOnPress: true
+                                style: econRadioButtonStyle
+                                onClicked: {
+                                    see3cam50cugm.setMultiExposureTrigger(SEE3CAM_50CUGM.MET_ENABLE, multiExpTextField.text)
                                 }
-                                TextField
-                                {
-                                    id: multiExpTextField
-                                    font.pixelSize: 10
-                                    font.family: "Ubuntu"
-                                    smooth: true
-                                    enabled: (enableMultiExp.enabled && enableMultiExp.checked) ? true : false
-                                    opacity: (enableMultiExp.enabled && enableMultiExp.checked) ? 1 : 0.1
-                                    horizontalAlignment: TextInput.AlignHCenter
-                                    style: econTextFieldStyle
+                                Keys.onReturnPressed: {
+                                    see3cam50cugm.setMultiExposureTrigger(SEE3CAM_50CUGM.MET_ENABLE, multiExpTextField.text)
                                 }
+                            }
+                            TextField
+                            {
+                                id: multiExpTextField
+                                font.pixelSize: 10
+                                font.family: "Ubuntu"
+                                smooth: true
+                                enabled: (enableMultiExp.enabled && enableMultiExp.checked) ? true : false
+                                opacity: (enableMultiExp.enabled && enableMultiExp.checked) ? 1 : 0.1
+                                horizontalAlignment: TextInput.AlignHCenter
+                                style: econTextFieldStyle
+                            }
 
-                                Button {
-                                    id: multiExpTriggerBtn
-                                    activeFocusOnPress : true
-                                    text: "Trigger"
-                                    style: econButtonStyle
-                                    enabled: (enableMultiExp.enabled && enableMultiExp.checked) ? true : false
-                                    opacity: (enableMultiExp.enabled && enableMultiExp.checked) ? 1 : 0.1
-                                    implicitHeight: 25
-                                    implicitWidth: 80
-                                    onClicked: {
-//                                        setButtonClicked = true
-                                        see3cam50cugm.setMultiExposureTrigger(SEE3CAM_50CUGM.MET_ENABLE, multiExpTextField.text)
-                                    }
-                                    Keys.onReturnPressed: {
-//                                        setButtonClicked = true
-                                        see3cam50cugm.setMultiExposureTrigger(SEE3CAM_50CUGM.MET_ENABLE, multiExpTextField.text)
-                                    }
+                            Button {
+                                id: multiExpTriggerBtn
+                                activeFocusOnPress : true
+                                text: "Trigger"
+                                style: econButtonStyle
+                                enabled: (enableMultiExp.enabled && enableMultiExp.checked) ? true : false
+                                opacity: (enableMultiExp.enabled && enableMultiExp.checked) ? 1 : 0.1
+                                implicitHeight: 25
+                                implicitWidth: 80
+                                onClicked: {
+                                    see3cam50cugm.setMultiExposureTrigger(SEE3CAM_50CUGM.MET_ENABLE, multiExpTextField.text)
                                 }
+                                Keys.onReturnPressed: {
+                                    see3cam50cugm.setMultiExposureTrigger(SEE3CAM_50CUGM.MET_ENABLE, multiExpTextField.text)
+                                }
+                            }
                         }
                     }
 
@@ -1455,6 +1540,7 @@ Item{
                         RadioButton {
                             id: frameSet2
                             exclusiveGroup: multiFrameSetGroup
+                            tooltip: "Here 2 exposure and 2 gain value can be set . so that the frame 1 is exposed for exposure1 time with gain1 and frame2 is exposure for exposure2 time with gain2 value. For every two frames this pattern will be applied."
                             checked: false
                             text: "2-Frame Set"
                             activeFocusOnPress: true
@@ -1469,6 +1555,7 @@ Item{
 
                         RadioButton {
                             id: frameSet4
+                            tooltip: "Like 2 frame set here for every 4 once the respective exposure and gain are applied."
                             exclusiveGroup: multiFrameSetGroup
                             checked: false
                             text: "4-Frame Set"
@@ -1992,6 +2079,7 @@ Item{
                                 exclusiveGroup: ultraShortExposureGrp
                                 checked: false
                                 text: "Enable"
+                                tooltip: "By using this control exposure time of 1.08uS to 14uS  can be achieved."
                                 activeFocusOnPress: true
                                 style: econRadioButtonStyle
                                 onClicked: {
@@ -2007,6 +2095,7 @@ Item{
                                 exclusiveGroup: ultraShortExposureGrp
                                 checked: false
                                 text: "Disable"
+                                tooltip: "To disable Ultra short exposure."
                                 activeFocusOnPress: true
                                 style: econRadioButtonStyle
                                 onClicked: {
@@ -2104,6 +2193,7 @@ Item{
                             id: softwareTriggerBtn
                             activeFocusOnPress : true
                             text: "Set"
+                            tooltip: "In this mode trigger is generated internally and number of trigger to be generated should be input in the text box."
                             style: econButtonStyle
                             enabled: ((triggerCombo.currentIndex == 2) && (triggerMode.checked)) ? true : false
                             opacity: ((triggerCombo.currentIndex == 2) && (triggerMode.checked)) ? 1 : 0.1
@@ -2872,7 +2962,7 @@ Item{
 
     function currentExposureMode(mode)
     {
-        if(mode === SEE3CAM_50CUGM.AUTO_EXPOSURE_MODE)
+        if(mode == SEE3CAM_50CUGM.AUTO_EXPOSURE_MODE)
         {
             autoExpMode.checked = true
 
@@ -2919,7 +3009,7 @@ Item{
             milliSecExpStat.opacity = 1
             microSecExpStat.opacity = 1
         }
-        else if(mode === SEE3CAM_50CUGM.MANUAL_EXPOSURE_MODE)
+        else if(mode == SEE3CAM_50CUGM.MANUAL_EXPOSURE_MODE)
         {
             manualExpMode.checked = true
 
@@ -3504,8 +3594,6 @@ Item{
         if(autoExposureSelect){
             autoExpMode.checked = true
 
-            root.sendExposureStatusToUVC(1 , convertedExposure)
-
             //Auto features enabled
             expContinuous.enabled = true
             expContinuous.opacity = 1
@@ -3551,7 +3639,7 @@ Item{
         }else{
             manualExpMode.checked = true
 
-            sendConvertedExpToUVC()
+//            sendConvertedExpToUVC()
 
             //Auto features disabled
             expContinuous.enabled = false
@@ -3601,19 +3689,26 @@ Item{
 
     function sendConvertedExpToUVC()
     {
-        if(expInSecondsTextField.text <= 2)
+        if(autoExpMode.checked)
         {
-            secondInt = parseInt(expInSecondsTextField.text);
-            milliSecondInt = parseInt(expInMilliSecTextField.text);
-            microSecondInt = parseInt(expInMicroSecTextField.text);
-
-            convertedExposure = (secondInt*1000000) + (milliSecondInt*1000) + microSecondInt
-            convertedExposure = convertedExposure/100
-
-            root.sendExposureStatusToUVC(0 , convertedExposure)
+            root.sendExposureStatusToUVC(1 , 0)
         }
-        else{
-            root.sendExposureToUVC(20000)
+        else
+        {
+            if(expInSecondsTextField.text < 2)
+            {
+                secondInt      = parseInt(expInSecondsTextField.text);
+                milliSecondInt = parseInt(expInMilliSecTextField.text);
+                microSecondInt = parseInt(expInMicroSecTextField.text);
+
+                convertedExposure = (secondInt*1000000) + (milliSecondInt*1000) + microSecondInt
+                convertedExposure = convertedExposure/100
+
+                root.sendExposureStatusToUVC(0 , convertedExposure)
+            }
+            else{
+                root.sendExposureStatusToUVC(0 , 20000)
+            }
         }
     }
 

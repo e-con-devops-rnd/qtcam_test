@@ -40,14 +40,9 @@ static int64_t audioPts = 0;
 VideoEncoder::VideoEncoder()
 {
     initVars();
-    initCodec();
     frameCount = 0;
     pAudioFrame = 0;
     samples = 0;
-
-    // Added by Sankari: Mar 4 2019.  Initialize AVpacket to NULL
-    pkt.data = NULL;
-    pkt.size = 0;
     videoPacketReceived = false;
     m_recStop = false;
 }
@@ -64,7 +59,6 @@ unsigned int VideoEncoder::getTickCount()
 VideoEncoder::~VideoEncoder()
 {
     closeFile();
-
 }
 
 
@@ -80,6 +74,9 @@ bool VideoEncoder::createFile(QString fileName,AVCodecID encodeType, unsigned wi
 bool VideoEncoder::createFile(QString fileName,CodecID encodeType, unsigned width,unsigned height,unsigned fpsDenominator, unsigned fpsNumerator, unsigned bitrate, int audioDeviceIndex, int sampleRate, int channels)
 #endif
 {
+    //To register all available audio & video codecs
+    av_register_all();
+
     // If we had an open video, close it.
     closeFile();
 
@@ -102,18 +99,31 @@ bool VideoEncoder::createFile(QString fileName,CodecID encodeType, unsigned widt
 #else
     pOutputFormat->video_codec = (CodecID)encodeType;
 #endif
-    pFormatCtx= avformat_alloc_context();
-    if(!pFormatCtx)
-    {
+
+    // Allocate format context
+    pFormatCtx = avformat_alloc_context();
+    if (!pFormatCtx) {
+        fprintf(stderr, "Error allocating format context\n");
         return false;
     }
-    //Format can handle media streams where the frame rate is not constant throughout the duration of the content
-    pOutputFormat->flags |= AVFMT_VARIABLE_FPS; // need to check
 
+    //Format can handle media streams where the frame rate is not constant throughout the duration of the content
+    pOutputFormat->flags |= AVFMT_VARIABLE_FPS;
+
+    //Assigning the output format to output container format (oformat)
     pFormatCtx->oformat = pOutputFormat;
 
-    snprintf(pFormatCtx->filename, sizeof(pFormatCtx->filename), "%s", fileName.toStdString().c_str());
+    if (!pFormatCtx->oformat) {
+        fprintf(stderr, "Error guessing format\n");
+        return false;
+    }
 
+    // Allocate video stream
+    pVideoStream = avformat_new_stream(pFormatCtx, NULL); // NULL instead of pCodec
+    if (!pVideoStream) {
+        fprintf(stderr, "Error creating video stream\n");
+        return false;
+    }
 
     // find the video encoder
 
@@ -122,69 +132,86 @@ bool VideoEncoder::createFile(QString fileName,CodecID encodeType, unsigned widt
 #else
     if(pOutputFormat->video_codec != AV_CODEC_ID_NONE) {
 #endif
-        pCodec = avcodec_find_encoder(pOutputFormat->video_codec);
-        if (!pCodec)
-        {
-            return false;
-        }
 
-        // Add the video stream
-        pVideoStream = avformat_new_stream(pFormatCtx, pCodec);
-        if(!pVideoStream )
-        {
-            return false;
-        }
+    // Find the codec
+    pCodec = avcodec_find_encoder(pOutputFormat->video_codec);
+    if (!pCodec) {
+        fprintf(stderr, "Error finding codec\n");
+        return false;
+    }
 
-        pCodecCtx=pVideoStream->codec;
+    // Allocate codec context
+    pCodecCtx = avcodec_alloc_context3(pCodec);
+    avcodec_get_context_defaults3 (pCodecCtx, pCodec);
+
+    if (!pCodecCtx) {
+        fprintf(stderr, "Error allocating codec context\n");
+        return false;
+    }
+
+    // Added by Sankari: Mar 20, 2019
+    // Edited by Navya : Jan 28, 2020
+    // If fps is >=112 means, bitrate is very low. So "avcodec_open2" is failed in H264 encoder. So make it as 60.
+
+    unsigned supportedFpsDen;
+    if(fpsDenominator == 120 || fpsDenominator == 112 || fpsDenominator == 180){
+        supportedFpsDen = 60;
+    }else{
+        supportedFpsDen = fpsDenominator;
+    }
+
+    //Higher bitRates results in larger file size & longer duration results in more data being processed.
+    pCodecCtx->bit_rate =  getWidth() / 3.0f * getHeight() * fpsNumerator / supportedFpsDen;
+
+    pCodecCtx->width = getWidth();
+    pCodecCtx->height = getHeight();
+
+    if(fpsDenominator >= 5){
+        pCodecCtx->time_base = (AVRational){int(fpsNumerator),int(fpsDenominator)};
+    }else{
+        pCodecCtx->time_base = (AVRational){1, 15};
+    }
+
+    pCodecCtx->gop_size = 12; // mjpg - group of pictures
+
+    //Pixel Format
+    #if !LIBAVCODEC_VER_AT_LEAST(54, 25)
+            if(encodeType == CODEC_ID_MJPEG)
+                pCodecCtx->pix_fmt =  PIX_FMT_YUVJ420P;
+            else {
+                pCodecCtx->pix_fmt =  PIX_FMT_YUV420P;
+            }
+    #else
+            if(encodeType == AV_CODEC_ID_MJPEG)
+                pCodecCtx->pix_fmt =  AV_PIX_FMT_YUVJ420P;
+            else {
+                pCodecCtx->pix_fmt =  AV_PIX_FMT_YUV420P;
+            }
+    #endif
+
         // some formats want stream headers to be separate
         if(pFormatCtx->oformat->flags & AVFMT_GLOBALHEADER)
             pCodecCtx->flags |= CODEC_FLAG_GLOBAL_HEADER;
 
         pCodecCtx->codec_id = pOutputFormat->video_codec;
-
-#if !LIBAVCODEC_VER_AT_LEAST(54, 25)
-        if(encodeType == CODEC_ID_MJPEG)
-            pCodecCtx->pix_fmt =  PIX_FMT_YUVJ420P;
-        else {
-            pCodecCtx->pix_fmt =  PIX_FMT_YUV420P;
-        }
-#else
-        if(encodeType == AV_CODEC_ID_MJPEG)
-            pCodecCtx->pix_fmt =  AV_PIX_FMT_YUVJ420P;
-        else {
-            pCodecCtx->pix_fmt =  AV_PIX_FMT_YUV420P;
-        }
-#endif
-        // Added by Sankari: Mar 20, 2019
-        // Edited by Navya : Jan 28, 2020
-        // If fps is >=112 means, bitrate is very low. So "avcodec_open2" is failed in H264 encoder. So make it as 60.
-        unsigned supportedFpsDen;
-        if(fpsDenominator == 120 || fpsDenominator == 112 || fpsDenominator == 180){
-            supportedFpsDen = 60;
-        }else{
-            supportedFpsDen = fpsDenominator;
-        }
-        pCodecCtx->bit_rate =  getWidth() / 3.0f * getHeight() * fpsNumerator / supportedFpsDen;
         pCodecCtx->codec_type = AVMEDIA_TYPE_VIDEO;
-        pCodecCtx->width = getWidth();
-        pCodecCtx->height = getHeight();
 
-
-        if(fpsDenominator >= 5){
-            pCodecCtx->time_base = (AVRational){fpsNumerator, fpsDenominator};
-        }else{
-            pCodecCtx->time_base = (AVRational){1, 15};
-        }
-
-        pCodecCtx->qmax = 4;
-        pCodecCtx->qmin = 1;
-
-        pCodecCtx->gop_size = 12; // mjpg
         pVideoStream->time_base.den = pCodecCtx->time_base.den;
         pVideoStream->time_base.num = pCodecCtx->time_base.num;
 
+        //Limit for compressing videos
+        pCodecCtx->qmax = 4;
+        pCodecCtx->qmin = 1;
 
-        tempExtensionCheck = fileName.mid(fileName.length()-3);
+//        tempExtensionCheck = fileName.mid(fileName.length()-3);
+
+        // Initialize the codec context with codec parameters
+        if((avcodec_parameters_from_context(pVideoStream->codecpar, pCodecCtx))<0)
+        {
+            fprintf(stderr, "Error in filling parameters \n");
+            return false;
+        }
+
 #if !LIBAVCODEC_VER_AT_LEAST(54, 25)
         if(pOutputFormat->video_codec == CODEC_ID_H264) {
 #else
@@ -226,6 +253,7 @@ bool VideoEncoder::createFile(QString fileName,CodecID encodeType, unsigned widt
             return false;
         }
     }
+
     if(audioDeviceIndex-1 >= 0){
         #if !LIBAVCODEC_VER_AT_LEAST(54, 25)
             pFormatCtx->audio_codec_id = CODEC_ID_MP2;
@@ -250,11 +278,10 @@ bool VideoEncoder::createFile(QString fileName,CodecID encodeType, unsigned widt
                 open_audio(pAudioStream);
     }
 
-
     if (!(pOutputFormat->flags & AVFMT_NOFILE)) {
         if (avio_open(&pFormatCtx->pb, fileName.toStdString().c_str(), AVIO_FLAG_WRITE) < 0) {
             fprintf(stderr, "Could not open '%s'\n", fileName.toStdString().c_str());
-            return 1;
+            return true;
         }
     }
 
@@ -262,9 +289,11 @@ bool VideoEncoder::createFile(QString fileName,CodecID encodeType, unsigned widt
     if(ret<0) {
         return false;
     }
+
     ok=true;
 
     frameCount = 0; // recording frame count - initialization
+
     return true;
 }
 
@@ -275,19 +304,26 @@ bool VideoEncoder::createFile(QString fileName,CodecID encodeType, unsigned widt
 bool VideoEncoder::closeFile()
 {
     if(!isOk())
+    {
         return false;
+    }
 
-    av_write_trailer(pFormatCtx);
+    // Close file
+    avio_close(pFormatCtx->pb);
 
-    // close_video
-    avcodec_close(pVideoStream->codec);
+    av_frame_free(&ppicture);
+
+    avcodec_free_context(&pCodecCtx);
+
+    avformat_free_context(pFormatCtx);
 
     freeFrame();
 
-    if(pkt.data != NULL && pkt.size != 0){
-    	av_free_packet(&pkt);
-        pkt.data = NULL;
-        pkt.size = 0;
+    if(pkt->data != NULL && pkt->size != 0){
+        //Replacing av_free_packet()
+        av_packet_unref(pkt);
+        pkt->data = NULL;
+        pkt->size = 0;
     }
 
     freeOutputBuf();
@@ -295,17 +331,11 @@ bool VideoEncoder::closeFile()
     /* free the streams */
     for(unsigned int i = 0; i < pFormatCtx->nb_streams; i++)
     {
-        av_freep(&pFormatCtx->streams[i]->codec);
+        av_freep(&pFormatCtx->streams[i]->codecpar);
         av_freep(&pFormatCtx->streams[i]);
     }
 
     sws_freeContext(img_convert_ctx);
-
-    // Close file
-    avio_close(pFormatCtx->pb);
-
-    // Free the stream
-    av_free(pFormatCtx);
 
     initVars();
 
@@ -316,7 +346,7 @@ bool VideoEncoder::closeFile()
 //Encodes the frame using the selected codec and writes the encoded packet to the output file.
 /**
    \brief Encode one frame
-    /* buffer - input buffer to encode
+     * buffer - input buffer to encode
      * bufferType - 0 if rgbabuffer passes
      *              - 1 if yuyv  or other buffer passes
      *              - 2 if uyvy buffer passes
@@ -338,6 +368,7 @@ int VideoEncoder::encodeImage(uint8_t *buffer,uint8_t bufferType)
  * @return 0 if success/ -ve if failure
  */
 int VideoEncoder::encodePacket(uint8_t *buffer, uint8_t bufferType){
+
     double fps, recordTimeDurationInSec, millisecondsDiff;
     if(frameCount == 0){
         time1  = QTime::currentTime();
@@ -350,7 +381,6 @@ int VideoEncoder::encodePacket(uint8_t *buffer, uint8_t bufferType){
         recordTimeDurationInSec = millisecondsDiff/1000; // convert millisec to sec
 
         fps = (frameCount)/ recordTimeDurationInSec; // calculate fps
-
     }
 
     if(!isOk())
@@ -358,66 +388,109 @@ int VideoEncoder::encodePacket(uint8_t *buffer, uint8_t bufferType){
 
     convertImage_sws(buffer,bufferType);
 
-    int got_packet = 0;
     int out_size = 0;
 
-    if(pkt.data != NULL && pkt.size != 0){
-       av_free_packet(&pkt);
-       pkt.data = NULL;
-       pkt.size = 0;
-   }
+    int sendPkt = -1;
 
-    // Init packet
-    av_init_packet(&pkt);
+    if(ppicture)
+    {
+        if (!avcodec_is_open(pCodecCtx))
+        {
+            fprintf(stderr, "ENCODER: codec not opened\n");
+            return false;
+        }
 
-    pkt.pts = pkt.dts = ppicture->pts;
+        if(!av_codec_is_encoder(pCodecCtx->codec))
+        {
+            fprintf(stderr, "ENCODER: codec not an encoder\n");
+            return false;
+        }
 
-    //Takes an input video frame, encodes it, and produces a compressed output packet
-    int ret = avcodec_encode_video2(pCodecCtx, &pkt, ppicture, &got_packet);
-    if (ret < 0) {
-        char errText[999]="";
-        av_strerror(ret, errText, 999);
-        fprintf(stderr, "Error encoding a video frame\n");
-        av_free_packet(&pkt);
-        pkt.data = NULL;
-        pkt.size = 0;
-        return -1;
+        /*
+         * avcodec_encode_video2() is deprecated, using avcodec_send_frame()/avcodec_receive_packet() instead.
+         * Sending context & input frame - Takes an input video frame, encodes it
+        */
+        sendPkt = avcodec_send_frame(pCodecCtx, ppicture);
+
+        if (sendPkt < 0)
+        {
+            char errorBuffer[AV_ERROR_MAX_STRING_SIZE];
+            av_strerror(sendPkt, errorBuffer, AV_ERROR_MAX_STRING_SIZE);
+            fprintf(stderr, "Error sending frame: %s\n", errorBuffer);
+            return false;
+        }
+    }
+    else
+    {
+        sendPkt = avcodec_send_frame(pCodecCtx, NULL);
+
+        if (sendPkt < 0)
+        {
+            fprintf(stderr, "Error in sending NULL frame...\n");
+            return false;
+        }
     }
 
-    pkt.stream_index = pVideoStream->index;
-    if (got_packet) {
+    // Init packet
+    pkt = av_packet_alloc();
 
-        // increment frame count
-          frameCount++;
+    if(pkt == NULL)
+    {
+        fprintf(stderr, "ENCODER: FATAL memory allocation failure (av_packet_alloc()): %s\n", strerror(errno));
+        return false;
+    }
 
-        // https://stackoverflow.com/questions/48440670/how-to-set-pts-and-dts-of-avpacket-from-rtp-timestamps-while-muxing-vp8-rtp-stre
-            //frameDuration = video_st->time_base.den / video_fps; // i.e. 25
-            //frameTime     = frame_count * frameDuration;
-            //pkt->pts      = frameTime / video_st->time_base.num;
-            //pkt->duration = frameDuration;
+    ppicture->pkt_dts = ppicture->pts;
 
-        pkt.duration = pCodecCtx->time_base.den/fps;
+    int receivePkt = -1;
+
+    //Reading encoded data from the encoder
+    receivePkt = avcodec_receive_packet(pCodecCtx, pkt);
+
+    if (receivePkt < 0)
+    {
+        if (receivePkt == AVERROR(EAGAIN) || receivePkt == AVERROR_EOF) {
+            fprintf(stderr, "No Frames Available or End of Stream\n");
+        } else {
+            fprintf(stderr, "Error receiving encoded frame\n");
+        }
+    }
+    else
+    {
+        pkt->stream_index = pVideoStream->index;
+
+        //Incrementing frame count
+        frameCount++;
+
+        //TimeStamp calculation
+        pkt->duration = pCodecCtx->time_base.den/fps;
+
         // The above calculation can be shortly gives as below
-        pkt.pts  = (frameCount*(pCodecCtx->time_base.den/fps)) / pCodecCtx->time_base.num;
-        pkt.dts = pkt.pts;
+        ppicture->pts  = (frameCount*(pCodecCtx->time_base.den/fps)) / pCodecCtx->time_base.num;
+        ppicture->pkt_dts = ppicture->pts;
 
         // Added by Navya -- 18 Sep 2019
         // Adjusted timestamps inorder to avoid glitches in recorded video for h264 encoder.
-
-        if(pts_prev == pkt.pts | pkt.pts < pts_prev){
-            pkt.pts = pts_prev+1;  // Incremented the timestamp value,as pkt.pts is maintaining the same value,leading to av_write_interleaved_frame failure.
-            pkt.dts = pkt.pts;
+        if(pts_prev == ppicture->pts | ppicture->pts < pts_prev){
+            ppicture->pts = pts_prev+1;  // Incremented the timestamp value,as pkt.pts is maintaining the same value,leading to av_write_interleaved_frame failure.
+            ppicture->pkt_dts = ppicture->pts;
         }
-        pts_prev = pkt.pts;
-        if(pCodecCtx->coded_frame->key_frame)
-            pkt.flags |= AV_PKT_FLAG_KEY;
+
+        pts_prev = ppicture->pts;
+
+        if(ppicture->key_frame)
+        {
+            pkt->flags |= AV_PKT_FLAG_KEY;
+        }
+
         /* Write the compressed frame to the media file. */
-        out_size = av_interleaved_write_frame(pFormatCtx, &pkt);
+        out_size = av_interleaved_write_frame(pFormatCtx, pkt);
         if(out_size == 0){
             videoPacketReceived = true;
             m_recStop = false;
         }
     }
+
     return out_size;
 }
 #else
@@ -455,7 +528,7 @@ int VideoEncoder::encodeImage(uint8_t *buffer,uint8_t bufferType)
     /* if zero size, it means the image was buffered */
     if (out_size > 0) {
 	if(pkt.data != NULL && pkt.size != 0){
-          av_free_packet(&pkt);
+          av_packet_unref(&pkt);
           pkt.data = NULL;
           pkt.size = 0;
       }
@@ -504,12 +577,6 @@ void VideoEncoder::initVars()
     i = 0;
 }
 
-bool VideoEncoder::initCodec()
-{
-    av_register_all();
-    return true;
-}
-
 bool VideoEncoder::isSizeValid()
 {
     if(getWidth()%8)
@@ -539,7 +606,9 @@ bool VideoEncoder::initOutputBuf()
     outbuf_size = getWidth()*getHeight()*3;
     outbuf = new uint8_t[outbuf_size];
     if(outbuf==0)
+    {
         return false;
+    }
     return true;
 }
 
@@ -559,12 +628,20 @@ bool VideoEncoder::initFrame()
 #else
     ppicture = avcodec_alloc_frame();
 #endif
-    if(ppicture==0){
+
+    if(ppicture == NULL)
+    {
+        fprintf(stderr, "ENCODER: FATAL memory allocation failure (encoder_video_init): %s\n", strerror(errno));
         return false;
     }
 
-    int size = avpicture_get_size(pCodecCtx->pix_fmt, pCodecCtx->width, pCodecCtx->height);
+    ppicture->pts = 0;
+
+    //Return the size in bytes of the amount of data required to store an image with the given parameters.
+    int size = av_image_get_buffer_size(pCodecCtx->pix_fmt, pCodecCtx->width, pCodecCtx->height,32);
+
     picture_buf = new uint8_t[size];
+
     if(picture_buf==0)
     {
         av_free(ppicture);
@@ -572,10 +649,17 @@ bool VideoEncoder::initFrame()
         return false;
     }
 
-    // Setup the planes
-    avpicture_fill((AVPicture *)ppicture, picture_buf,pCodecCtx->pix_fmt, pCodecCtx->width, pCodecCtx->height);
+    ppicture->width  = pCodecCtx->width;
+    ppicture->height = pCodecCtx->height;
+    ppicture->format = pCodecCtx->pix_fmt;
+    ppicture->linesize[0] = pCodecCtx->width;
+    ppicture->linesize[1] = pCodecCtx->width / 2;
+    ppicture->linesize[2] = pCodecCtx->width / 2;
 
-    return true;
+    //To allocate the buffer and fill in the dst_data and dst_linesize
+   av_image_fill_arrays(ppicture->data, ppicture->linesize, picture_buf ,pCodecCtx->pix_fmt, pCodecCtx->width, pCodecCtx->height,32);
+
+   return true;
 }
 void VideoEncoder::freeFrame()
 {
@@ -604,9 +688,10 @@ void VideoEncoder::freeFrame()
 
 bool VideoEncoder::convertImage_sws(uint8_t *buffer,uint8_t bufferType)
 {
+    //Initializing software scaler context for the respective bufferTypes
     if(bufferType == RGB_BUFFER){
 #if !LIBAVCODEC_VER_AT_LEAST(54, 25)
-        img_convert_ctx = sws_getCachedContext(img_convert_ctx,getWidth(),getHeight(), PIX_FMT_RGBA,getWidth(),getHeight(),pCodecCtx->pix_fmt,SWS_FAST_BILINEAR, NULL, NULL, NULL);
+        img_convert_ctx = sws_getCachedContext(img_convert_ctx, getWidth(), getHeight(), PIX_FMT_RGBA, getWidth(), getHeight(), pCodecCtx->pix_fmt, SWS_FAST_BILINEAR, NULL, NULL, NULL);
 #else
         img_convert_ctx = sws_getCachedContext(img_convert_ctx,getWidth(),getHeight(),AV_PIX_FMT_RGBA,getWidth(),getHeight(),pCodecCtx->pix_fmt,SWS_FAST_BILINEAR, NULL, NULL, NULL);
 #endif
@@ -625,7 +710,17 @@ bool VideoEncoder::convertImage_sws(uint8_t *buffer,uint8_t bufferType)
 #if !LIBAVCODEC_VER_AT_LEAST(54, 25)
         img_convert_ctx = sws_getCachedContext(img_convert_ctx,getWidth(),getHeight(), PIX_FMT_UYVY422,getWidth(),getHeight(),pCodecCtx->pix_fmt,SWS_FAST_BILINEAR, NULL, NULL, NULL);
 #else
-        img_convert_ctx = sws_getCachedContext(img_convert_ctx,getWidth(),getHeight(),AV_PIX_FMT_UYVY422,getWidth(),getHeight(),pCodecCtx->pix_fmt,SWS_FAST_BILINEAR, NULL, NULL, NULL);
+        img_convert_ctx = sws_getCachedContext(img_convert_ctx,
+                                               getWidth(),
+                                               getHeight(),
+                                               AV_PIX_FMT_UYVY422,
+                                               getWidth(),
+                                               getHeight(),
+                                               pCodecCtx->pix_fmt,
+                                               SWS_FAST_BILINEAR,
+                                               NULL,
+                                               NULL,
+                                               NULL);
 #endif
     } else if(bufferType == Y8_BUFFER){
 #if !LIBAVCODEC_VER_AT_LEAST(54, 25)
@@ -634,7 +729,6 @@ bool VideoEncoder::convertImage_sws(uint8_t *buffer,uint8_t bufferType)
         img_convert_ctx = sws_getCachedContext(img_convert_ctx,getWidth(),getHeight(),AV_PIX_FMT_GRAY8,getWidth(),getHeight(),pCodecCtx->pix_fmt,SWS_FAST_BILINEAR, NULL, NULL, NULL);
 #endif
     }
-
     if (img_convert_ctx == NULL)
     {
         return false;
@@ -661,7 +755,21 @@ bool VideoEncoder::convertImage_sws(uint8_t *buffer,uint8_t bufferType)
     srcstride[1]=0;
     srcstride[2]=0;
 
-    sws_scale(img_convert_ctx, srcplanes, srcstride,0, getHeight(), ppicture->data, ppicture->linesize);
+    /*  Takes the source planes (srcplanes), source stride (srcstride),
+        and writes the converted output to the destination planes (ppicture->data).
+        The conversion is performed over a specific range (in this case, from row 0 to getHeight()).
+    */
+    int outputSlice = sws_scale(img_convert_ctx,
+              srcplanes,
+              srcstride,
+              0,
+              getHeight(),
+              ppicture->data,
+              ppicture->linesize);
+
+    if (outputSlice != int(getHeight())) {
+
+    }
 
     return true;
 }
@@ -699,39 +807,39 @@ int VideoEncoder::encodeH264Packet(void *buffer, int bytesused){
         return -1;
 
     int out_size = 0;
-    pkt.data = (u_int8_t *) buffer;
-    pkt.size = bytesused;
+    pkt->data = (u_int8_t *) buffer;
+    pkt->size = bytesused;
 
-    av_init_packet(&pkt);
+    pkt = av_packet_alloc();
 
-    pkt.stream_index = pVideoStream->index;
+    pkt->stream_index = pVideoStream->index;
 
-    if(pCodecCtx->coded_frame->key_frame)
-        pkt.flags |= AV_PKT_FLAG_KEY;
+    if(pCodecCtx->rc_override->quality_factor)
+        pkt->flags |= AV_PKT_FLAG_KEY;
 
-    pkt.pts  = (frameCount*(pCodecCtx->time_base.den/fps)) / pCodecCtx->time_base.num;
-    pkt.dts = pkt.pts;
+    pkt->pts  = (frameCount*(pCodecCtx->time_base.den/fps)) / pCodecCtx->time_base.num;
+    pkt->dts = pkt->pts;
 
     // Added by Navya -- 18 Oct 2019
     // Adjusted timestamps inorder to avoid glitches in recorded video for h264 encoder.
 
-    if(pts_prev == pkt.pts | pkt.pts < pts_prev){
-        pkt.pts = pts_prev+1;  // Incremented the timestamp value,as pkt.pts is maintaining the same value,leading to av_write_interleaved_frame failure.
-        pkt.dts = pkt.pts;
+    if(pts_prev == pkt->pts | pkt->pts < pts_prev){
+        pkt->pts = pts_prev+1;  // Incremented the timestamp value,as pkt.pts is maintaining the same value,leading to av_write_interleaved_frame failure.
+        pkt->dts = pkt->pts;
     }
-    pts_prev = pkt.pts;
+    pts_prev = pkt->pts;
     /* Write the compressed frame to the media file. */
 
-    out_size = av_write_frame(pFormatCtx, &pkt);
+    out_size = av_write_frame(pFormatCtx, pkt);
     if(out_size == 0){
          frameCount++;
          videoPacketReceived = true;
     }
 
-     if(pkt.data != NULL && pkt.size != 0){
-        av_free_packet(&pkt);
-        pkt.data = NULL;
-        pkt.size = 0;
+     if(pkt->data != NULL && pkt->size != 0){
+        av_packet_unref(pkt);
+        pkt->data = NULL;
+        pkt->size = 0;
     }
 
     return out_size;
@@ -768,13 +876,26 @@ AVStream* VideoEncoder::add_audio_stream(AVFormatContext *oc, CodecID codec_id, 
         printf("codec not found\n");
         return NULL;
     }
+
+    pAudioCodecCtx = avcodec_alloc_context3(paudioCodec);
+    avcodec_get_context_defaults3 (pAudioCodecCtx, paudioCodec);
+
+    if (!pAudioCodecCtx) {
+        return NULL;
+    }
+
     st = avformat_new_stream(oc, paudioCodec);
     if (!st) {
         fprintf(stderr, "Could not alloc stream\n");
         return NULL;
     }
 
-    c = st->codec;
+    // Initialize the audio codec context with codec parameters
+    if(avcodec_parameters_to_context(c, st->codecpar) < 0)
+    {
+        return NULL;
+    }
+
     c->codec_id = codec_id;
     c->codec_type = AVMEDIA_TYPE_AUDIO;
 
@@ -806,7 +927,13 @@ AVStream* VideoEncoder::add_audio_stream(AVFormatContext *oc, CodecID codec_id, 
 
 int VideoEncoder::open_audio(AVStream *st)
 {
-    pAudioCodecCtx = st->codec;
+    // Initialize the audio codec context with codec parameters
+    int audioConnect = avcodec_parameters_to_context(pAudioCodecCtx, st->codecpar);
+
+    if (audioConnect < 0) {
+        return false;
+    }
+
    /* open it */
 #if LIBAVCODEC_VER_AT_LEAST(53,6)
     if (avcodec_open2(pAudioCodecCtx, paudioCodec, NULL) < 0)
@@ -855,13 +982,14 @@ int VideoEncoder::encodeAudio(void *data){
         return -1;
     }
 
-    int got_packet = 0;
     int out_size = 0;
     int ret = 0;
-    audioPkt.data = NULL;
-    audioPkt.size = 0;
-    av_init_packet(&audioPkt);
-    audioPkt.pts = pAudioFrame->pts;
+    audioPkt->data = NULL;
+    audioPkt->size = 0;
+
+    audioPkt = av_packet_alloc();
+
+    audioPkt->pts = pAudioFrame->pts;
 
     #if LIBAVUTIL_VER_AT_LEAST(51,23)
         int align = 0;
@@ -890,38 +1018,57 @@ int VideoEncoder::encodeAudio(void *data){
         return out_size;
     }
 
-    /* encode the audio */
-    ret = avcodec_encode_audio2(pAudioCodecCtx, &audioPkt, pAudioFrame, &got_packet);
-    if (ret < 0) {
-        fprintf(stderr, "Error encoding a audio frame\n");
-        av_free_packet(&audioPkt);
-        return -1;
+    /*
+     * avcodec_encode_audio2() is deprecated, using avcodec_send_frame()/avcodec_receive_packet() instead.
+     * Sending context & input frame - Takes an input audio frame, encodes it
+    */
+    int audioResult = avcodec_send_frame(pAudioCodecCtx, pAudioFrame);
+
+    if (audioResult < 0)
+    {
+        char errText[999]="";
+        av_strerror(audioResult, errText, 999);
+        fprintf(stderr, "Error in sending audio frame\n");
+        return false;
     }
-
-    if (got_packet) {
-        audioPkt.stream_index = pAudioStream->index;
-#if LIBAVCODEC_VER_AT_LEAST(56,1)
-        av_packet_rescale_ts(&audioPkt,
-                                  pAudioCodecCtx->time_base,
-                                  pAudioStream->time_base);
-#else
-        audioPkt.pts = av_rescale_q(pAudioCodecCtx->coded_frame->pts, pAudioCodecCtx->time_base, pAudioStream->time_base);
-#endif
-
-        pAudioCodecCtx->gop_size = pCodecCtx->gop_size;
-
-        if(pAudioCodecCtx->coded_frame->key_frame)
-            audioPkt.flags |= AV_PKT_FLAG_KEY;
-
-        out_size = audioPkt.size;
-
-        if(!m_recStop){
-            /* Write the compressed frame to the media file. */
-            out_size = av_write_frame(pFormatCtx, &audioPkt);
+    else {
+        //Produces a compressed output packet
+        if(avcodec_receive_packet(pAudioCodecCtx, audioPkt) < 0)
+        {
+            char errText[999]="";
+            av_strerror(audioResult, errText, 999);
+            fprintf(stderr, "Error in receiving audio frame\n");
+            av_packet_unref(audioPkt);
+            audioPkt->data = NULL;
+            audioPkt->size = 0;
+            return false;
         }
+        else{
+            audioPkt->stream_index = pAudioStream->index;
 
-        av_free_packet(&audioPkt);
-    }
+            #if LIBAVCODEC_VER_AT_LEAST(56,1)
+                    av_packet_rescale_ts(audioPkt,
+                                              pAudioCodecCtx->time_base,
+                                              pAudioStream->time_base);
+            #else
+                    audioPkt.pts = av_rescale_q(pAudioCodecCtx->coded_frame->pts, pAudioCodecCtx->time_base, pAudioStream->time_base);
+            #endif
+
+            pAudioCodecCtx->gop_size = pCodecCtx->gop_size;
+
+            if(pAudioCodecCtx->rc_override->quality_factor)
+                audioPkt->flags |= AV_PKT_FLAG_KEY;
+
+            out_size = audioPkt->size;
+
+            if(!m_recStop){
+                /* Write the compressed frame to the media file. */
+                out_size = av_write_frame(pFormatCtx, audioPkt);
+            }
+
+            av_packet_unref(audioPkt);
+        }
+     }
     return out_size;
 }
 #else
@@ -955,7 +1102,7 @@ int VideoEncoder::encodeAudio(void *data)
        pAudioCodecCtx->gop_size = pCodecCtx->gop_size;
        /* write the compressed frame in the media file */
           ret = av_write_frame(pFormatCtx, &audioPkt);
-          av_free_packet(&audioPkt);
+          av_packet_unref(&audioPkt);
    } else
    {
           ret = 0;

@@ -24,6 +24,160 @@ SEE3CAM_CU512M::SEE3CAM_CU512M()
 
 }
 
+/*
+ * @brief SEE3CAM_CU512M::setStreamMode - set Master/Trigger mode to the camera
+ * @param - streamMode - To switch between master and trigger mode
+ * return true/false
+*/
+bool SEE3CAM_CU512M::setStreamMode(CAMERA_MODE streamMode)
+{
+    // hid validation
+    if(uvccamera::hid_fd < 0)
+    {
+        return false;
+    }
+
+    //Initialize buffers
+    initializeBuffers();
+
+    // fill buffer values
+    g_out_packet_buf[1] = CAMERA_CONTROL_ID1_SEE3CAM_CU512M;
+    g_out_packet_buf[2] = CAMERA_CONTROL_ID2_SEE3CAM_CU512M;
+    g_out_packet_buf[3] = SET_STREAM_MODE_SEE3CAM_CU512M;
+    g_out_packet_buf[4] = streamMode;
+
+    // send request and get reply from camera
+    if(uvc.sendHidCmd(g_out_packet_buf, g_in_packet_buf, BUFFER_LENGTH)){
+        if (g_in_packet_buf[6] == SET_FAIL) {
+            return false;
+        } else if(g_in_packet_buf[0] == CAMERA_CONTROL_ID1_SEE3CAM_CU512M &&
+            g_in_packet_buf[1] == CAMERA_CONTROL_ID2_SEE3CAM_CU512M &&
+            g_in_packet_buf[2] == SET_STREAM_MODE_SEE3CAM_CU512M &&
+            g_in_packet_buf[6] == SET_SUCCESS) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * @brief SEE3CAM_CU512M::getStreamMode - To get status of stream mode from the camera
+ * return true - success /false - failure
+ */
+bool SEE3CAM_CU512M::getStreamMode()
+{
+    // hid validation
+    if(uvccamera::hid_fd < 0)
+    {
+        return false;
+    }
+
+    //Initialize buffers
+    initializeBuffers();
+
+    // fill buffer values
+    g_out_packet_buf[1] = CAMERA_CONTROL_ID1_SEE3CAM_CU512M;
+    g_out_packet_buf[2] = CAMERA_CONTROL_ID2_SEE3CAM_CU512M;
+    g_out_packet_buf[3] = GET_STREAM_MODE_SEE3CAM_CU512M;
+
+    // send request and get reply from camera
+    if(uvc.sendHidCmd(g_out_packet_buf, g_in_packet_buf, BUFFER_LENGTH)){
+        if (g_in_packet_buf[6] == GET_FAIL) {
+            return false;
+        } else if(g_in_packet_buf[0] == CAMERA_CONTROL_ID1_SEE3CAM_CU512M &&
+            g_in_packet_buf[1] == CAMERA_CONTROL_ID2_SEE3CAM_CU512M &&
+            g_in_packet_buf[2] == GET_STREAM_MODE_SEE3CAM_CU512M &&
+            g_in_packet_buf[6] == GET_SUCCESS) {
+            emit streamModeReceived(g_in_packet_buf[3]);
+            return true;
+        }
+    }
+    return false;
+}
+
+
+/*
+ * @brief SEE3CAM_CU512M::setOrientation - Setting orientation - set Normal/horizontal/vertical/Rotate180
+ * @param - horizontal flip selection
+ * @param - vertical flip selection
+ * return true/false
+*/
+bool SEE3CAM_CU512M::setOrientation(bool horzModeSel, bool vertiModeSel)
+{
+    // hid validation
+    if(uvccamera::hid_fd < 0)
+    {
+        return false;
+    }
+
+    //Initialize buffers
+    initializeBuffers();
+
+    // fill buffer values
+    g_out_packet_buf[1] = CAMERA_CONTROL_ID1_SEE3CAM_CU512M;
+    g_out_packet_buf[2] = CAMERA_CONTROL_ID2_SEE3CAM_CU512M;
+    g_out_packet_buf[3] = SET_ORIENTATION_MODE_SEE3CAM_CU512M;
+
+    if(horzModeSel && vertiModeSel){
+        g_out_packet_buf[4] = ROTATE_180; /* both flip enable */
+    }else if(horzModeSel && !vertiModeSel){
+        g_out_packet_buf[4] = HORIZONTAL; /* horizontal flip only mode */
+    }else if(!horzModeSel && vertiModeSel){
+        g_out_packet_buf[4] = VERTICAL; /* vertical flip only mode */
+    }else
+        g_out_packet_buf[4] = NORMAL; /* both flip disable */
+
+    // send request and get reply from camera
+    if(uvc.sendHidCmd(g_out_packet_buf, g_in_packet_buf, BUFFER_LENGTH)){
+        if (g_in_packet_buf[6] == SET_FAIL) {
+            return false;
+        } else if(g_in_packet_buf[0] == CAMERA_CONTROL_ID1_SEE3CAM_CU512M &&
+            g_in_packet_buf[1] == CAMERA_CONTROL_ID2_SEE3CAM_CU512M &&
+            g_in_packet_buf[2] == SET_ORIENTATION_MODE_SEE3CAM_CU512M &&
+            g_in_packet_buf[6] == SET_SUCCESS) {
+
+            return true;
+        }
+    }
+    return false;
+}
+
+
+/**
+ * @brief SEE3CAM_CU512M::getOrientation - getting flip mode from the camera
+ * return true - success /false - failure
+ */
+bool SEE3CAM_CU512M::getOrientation()
+{
+    // hid validation
+    if(uvccamera::hid_fd < 0)
+    {
+        return false;
+    }
+
+    //Initialize buffers
+    initializeBuffers();
+
+    // fill buffer values
+    g_out_packet_buf[1] = CAMERA_CONTROL_ID1_SEE3CAM_CU512M;
+    g_out_packet_buf[2] = CAMERA_CONTROL_ID2_SEE3CAM_CU512M;
+    g_out_packet_buf[3] = GET_ORIENTATION_MODE_SEE3CAM_CU512M;
+
+    // send request and get reply from camera
+    if(uvc.sendHidCmd(g_out_packet_buf, g_in_packet_buf, BUFFER_LENGTH)){
+        if (g_in_packet_buf[6] == GET_FAIL) {
+            return false;
+        } else if(g_in_packet_buf[0] == CAMERA_CONTROL_ID1_SEE3CAM_CU512M &&
+            g_in_packet_buf[1] == CAMERA_CONTROL_ID2_SEE3CAM_CU512M &&
+            g_in_packet_buf[2] == GET_ORIENTATION_MODE_SEE3CAM_CU512M &&
+            g_in_packet_buf[6] == GET_SUCCESS) {
+            emit flipMirrorModeChanged(g_in_packet_buf[3]);
+            return true;
+        }
+    }
+    return false;
+}
+
 
 /**
  * @brief SEE3CAM_CU512M::setFlashMode - setting flashMode to the camera
@@ -42,8 +196,8 @@ bool SEE3CAM_CU512M::setFlashMode(FlashMode flashMode)
     initializeBuffers();
 
     // fill buffer values
-    g_out_packet_buf[1] = CAMERA_CONTROL_ID1_SEE3CAM_CU512M; /* set camera control code */
-    g_out_packet_buf[2] = CAMERA_CONTROL_ID2_SEE3CAM_CU512M; /* set camera control code */
+    g_out_packet_buf[1] = CAMERA_CONTROL_ID1_SEE3CAM_CU512M; /* camera control id_1 */
+    g_out_packet_buf[2] = CAMERA_CONTROL_ID2_SEE3CAM_CU512M; /* camera control id_2 */
     g_out_packet_buf[3] = SET_FLASH_MODE_SEE3CAM_CU512; /* set flash mode */
     g_out_packet_buf[4] = flashMode; /* set flash mode*/
 
@@ -87,8 +241,8 @@ bool SEE3CAM_CU512M::getFlashMode()
             return false;
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_ID1_SEE3CAM_CU512M &&
             g_in_packet_buf[1] == CAMERA_CONTROL_ID2_SEE3CAM_CU512M &&
-            g_in_packet_buf[2]==GET_FLASH_MODE_SEE3CAM_CU512 &&
-            g_in_packet_buf[6]==GET_SUCCESS) {
+            g_in_packet_buf[2] == GET_FLASH_MODE_SEE3CAM_CU512 &&
+            g_in_packet_buf[6] == GET_SUCCESS) {
             emit flashModeReceived(g_in_packet_buf[3]);
             return true;
         }
@@ -119,14 +273,14 @@ bool SEE3CAM_CU512M::setToDefaultValues()
     // send request and get reply from camera
     if(uvc.sendHidCmd(g_out_packet_buf, g_in_packet_buf, BUFFER_LENGTH))
     {
-        if (g_in_packet_buf[6]==SET_FAIL)
+        if (g_in_packet_buf[6] == SET_FAIL)
         {
             return false;
         }
         else if(g_in_packet_buf[0] == CAMERA_CONTROL_ID1_SEE3CAM_CU512M &&
             g_in_packet_buf[1] == CAMERA_CONTROL_ID2_SEE3CAM_CU512M &&
-            g_in_packet_buf[2]==SET_DEFAULT_SEE3CAM_CU512M &&
-            g_in_packet_buf[6]==SET_SUCCESS){
+            g_in_packet_buf[2] == SET_DEFAULT_SEE3CAM_CU512M &&
+            g_in_packet_buf[6] == SET_SUCCESS){
             return true;
         }
     }

@@ -1,3 +1,8 @@
+Qtcam Application - 26.0.1
+---------------------------
+*Added streaming support for MIPI cameras.
+*Added new HID controls in See3CAM_CU512M.
+
 Qtcam Application - 26.0.0
 ---------------------------
 *Added support for Ubuntu 22.04.

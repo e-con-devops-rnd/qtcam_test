@@ -79,6 +79,8 @@ Item {
     property bool usb3speed: false
     property bool enablePowerLineFreq : true
     property bool hdrModeSelected : false
+    property bool setUVCExposure : true
+
 
     property bool powerLineComboEnable
     // Skip doing things when exposure combo index changed calls when no selection of any camera
@@ -766,7 +768,6 @@ Item {
                                     //To set Auto/Manual exposure mode
                                     if(currentText.toString() != "Auto Mode" && currentText.toString() != "Aperture Priority Mode") {
                                         root.changeCameraSettings(exposurecontrolId,exposure_Slider.value.toString())
-
                                         root.autoExposureSelected(false)
                                         JS.autoExposureSelected = false
                                         exposure_absolute.opacity = 1
@@ -809,32 +810,43 @@ Item {
                         width: 110
                         opacity: enabled ? 1 : 0.1
                         style:econSliderStyle
-                        onValueChanged: {
-                            //Sending UVC value to HID
-                            adjustedExposure = exposure_Slider.value * 100
-                            root.getExposureUVC(adjustedExposure)
+                        onPressedChanged: {
 
-                            exposureInt = parseInt(exposure_Slider.value)
+                            exposureInt = parseInt(exposure_Slider.value) * 100
 
-                            seconds = exposureInt / 1000000
+                            seconds      = exposureInt / 1000000
                             milliSeconds = (exposureInt/1000) - (seconds * 1000)
                             microSeconds = exposureInt - ((seconds * 1000000) + (milliSeconds * 1000))
 
-                            if((exposureCombo.currentText == "Manual Mode") && (root.selectedDeviceEnumValue == CommonEnums.CX3_UVC_CAM)){
-                                exposureValueAscella = exposureOrigAscella[value]
-                                exposure_value.text = exposureOrigAscella[value]
-                                root.changeCameraSettings(exposurecontrolId, exposureValueAscella)
+                            root.getExposureComponentsUVC(seconds, milliSeconds, microSeconds)
+                        }
 
-                            }else if(!exposureAutoAvailable){ // If a camera does not contain "exposure, auto" control, but having "exposure absolute" control, allow it change exposure value.
-                                root.changeCameraSettings(exposurecontrolId,value.toString())
-                            }else{
-                                if((exposureCombo.currentText == "Shutter Priority Mode" || exposureCombo.currentText == "Manual Mode")) {
-                                    root.getExposureComponentsUVC(seconds, milliSeconds, microSeconds)
+                        onValueChanged: {
 
-                                    if(exposureSliderSetEnable){
-                                        root.changeCameraSettings(exposurecontrolId,value.toString())
+                            if(setUVCExposure)
+                            {
+                                //Sending UVC value to HID
+                                adjustedExposure = exposure_Slider.value * 100
+                                root.getExposureUVC(adjustedExposure)
+
+                                if((exposureCombo.currentText == "Manual Mode") && (root.selectedDeviceEnumValue == CommonEnums.CX3_UVC_CAM)){
+                                    exposureValueAscella = exposureOrigAscella[value]
+                                    exposure_value.text = exposureOrigAscella[value]
+                                    root.changeCameraSettings(exposurecontrolId, exposureValueAscella)
+
+                                }else if(!exposureAutoAvailable){ // If a camera does not contain "exposure, auto" control, but having "exposure absolute" control, allow it change exposure value.
+                                    root.changeCameraSettings(exposurecontrolId,value.toString())
+                                }else{
+                                    if((exposureCombo.currentText == "Shutter Priority Mode" || exposureCombo.currentText == "Manual Mode")) {
+                                        if(exposureSliderSetEnable){
+                                            root.changeCameraSettings(exposurecontrolId,value.toString())
+                                        }
                                     }
                                 }
+                                setUVCExposure = true
+                            }
+                            else
+                            {
                             }
                         }
                     }
@@ -1268,19 +1280,6 @@ Item {
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
     Connections
     {
         target: root
@@ -1294,6 +1293,8 @@ Item {
         {
             videoFilter.visible = status;
         }
+
+        //Added by Sushanth - Signals getting values from HID settings and set it to UVC
         function onSendGainValueToUVC(gain){
             gain_Slider.value = gain
         }
@@ -1312,9 +1313,6 @@ Item {
         function onGetColorTempFromHID(colorTempFromHID){
             white_balance_Slider.value = colorTempFromHID
         }
-        function onGetExposureFromHID(exposureFromHID){
-            exposure_Slider.value = exposureFromHID
-        }
         function onGetExposureStatusFromHID(isAutoEnable, exposure){
             if(isAutoEnable)
             {
@@ -1325,8 +1323,13 @@ Item {
                 exposureCombo.currentIndex = 1
                 exposure_Slider.value = exposure
             }
+            setUVCExposure = false
+        }
+        function onGetExposureFromHID(exposureFromHID){
+            exposure_Slider.value = exposureFromHID
         }
     }
+
     Connections
     {
         target: root
@@ -1422,7 +1425,7 @@ Item {
     Connections
     {
         target:root
-       function onSetControlValues(controlName,controlType,controlMinValue,controlMaxValue,controlStepSize,controlDefaultValue,controlID)
+        function onSetControlValues(controlName,controlType,controlMinValue,controlMaxValue,controlStepSize,controlDefaultValue,controlID)
         {
             setCameraControls(controlName,controlType,controlMinValue,controlMaxValue,controlStepSize,controlDefaultValue,controlID);
         }
@@ -1492,7 +1495,6 @@ Item {
         function onQueryUvcControls(){
             queryctrlTimer.start()
         }
-
     }
 
     function updateHIDIn50CUG(whiteBalance)
