@@ -56,15 +56,15 @@ Item{
     Connections{
         target: root
 
-        function onTakeScreenShot()
+        onTakeScreenShot:
         {
             root.imageCapture(CommonEnums.SNAP_SHOT);
         }
-        function onGetVideoPinStatus()
+        onGetVideoPinStatus:
         {
             root.enableVideoPin(true);
         }
-        function onGetStillImageFormats()
+        onGetStillImageFormats:
         {
             var stillImageFormat = []
             stillImageFormat.push("jpg")
@@ -75,22 +75,22 @@ Item{
         }
 
         //Signals getting values from UVC & set its values to the HID controls
-        function onSendGainValueToHID(gainHid){
+        onSendGainValueToHID:{
             gainSlider.value = gainHid
         }
-        function onGetBrightnessFromUVC(brightnessFromUVC){
+        onGetBrightnessFromUVC:{
             brightnessSlider.value = brightnessFromUVC
         }
-        function onGetContrastFromUVC(contrastFromUVC){
+        onGetContrastFromUVC:{
             contrastSlider.value = contrastFromUVC
         }
-        function onGetSaturationFromUVC(saturationFromUVC){
+        onGetSaturationFromUVC:{
             saturationSlider.value = saturationFromUVC
         }
-        function onGetGammaFromUVC(gammaFromUVC){
+        onGetGammaFromUVC:{
             gammaCorrectionSlider.value = gammaFromUVC
         }
-        function onGetColorTempFromUVC(colorTempFromUVC){
+        onGetColorTempFromUVC:{
             skipUpdateColorTemperature = false
             colorTempTextField.text = colorTempFromUVC
 
@@ -125,7 +125,7 @@ Item{
             see3cam50cug.getColorCorrectionMatrix()
             see3cam50cug.getRBGain()
         }
-        function onGetExposureFromUVC(exposureFromUVC){
+        onGetExposureFromUVC:{
             manualExpTextField.text = exposureFromUVC
         }
     }

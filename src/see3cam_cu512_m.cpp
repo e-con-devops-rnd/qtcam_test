@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Qtcam. If not, see <http://www.gnu.org/licenses/>.
 */
-#include "see3camcu512m.h"
+#include "see3cam_cu512_m.h"
 
 SEE3CAM_CU512M::SEE3CAM_CU512M()
 {

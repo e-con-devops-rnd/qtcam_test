@@ -74,6 +74,5 @@ public slots:
     bool getOrientation();
 
     bool setToDefaultValues();
-
 };
 #endif // SEE3CAMCU512M_H

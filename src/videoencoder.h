@@ -42,9 +42,6 @@ extern "C" {
 #include "libswscale/swscale.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/dict.h"
-#include "libavutil/avutil.h"
-#include "libavutil/imgutils.h"
-#include "libavutil/opt.h"
 //#include "libavcodec/version.h"
 #if LIBAVUTIL_VER_AT_LEAST(52,2)
     #include "libavutil/channel_layout.h"
@@ -176,10 +173,10 @@ protected:
       SwsContext *img_convert_ctx;
 
     // Packet
-    AVPacket *pkt, *audioPkt;
+    AVPacket pkt, audioPkt;
 
       QString fileName;
-//      QString tempExtensionCheck;
+      QString tempExtensionCheck;
 
     //audio
     int audio_outbuf_size;
@@ -194,7 +191,9 @@ protected:
     unsigned getHeight();
     bool isSizeValid();
 
-      void initVars();      
+      void initVars();
+      bool initCodec();
+      
 
       // Alloc/free the output buffer
       bool initOutputBuf();

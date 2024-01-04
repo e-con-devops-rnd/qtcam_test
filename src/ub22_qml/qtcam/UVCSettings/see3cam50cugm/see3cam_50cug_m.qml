@@ -54,6 +54,7 @@ Item{
 
     property bool setButtonClicked: false
 
+
     property bool skipUpdateUIOnBurstLength: false
     property bool skipUpdateUIFlickerCtrl:false
     property int  triggerCtrl

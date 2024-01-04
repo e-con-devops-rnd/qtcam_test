@@ -310,8 +310,10 @@ Item {
        see3camcu512m.setStreamMode(See3CAM_CU512M.MASTER)
 
        root.startUpdatePreviewInMasterMode()
+
        root.checkForTriggerMode(false)
        root.captureBtnEnable(true)
+       root.videoRecordBtnEnable(true)
    }
 
    function setTriggerMode(){

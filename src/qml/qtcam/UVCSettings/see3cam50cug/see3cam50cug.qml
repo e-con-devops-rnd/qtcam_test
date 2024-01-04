@@ -1024,7 +1024,7 @@ This feature controls the integration time of the sensor. Values are expressed i
                       exclusiveGroup: cameraModeGroup
                       activeFocusOnPress: true
                       tooltip: " Master Mode :
-After choosing master mode, the application starts streaming.
+After choosing master mode, the application starts steaming.
 This is a simple mode of operation for the camera without any external trigger capability."
                       onClicked: {
                           setMasterMode()

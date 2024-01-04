@@ -1,5 +1,5 @@
 /*
- * see3cam_50cug_m.cpp -- Handling special feature of see3cam_50cug_m camera
+ * see3cam_50cug_m.cpp -- Handling special feature of nilecam30_usb camera
  * Copyright © 2015  e-con Systems India Pvt. Limited
  *
  * This file is part of Qtcam.
@@ -104,7 +104,7 @@ bool SEE3CAM_50CUGM::getOrientation()
 }
 
 /*
- * @brief SEE3CAM_50CUGM::setCameraMode - set Master/Trigger mode to the camera
+ * @brief SEE3CAM_50CUGM::setCameraMode - Setting orientation - set Normal/horizontal/vertical/Rotate180
  * @param - cameraModes - To switch between master and trigger mode
  * return true/false
 */
@@ -484,8 +484,6 @@ bool SEE3CAM_50CUGM::setExposure(EXPOSURE_MODE expMode, AUTO_EXPOSURE_FEATURES a
     g_out_packet_buf[2] = SET_EXPOSURE_SEE3CAM_50CUG_M; /* set exposure command */
     g_out_packet_buf[3] = expMode; /* Exposure mode to set */
 
-    uint milliSecond, microSecond;
-
     if(g_out_packet_buf[3] == 0X00)
     {
         g_out_packet_buf[4] = autoExpFeature;
@@ -507,9 +505,6 @@ bool SEE3CAM_50CUGM::setExposure(EXPOSURE_MODE expMode, AUTO_EXPOSURE_FEATURES a
         } else if(g_in_packet_buf[0] == CAMERA_CONTROL_SEE3CAM_50CUG_M &&
             g_in_packet_buf[1] == SET_EXPOSURE_SEE3CAM_50CUG_M &&
             g_in_packet_buf[9] == SET_SUCCESS) {
-
-            milliSecond = (g_in_packet_buf[5] << 8) | (g_in_packet_buf[6] << 0);
-            microSecond = (g_in_packet_buf[7] << 8) | (g_in_packet_buf[8] << 0);
 
             return true;
         }
@@ -746,7 +741,7 @@ bool SEE3CAM_50CUGM::setAutoGainLimit(uint lowerLimit, uint upperLimit)
 
 
 /**
- * @brief SEE3CAM_50CUGM::getAutoExposureLowerLimit - get current lower limit exposure from camera
+ * @brief SEE3CAM_50CUGM::getAutoExposureLowerLimit  - get current lower limit exposure from camera
  * @return - true/false
  */
 bool SEE3CAM_50CUGM::getAutoExposureLowerLimit()
@@ -1123,7 +1118,6 @@ bool SEE3CAM_50CUGM::getMultiExposureTrigger(){
     // fill buffer values
     g_out_packet_buf[1] = CAMERA_CONTROL_SEE3CAM_50CUG_M; /* camera id */
     g_out_packet_buf[2] = GET_MULTI_EXP_TRIGGER_SEE3CAM_50CUG_M;
-
     // send request and get reply from camera
     if(uvc.sendHidCmd(g_out_packet_buf, g_in_packet_buf, BUFFER_LENGTH)){
         if (g_in_packet_buf[6] == SET_FAIL) {

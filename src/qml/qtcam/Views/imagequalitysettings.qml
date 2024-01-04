@@ -79,8 +79,6 @@ Item {
     property bool usb3speed: false
     property bool enablePowerLineFreq : true
     property bool hdrModeSelected : false
-    property bool setUVCExposure : true
-
 
     property bool powerLineComboEnable
     // Skip doing things when exposure combo index changed calls when no selection of any camera
@@ -810,43 +808,32 @@ Item {
                         width: 110
                         opacity: enabled ? 1 : 0.1
                         style:econSliderStyle
-                        onPressedChanged: {
+                        onValueChanged: {
+                            //Sending UVC value to HID
+                            adjustedExposure = exposure_Slider.value * 100
+                            root.getExposureUVC(adjustedExposure)
 
-                            exposureInt = parseInt(exposure_Slider.value) * 100
+                            exposureInt = parseInt(exposure_Slider.value)
 
-                            seconds      = exposureInt / 1000000
+                            seconds = exposureInt / 1000000
                             milliSeconds = (exposureInt/1000) - (seconds * 1000)
                             microSeconds = exposureInt - ((seconds * 1000000) + (milliSeconds * 1000))
 
-                            root.getExposureComponentsUVC(seconds, milliSeconds, microSeconds)
-                        }
+                            if((exposureCombo.currentText == "Manual Mode") && (root.selectedDeviceEnumValue == CommonEnums.CX3_UVC_CAM)){
+                                exposureValueAscella = exposureOrigAscella[value]
+                                exposure_value.text = exposureOrigAscella[value]
+                                root.changeCameraSettings(exposurecontrolId, exposureValueAscella)
 
-                        onValueChanged: {
+                            }else if(!exposureAutoAvailable){ // If a camera does not contain "exposure, auto" control, but having "exposure absolute" control, allow it change exposure value.
+                                root.changeCameraSettings(exposurecontrolId,value.toString())
+                            }else{
+                                if((exposureCombo.currentText == "Shutter Priority Mode" || exposureCombo.currentText == "Manual Mode")) {
+                                    root.getExposureComponentsUVC(seconds, milliSeconds, microSeconds)
 
-                            if(setUVCExposure)
-                            {
-                                //Sending UVC value to HID
-                                adjustedExposure = exposure_Slider.value * 100
-                                root.getExposureUVC(adjustedExposure)
-
-                                if((exposureCombo.currentText == "Manual Mode") && (root.selectedDeviceEnumValue == CommonEnums.CX3_UVC_CAM)){
-                                    exposureValueAscella = exposureOrigAscella[value]
-                                    exposure_value.text = exposureOrigAscella[value]
-                                    root.changeCameraSettings(exposurecontrolId, exposureValueAscella)
-
-                                }else if(!exposureAutoAvailable){ // If a camera does not contain "exposure, auto" control, but having "exposure absolute" control, allow it change exposure value.
-                                    root.changeCameraSettings(exposurecontrolId,value.toString())
-                                }else{
-                                    if((exposureCombo.currentText == "Shutter Priority Mode" || exposureCombo.currentText == "Manual Mode")) {
-                                        if(exposureSliderSetEnable){
-                                            root.changeCameraSettings(exposurecontrolId,value.toString())
-                                        }
+                                    if(exposureSliderSetEnable){
+                                        root.changeCameraSettings(exposurecontrolId,value.toString())
                                     }
                                 }
-                                setUVCExposure = true
-                            }
-                            else
-                            {
                             }
                         }
                     }
@@ -1323,7 +1310,6 @@ Item {
                 exposureCombo.currentIndex = 1
                 exposure_Slider.value = exposure
             }
-            setUVCExposure = false
         }
         onGetExposureFromHID:{
             exposure_Slider.value = exposureFromHID
