@@ -424,6 +424,7 @@ private:
     bool m_VideoRecord;
     bool previewStop;
     bool trigger_mode;
+    bool triggerImageCap = false;
     int triggermode_skipframes;
     int skipImageCapture;
 
