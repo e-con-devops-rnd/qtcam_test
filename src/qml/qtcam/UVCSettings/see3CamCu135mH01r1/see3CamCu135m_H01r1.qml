@@ -144,12 +144,10 @@ Item {
         onUpdateCrossStillCaptureProperty:{
             if(isEnable)
             {
-                console.log("SET_2")
                 see3camcu135mH01r1.setPropertiesForCrossStill(true)
             }
             else
             {
-                console.log("NOT_SET_2")
                 see3camcu135mH01r1.setPropertiesForCrossStill(false)
             }
         }

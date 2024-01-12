@@ -1344,18 +1344,17 @@ value in the text box and click the Set button"
         onAutoExposureSelected:{
             enableDisableAutoExposureControls(autoExposureSelect)
         }
-//        onVideoResolutionChanged:{
-//            getexposureCompFrameRateCtrlTimer.start()
-//        }
-//        onPreviewFPSChanged:{
-//            getexposureCompFrameRateCtrlTimer.start()
-//        }
-//        onVideoColorSpaceChanged:{
-//            getexposureCompFrameRateCtrlTimer.start()
-//        }
+        onVideoResolutionChanged:{
+            getexposureCompFrameRateCtrlTimer.start()
+        }
+        onPreviewFPSChanged:{
+            getexposureCompFrameRateCtrlTimer.start()
+        }
+        onVideoColorSpaceChanged:{
+            getexposureCompFrameRateCtrlTimer.start()
+        }
         onAfterRecordVideo:{
             root.keyEventFiltering = true
         }
     }
 }
-

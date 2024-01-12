@@ -1,7 +1,6 @@
 #ifndef SEE3CAM_24CUG_H
 #define SEE3CAM_24CUG_H
 
-#include <QThread>
 #include "uvccamera.h"
 #include <QObject>
 
