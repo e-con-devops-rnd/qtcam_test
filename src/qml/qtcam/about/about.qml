@@ -90,7 +90,7 @@ Window {
 
     Text {
         id: copyrights
-        text: "Copyright © 2023  e-con Systems India Pvt. Limited"
+        text: "Copyright © 2024  e-con Systems India Pvt. Limited"
         font.pixelSize: 15
         font.family: "Ubuntu Light"
         color: "#ffffff"
