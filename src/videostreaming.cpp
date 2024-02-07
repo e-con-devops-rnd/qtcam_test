@@ -1867,25 +1867,6 @@ void Videostreaming::capFrame()
     {
         int err = -1;
 
-//        //To save bmp, png, jpg after debayering Y16 data from Raw Y10 - For See3CAM_CU200
-//        if(m_renderer->rawY10Format)
-//        {
-//            int err = 0;
-//            copy = m_capSrcFormat;
-//            copy.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
-//            err = v4lconvert_convert(m_convertData, &copy, &m_capDestFormat,
-//                                     (unsigned char *)m_renderer->yuvBuffer, buf.bytesused,
-//                                     m_capImage->bits(), m_capDestFormat.fmt.pix.sizeimage); // yuyv to rgb conversion
-
-//            if(err == -1)
-//            {
-//                logCriticalHandle(v4lconvert_get_error_message(m_convertData));
-//                qbuf(buf);
-//                return;
-//            }
-//        }
-//        else
-
         if(!m_renderer->y16BayerFormat && !m_renderer->rawY10Format) //  Ex: cu40 camera -  y16 bayer format means these conversions are not needed. Calculations are done in "prepareBuffer" function itself.
         {
             if(m_capSrcFormat.fmt.pix.pixelformat == V4L2_PIX_FMT_Y16)

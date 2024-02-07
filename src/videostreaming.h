@@ -68,8 +68,6 @@
 #define Y16_NEW_WIDTH     3120
 #define Y16_NEW_HEIGHT    1080
 
-#define LOWER_8_BITS_MASK 0xFF
-
 #include <QTimer>
 #include <QDateTime>
 #include <QSocketNotifier>
