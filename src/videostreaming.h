@@ -68,7 +68,7 @@
 #define Y16_NEW_WIDTH     3120
 #define Y16_NEW_HEIGHT    1080
 
-#define ZERO_FPS      0
+#define LOWER_8_BITS_MASK 0xFF
 
 #include <QTimer>
 #include <QDateTime>
@@ -197,6 +197,7 @@ public:
     int glViewPortHeight;
     __u32 m_pixelformat;
     bool y16BayerFormat;
+    bool rawY10Format;
 
 signals:
      void ybufferchanged(uint8_t);
@@ -278,6 +279,8 @@ public:
     //Buffer to stillCapture for See3CAM_27CUG => Added By Sushanth.S
     unsigned char *stillBuffer;
 
+    uint16_t *rawY10Buffer;
+
     // prepare target buffer for rendering from input buffer.
     bool prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 bytesUsed);
 
@@ -291,6 +294,9 @@ public:
 
     //Preparing UYVY & Y8 buffer for See3CAM_CU83
     bool prepareCu83Buffer(uint8_t *inputbuffer);
+
+    //To convert RawY10 to Y16 format
+    bool convertRawY10ToY16(void *inputbuffer, uint16_t *outputBuffer, int bytesUsed);
 
     // save captured image files
     bool saveRawFile(void *inputBuffer, int buffersize);
@@ -436,8 +442,6 @@ private:
     int skipPreviewChange   = 0;
     bool skipReturn       = false;
     bool flagReset      = true;
-
-    bool onY16Format = false;
 
     QSocketNotifier *m_capNotifier;
 
@@ -862,7 +866,6 @@ signals:
     void startEnumerateMenulist();
     void deviceUnplugged(QString _title,QString _text);
     void averageFPS(unsigned fps);
-    void updateFpsZero(int fps);
     void defaultStillFrameSize(unsigned int outputIndexValue);
     void defaultFrameSize(unsigned int outputIndexValue, unsigned int  defaultWidth, unsigned int defaultHeight);
     void defaultOutputFormat(unsigned int formatIndexValue);
