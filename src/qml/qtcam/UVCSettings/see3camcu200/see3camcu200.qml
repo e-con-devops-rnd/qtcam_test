@@ -110,13 +110,17 @@ Item{
             {
                 colorTempSlider.value = 3
             }
-            else if(colorTempFromUVC == "6000")
+            else if(colorTempFromUVC == "4100")
             {
                 colorTempSlider.value = 4
             }
-            else if(colorTempFromUVC == "6500")
+            else if(colorTempFromUVC == "6000")
             {
                 colorTempSlider.value = 5
+            }
+            else if(colorTempFromUVC == "6500")
+            {
+                colorTempSlider.value = 6
             }
 
             skipUpdateColorTemperature = true
@@ -127,6 +131,9 @@ Item{
         }
         onGetExposureFromUVC:{
             manualExpTextField.text = exposureFromUVC
+        }
+        onGetFlipMode:{ //To get the Flip status when 2 or more cameras are connected
+            sendFlipStatus()
         }
     }
 
@@ -176,6 +183,50 @@ Item{
                 y:5
                 spacing:18
 
+                Text {
+                    id: flipMode
+                    text: "--- Orientation Mode ---"
+                    font.pixelSize: 14
+                    font.family: "Ubuntu"
+                    color: "#ffffff"
+                    smooth: true
+                    Layout.alignment: Qt.AlignCenter
+                    opacity: 0.50196078431373
+                }
+                Row{
+                    spacing: 40
+                    CheckBox {
+                        id: flipCtrlHorizotal
+                        activeFocusOnPress : true
+                        text: "Horizontal"
+                        style: econCheckBoxStyle
+                        tooltip: "Flips the preview left/right."
+                        onClicked:{
+                            see3camcu200.setOrientation(flipCtrlHorizotal.checked, flipCtrlVertical.checked)
+                            sendFlipStatus()
+                        }
+                        Keys.onReturnPressed: {
+                            see3camcu200.setOrientation(flipCtrlHorizotal.checked, flipCtrlVertical.checked)
+                            sendFlipStatus()
+                        }
+                    }
+                    CheckBox {
+                        id: flipCtrlVertical
+                        activeFocusOnPress : true
+                        text: "Vertical"
+                        style: econCheckBoxStyle
+                        tooltip: "Flips the preview vertically up/down."
+                        onClicked:{
+                            see3camcu200.setOrientation(flipCtrlHorizotal.checked, flipCtrlVertical.checked)
+                            sendFlipStatus()
+                        }
+                        Keys.onReturnPressed: {
+                            see3camcu200.setOrientation(flipCtrlHorizotal.checked, flipCtrlVertical.checked)
+                            sendFlipStatus()
+                        }
+                    }
+                }
+
 //                Text {
 //                    id: gainModeTitle
 //                    text: "--- Gain Mode ---"
@@ -224,7 +275,7 @@ Item{
 
                Text{
                     id: manualGainSlider
-                    text: "--- Manual Gain ---"
+                    text: "--- Gain ---"
                     font.pixelSize: 14
                     font.family: "Ubuntu"
                     color: "#ffffff"
@@ -283,7 +334,7 @@ Item{
 
                    Text{
                         id: gainRTitle
-                        text: "--- R Gain ---"
+                        text: "--- Red Gain ---"
                         font.pixelSize: 14
                         font.family: "Ubuntu"
                         color: "#ffffff"
@@ -337,7 +388,7 @@ Item{
 
                    Text{
                         id: gainBTitle
-                        text: "--- B Gain ---"
+                        text: "--- Blue Gain ---"
                         font.pixelSize: 14
                         font.family: "Ubuntu"
                         color: "#ffffff"
@@ -394,7 +445,7 @@ Item{
 
                Text {
                    id: colorCorrectionMaxTitle
-                   text: "--- Color Correction Matrix ---"
+                   text: "--- Colour Correction Matrix ---"
                    font.pixelSize: 14
                    font.family: "Ubuntu"
                    color: "#ffffff"
@@ -705,7 +756,7 @@ Note: Changing the value will affect image quality."
                Text
                {
                    id: colorTempTitle
-                   text: "--- Color Temperature ---"
+                   text: "--- Colour Temperature ---"
                    font.pixelSize: 14
                    font.family: "Ubuntu"
                    color: "#ffffff"
@@ -715,7 +766,7 @@ Note: Changing the value will affect image quality."
                    ToolButton{
                        tooltip: "It is used for white balancing the scene based on the temperature set by applying predefined R and B digital gain.
 Note:
-For temperature other than the possible values (2300, 2800, 3000, 4000, 6000, 6500), individual R and B digital gain can be manually adjusted."
+For temperature other than the possible values (2300, 2800, 3000, 4000, 4100, 6000, 6500), individual R and B digital gain can be manually adjusted."
                        width: 200
                        opacity: 0
                    }
@@ -731,7 +782,7 @@ For temperature other than the possible values (2300, 2800, 3000, 4000, 6000, 65
                        style:econSliderStyle
 
                        minimumValue: 0
-                       maximumValue: 5
+                       maximumValue: 6
                        stepSize: 1
 
                        onValueChanged:  {
@@ -765,12 +816,18 @@ For temperature other than the possible values (2300, 2800, 3000, 4000, 6000, 65
                                        break;
                                    case 4:
                                        root.sendColorTemperatureToUVC(5)
-                                       colorTempTextField.text = "6000"
-                                       see3camcu200.setColorTemperature(6000)
+                                       colorTempTextField.text = "4100"
+                                       see3camcu200.setColorTemperature(4100)
 
                                        break;
                                    case 5:
                                        root.sendColorTemperatureToUVC(6)
+                                       colorTempTextField.text = "6000"
+                                       see3camcu200.setColorTemperature(6000)
+
+                                       break;
+                                   case 6:
+                                       root.sendColorTemperatureToUVC(7)
                                        colorTempTextField.text = "6500"
                                        see3camcu200.setColorTemperature(6500)
 
@@ -995,7 +1052,7 @@ For temperature other than the possible values (2300, 2800, 3000, 4000, 6000, 65
 
                Text {
                    id: strobe
-                   text: "--- Strobe Mode ---"
+                   text: "--- Strobe ---"
                    font.pixelSize: 14
                    font.family: "Ubuntu"
                    color: "#ffffff"
@@ -1036,46 +1093,6 @@ For temperature other than the possible values (2300, 2800, 3000, 4000, 6000, 65
                        }
                        Keys.onReturnPressed: {
                            see3camcu200.setStrobeMode(SEE3CAM_CU200.STROBE_OFF)
-                       }
-                   }
-               }
-
-               Text {
-                   id: flipMode
-                   text: "--- Orientation Mode ---"
-                   font.pixelSize: 14
-                   font.family: "Ubuntu"
-                   color: "#ffffff"
-                   smooth: true
-                   Layout.alignment: Qt.AlignCenter
-                   opacity: 0.50196078431373
-               }
-               Row{
-                   spacing: 40
-                   CheckBox {
-                       id: flipCtrlHorizotal
-                       activeFocusOnPress : true
-                       text: "Horizontal"
-                       style: econCheckBoxStyle
-                       tooltip: "Flips the preview left/right."
-                       onClicked:{
-                           see3camcu200.setOrientation(flipCtrlHorizotal.checked, flipCtrlVertical.checked)
-                       }
-                       Keys.onReturnPressed: {
-                           see3camcu200.setOrientation(flipCtrlHorizotal.checked, flipCtrlVertical.checked)
-                       }
-                   }
-                   CheckBox {
-                       id: flipCtrlVertical
-                       activeFocusOnPress : true
-                       text: "Vertical"
-                       style: econCheckBoxStyle
-                       tooltip: "Flips the preview vertically up/down."
-                       onClicked:{
-                           see3camcu200.setOrientation(flipCtrlHorizotal.checked, flipCtrlVertical.checked)
-                       }
-                       Keys.onReturnPressed: {
-                           see3camcu200.setOrientation(flipCtrlHorizotal.checked, flipCtrlVertical.checked)
                        }
                    }
                }
@@ -1384,6 +1401,7 @@ The camera serial number will be displayed along with the F/W version."
             gainSlider.value        = current
             gainSlider.stepSize     = stepValue
             gainSlider.maximumValue = max
+//            root.getGainValueFromHID(gainSlider.value)
             skipUpdateGainMode = true
         }
 
@@ -1437,6 +1455,13 @@ The camera serial number will be displayed along with the F/W version."
             currentBrightness = parseFloat((currentBrightness).toFixed(3));
             brightnessSlider.value = currentBrightness
             brightnessTextField.text = currentBrightness
+
+            adjustedBrightness = parseFloat((brightnessSlider.value).toFixed(3));
+
+            //Sending HID value to UVC
+            brightnessInt = adjustedBrightness * 200;
+            root.sendBrightnessToUVC(brightnessInt)
+
             skipUpdateBrightness = true
         }
 
@@ -1449,6 +1474,13 @@ The camera serial number will be displayed along with the F/W version."
             currentSaturation = parseFloat((currentSaturation).toFixed(3));
             saturationSlider.value = currentSaturation
             saturationTextField.text = currentSaturation
+
+            adjustedSaturation = parseFloat((saturationSlider.value).toFixed(3));
+
+            //Sending HID value to UVC
+            saturationInt = adjustedSaturation * 200
+            root.sendSaturationToUVC(saturationInt)
+
             skipUpdateSaturation = true
         }
 
@@ -1463,6 +1495,13 @@ The camera serial number will be displayed along with the F/W version."
             currentGamma = parseFloat((currentGamma).toFixed(1));
             gammaCorrectionSlider.value = currentGamma
             gammaCorrectionTextField.text = currentGamma
+
+            adjustedGammaCorrection = parseFloat((gammaCorrectionSlider.value).toFixed(1));
+
+            //Sending HID value to UVC
+            gammaInt = adjustedGammaCorrection * 10
+            root.sendGammaToUVC(gammaInt)
+
             skipUpdateGammaCorrection = true
         }
 
@@ -1470,6 +1509,7 @@ The camera serial number will be displayed along with the F/W version."
         onCurrentContrastReceived: {
             skipUpdateContrast = false
             contrastSlider.value = currentContrast
+            root.sendContrastToUVC(contrastSlider.value)
             skipUpdateContrast = true
         }
         onMinContrastReceived: {
@@ -1489,26 +1529,37 @@ The camera serial number will be displayed along with the F/W version."
             if(colorTemp == "2300")
             {
                colorTempSlider.value = 0
+               root.sendColorTemperatureToUVC(1)
             }
             else if(colorTemp == "2800")
             {
                 colorTempSlider.value = 1
+                root.sendColorTemperatureToUVC(2)
             }
             else if(colorTemp == "3000")
             {
                 colorTempSlider.value = 2
+                root.sendColorTemperatureToUVC(3)
             }
             else if(colorTemp == "4000")
             {
                 colorTempSlider.value = 3
+                root.sendColorTemperatureToUVC(4)
+            }
+            else if(colorTemp == "4100")
+            {
+                colorTempSlider.value = 4
+                root.sendColorTemperatureToUVC(5)
             }
             else if(colorTemp == "6000")
             {
-                colorTempSlider.value = 4
+                colorTempSlider.value = 5
+                root.sendColorTemperatureToUVC(6)
             }
             else if(colorTemp == "6500")
             {
-                colorTempSlider.value = 5
+                colorTempSlider.value = 6
+                root.sendColorTemperatureToUVC(7)
             }
 
             skipUpdateColorTemperature = true
@@ -1524,6 +1575,15 @@ The camera serial number will be displayed along with the F/W version."
 
         onExposureValueReceived: {
             manualExpTextField.text = exposure
+
+            if(manualExpTextField.text <= 1000000)
+            {
+                exposureInt = manualExpTextField.text / 100
+                root.sendExposureToUVC(exposureInt)
+            }
+            else{
+                root.sendExposureToUVC(100000)
+            }
         }
 
 
@@ -1615,19 +1675,43 @@ The camera serial number will be displayed along with the F/W version."
             case SEE3CAM_CU200.NORMAL:
                 flipCtrlVertical.checked  = false
                 flipCtrlHorizotal.checked = false
+                root.getFlipStatus(false, false)
                 break;
             case SEE3CAM_CU200.VERTICAL:
                 flipCtrlVertical.checked  = true
                 flipCtrlHorizotal.checked = false
+                root.getFlipStatus(false, true)
                 break;
             case SEE3CAM_CU200.HORIZONTAL:
                 flipCtrlVertical.checked  = false
                 flipCtrlHorizotal.checked = true
+                root.getFlipStatus(true, false)
                 break;
             case SEE3CAM_CU200.ROTATE_180:
                 flipCtrlVertical.checked  = true
                 flipCtrlHorizotal.checked = true
+                root.getFlipStatus(false, false)
                 break;
+        }
+    }
+
+    function sendFlipStatus()
+    {
+        if((flipCtrlVertical.checked) && (flipCtrlHorizotal.checked))
+        {
+            root.getFlipStatus(true, true)
+        }
+        else if(!(flipCtrlVertical.checked) && (flipCtrlHorizotal.checked))
+        {
+            root.getFlipStatus(true, false)
+        }
+        else if((flipCtrlVertical.checked) && !(flipCtrlHorizotal.checked))
+        {
+            root.getFlipStatus(false, true)
+        }
+        else if(!(flipCtrlVertical.checked) && !(flipCtrlHorizotal.checked))
+        {
+            root.getFlipStatus(false, false)
         }
     }
 
@@ -1638,6 +1722,7 @@ The camera serial number will be displayed along with the F/W version."
         {
             masterMode.checked = true
 
+            root.startUpdatePreviewInMasterMode()
             root.checkForTriggerMode(false)
             root.videoRecordBtnEnable(true)
             root.captureBtnEnable(true)
@@ -1646,11 +1731,13 @@ The camera serial number will be displayed along with the F/W version."
         {
             triggerMode.checked = true
 
+            root.stopUpdatePreviewInTriggerMode()
             root.checkForTriggerMode(true)
             root.videoRecordBtnEnable(false)
             root.captureBtnEnable(false)
         }
     }
+
 
     function setMasterMode()
     {
