@@ -24,6 +24,7 @@
 
 #define RGB_FRAME               0X00
 #define IR_FRAME                0x01
+#define BYTES_PER_PIXEL_RGB     3
 
 #define IR_RGB_MODE    1
 #define RGB_MODE       2
@@ -31,8 +32,6 @@
 
 #define BYTES_PER_PIXEL_UYVY      2
 #define BYTES_PER_PIXEL_Y16       2
-#define BYTES_PER_PIXEL_RAW_Y10   1.25
-#define BYTES_PER_PIXEL_RGB       3
 
 #define RGB_SIZE_CU83          16588800
 #define IR_SIZE_CU83           2073600
@@ -68,8 +67,6 @@
 
 #define Y16_NEW_WIDTH     3120
 #define Y16_NEW_HEIGHT    1080
-
-#define RAW_Y10_PIX_FMT   540029273
 
 #include <QTimer>
 #include <QDateTime>
@@ -179,7 +176,6 @@ public:
     __u32 width,height;
      __u32 x1,y1;
     bool gotFrame;
-    bool flipModeChanged;
     bool triggermodeFlag;
     bool copied;
     unsigned fps;
@@ -199,7 +195,7 @@ public:
     int glViewPortHeight;
     __u32 m_pixelformat;
     bool y16BayerFormat;
-    bool rawY10Format;
+    bool rawY16Format;
 
 signals:
      void ybufferchanged(uint8_t);

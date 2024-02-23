@@ -330,7 +330,6 @@ FrameRenderer::FrameRenderer(): m_t(0),m_programYUYV(0){
     greyBuffer = NULL;
     rgbaDestBuffer = NULL;
     gotFrame = false;
-    flipModeChanged = false;
     triggermodeFlag = false;
     updateStop = true;
     m_formatChange = false;
@@ -339,7 +338,7 @@ FrameRenderer::FrameRenderer(): m_t(0),m_programYUYV(0){
     m_shaderProgram = NULL;
     m_programYUYV = NULL;
     y16BayerFormat = false;
-    rawY10Format = false;
+    rawY16Format = false;
     skipH264Frames = 20;
 
     uyvyBuffer    = NULL;
@@ -749,6 +748,7 @@ void FrameRenderer::drawYUYVBUffer(){
 
     glViewport(glViewPortX, glViewPortY, glViewPortWidth, glViewPortHeight);
     if(renderyuyvMutex.tryLock()){
+
         // Added by Navya -- 18 Sep 2019
         // Skipped frames inorder to avoid green strips in streaming while switching resolution or capturing images continuosly.
         if((currentlySelectedEnumValue == CommonEnums::SEE3CAM_20CUG || currentlySelectedEnumValue == CommonEnums::SEE3CAM_CU200 || currentlySelectedEnumValue == CommonEnums::See3CAM_CU135M_H01R1|| currentlySelectedEnumValue == CommonEnums::SEE3CAM_135M || currentlySelectedEnumValue == CommonEnums::SEE3CAM_CU136M)){
@@ -771,7 +771,15 @@ void FrameRenderer::drawYUYVBUffer(){
         renderyuyvMutex.unlock();
     }
     else{
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, mIndicesData);
+        if((currentlySelectedEnumValue == CommonEnums::SEE3CAM_CU200))
+        {
+          skipFrames = frame;
+        }
+
+        if(skipFrames >3)
+        {
+          glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, mIndicesData);
+        }
     }
 skip:
     m_shaderProgram->disableAttributeArray(0);
@@ -785,7 +793,6 @@ skip:
  * @brief FrameRenderer::drawUYVYBUffer - draw uyvy buffer
  */
 void FrameRenderer::drawUYVYBUffer(){
-
     int skipFrames = 4;
 
     m_shaderProgram->bind();
@@ -806,16 +813,9 @@ void FrameRenderer::drawUYVYBUffer(){
     glViewport(glViewPortX, glViewPortY, glViewPortWidth, glViewPortHeight);
 
     if(renderyuyvMutex.tryLock()){
-
-        if((flipModeChanged) && (currentlySelectedEnumValue == CommonEnums::SEE3CAM_CU200))
-        {
-            frame = 0;
-            flipModeChanged = false;
-        }
-
         // Added by Navya -- 18 Sep 2019
         // Skipped frames inorder to avoid green strips in streaming while switching resolution or capturing images continuosly.
-        if((currentlySelectedEnumValue == CommonEnums::SEE3CAM_CU83) | (currentlySelectedEnumValue == CommonEnums::SEE3CAM_CU200) | (currentlySelectedEnumValue == CommonEnums::SEE3CAM_27CUG) | (currentlySelectedEnumValue == CommonEnums::ECAM22_USB) |(currentlySelectedEnumValue == CommonEnums::SEE3CAM_20CUG || currentlySelectedEnumValue == CommonEnums::See3CAM_CU135M_H01R1|| currentlySelectedEnumValue == CommonEnums::SEE3CAM_135M|| currentlySelectedEnumValue == CommonEnums::SEE3CAM_CU136M))
+        if((currentlySelectedEnumValue == CommonEnums::SEE3CAM_CU83) | (currentlySelectedEnumValue == CommonEnums::SEE3CAM_27CUG) | (currentlySelectedEnumValue == CommonEnums::ECAM22_USB) |(currentlySelectedEnumValue == CommonEnums::SEE3CAM_20CUG || currentlySelectedEnumValue == CommonEnums::See3CAM_CU135M_H01R1|| currentlySelectedEnumValue == CommonEnums::SEE3CAM_135M|| currentlySelectedEnumValue == CommonEnums::SEE3CAM_CU136M))
         {
             skipFrames = frame;
         }
@@ -823,7 +823,6 @@ void FrameRenderer::drawUYVYBUffer(){
         {
             skipFrames = 4;
         }
-
         if(currentlySelectedEnumValue == CommonEnums::SEE3CAM_CU83){
               if((videoResolutionwidth == Y16_2160p_WIDTH) && (videoResolutionHeight == Y16_2160p_HEIGHT)) {//To render Y16 -> UYVY colorspace
                   if(uyvyBuffer!= NULL){
@@ -963,7 +962,7 @@ void FrameRenderer::changeShader(){
         m_programYUYV = NULL;
     }
 
-    if(y16BayerFormat){
+    if(y16BayerFormat || rawY16Format){
         shaderYUYV();
         drawYUYVBUffer();
     }
@@ -1019,11 +1018,6 @@ void FrameRenderer::changeShader(){
                 break;
             case V4L2_PIX_FMT_H264:
                 drawBufferForYUV420();
-                break;
-            case RAW_Y10_PIX_FMT:
-                shaderUYVY();
-                drawUYVYBUffer();
-                renderBufferFormat = CommonEnums::UYVY_BUFFER_RENDER;
                 break;
         }
     }
@@ -1731,15 +1725,6 @@ void Videostreaming::capFrame()
         return;
     }
 
-    if(currentlySelectedCameraEnum == CommonEnums::SEE3CAM_CU200 && m_capSrcFormat.fmt.pix.pixelformat == RAW_Y10_PIX_FMT)
-    {
-        m_renderer->rawY10Format = true;
-    }
-    else
-    {
-        m_renderer->rawY10Format = false;
-    }
-
 
     if(currentlySelectedCameraEnum == CommonEnums::SEE3CAM_24CUG && trigger_mode) //Added by M.VishnuMurali: For capturing trigger mode images.
     {
@@ -1821,10 +1806,9 @@ void Videostreaming::capFrame()
             }
         }break;
         default:
-        {
-           validFrame = true;
-        }   // To do: for other color spaces
-        break;
+            validFrame = true;
+            // To do: for other color spaces
+            break;
     }
 
     if (validFrame != true){
@@ -1892,7 +1876,8 @@ void Videostreaming::capFrame()
     if(m_snapShot || m_burstShot)
     {
         int err = -1;
-        if(!m_renderer->y16BayerFormat && !m_renderer->rawY10Format) //  Ex: cu40 camera -  y16 bayer format means these conversions are not needed. Calculations are done in "prepareBuffer" function itself.
+
+        if(!m_renderer->y16BayerFormat && !m_renderer->rawY16Format) //  Ex: cu40 camera -  y16 bayer format means these conversions are not needed. Calculations are done in "prepareBuffer" function itself.
         {
             if(m_capSrcFormat.fmt.pix.pixelformat == V4L2_PIX_FMT_Y16)
             {
@@ -2097,7 +2082,7 @@ void Videostreaming::capFrame()
         }
 
         if(formatType == "raw"){// save incoming buffer directly
-            if(m_renderer->rawY10Format)
+            if(m_renderer->rawY16Format)
             {
                 saveRawFile((void*)rawY16Buffer, (width*height*2));
                 imgSaveSuccessCount++;
@@ -2121,7 +2106,7 @@ void Videostreaming::capFrame()
             unsigned char *bufferToSave = NULL;
 
             //For See3CAM_CU40 & See3CAM_CU200 - Saving RGB frame after debayering
-            if(m_renderer->y16BayerFormat || m_renderer->rawY10Format){
+            if(m_renderer->y16BayerFormat || m_renderer->rawY16Format){
                 bufferToSave = y16BayerDestBuffer;
 
                 QImage qImage3(bufferToSave, width, height, QImage::Format_RGB888);
@@ -2273,8 +2258,6 @@ void Videostreaming::capFrame()
                 }
                 else
                 {//This is common to all other cameras
-
-                    //Added By Sushanth - To save the frames converted following BT.701 standards
                     if(currentlySelectedCameraEnum == CommonEnums::SEE3CAM_CU31)
                     {
                         int inputSize = buf.bytesused;
@@ -3089,27 +3072,6 @@ void rgb2yuyv(uint8_t *prgb, uint8_t *pyuv, int width, int height)
         }
 }
 
-//To convert RGB to UYVY
-void rgb2uyvy(uint8_t *prgb, uint8_t *pyuv, int width, int height)
-{
-    for (int i = 0; i < width * height * 3; i += 6) {
-            int y0, u, y1, v;
-            y0 = CLIP(0.299 * (prgb[i] - 128) + 0.587 * (prgb[i + 1] - 128) + 0.114 * (prgb[i + 2] - 128) + 128);
-            u = CLIP((-0.147 * (prgb[i] - 128) - 0.289 * (prgb[i + 1] - 128) + 0.436 * (prgb[i + 2] - 128) + 128 +
-                      (-0.147 * (prgb[i + 3] - 128) - 0.289 * (prgb[i + 4] - 128) + 0.436 * (prgb[i + 5] - 128) + 128)) /
-                     2);
-            y1 = CLIP(0.299 * (prgb[i + 3] - 128) + 0.587 * (prgb[i + 4] - 128) + 0.114 * (prgb[i + 5] - 128) + 128);
-            v = CLIP((0.615 * (prgb[i] - 128) - 0.515 * (prgb[i + 1] - 128) - 0.100 * (prgb[i + 2] - 128) + 128 +
-                      (0.615 * (prgb[i + 3] - 128) - 0.515 * (prgb[i + 4] - 128) - 0.100 * (prgb[i + 5] - 128) + 128)) /
-                     2);
-
-            *pyuv++ = u;
-            *pyuv++ = y0;
-            *pyuv++ = v;
-            *pyuv++ = y1;
-        }
-}
-
 //Added by Sushanth.S - Storing IR & RGB buffer Seperately to still capture in See3CAM_27CUG
 bool Videostreaming::prepareStillBuffer(uint8_t *inputBuffer)
 {
@@ -3625,16 +3587,16 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
             memcpy(m_renderer->yuvBuffer, yuyvBuffer, width*height*2);
 
         }
-        else if(m_renderer->rawY10Format)
+        else if(m_renderer->rawY16Format)
         {
-            m_renderer->renderBufferFormat = CommonEnums::UYVY_BUFFER_RENDER;
+            m_renderer->renderBufferFormat = CommonEnums::YUYV_BUFFER_RENDER;
 
             int inputBufSize;
-            inputBufSize = width*height*BYTES_PER_PIXEL_RAW_Y10;
+            inputBufSize = width*height*1.25;
 
-            rawY16Buffer = (uint16_t*) malloc(width*height*BYTES_PER_PIXEL_Y16);
+            rawY16Buffer = (uint16_t*) malloc(width*height*2);
 
-            memset(rawY16Buffer, 0, (width*height*BYTES_PER_PIXEL_Y16));
+            memset(rawY16Buffer, 0, (width*height*2));
 
             if(!convertRawY10ToY16(((void*)inputbuffer),rawY16Buffer, inputBufSize))
             {
@@ -3642,10 +3604,9 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
             }
 
             /* Applying Nearest neighbour interpolation algorithm - y16 to RGB24 conversion */
-            y16BayerDestBuffer = (unsigned char *)malloc(width * height * BYTES_PER_PIXEL_RGB);
+            y16BayerDestBuffer = (unsigned char *)malloc(width * height * 3);
             if(!horizontalFlip && !verticalFlip)
             {
-                //GBRG Pattern
                 for (__u32 y = 0; y < height; y += 2) {
                     for (__u32 x = 0; x < width; x += 2) {
                         uint8_t g1 = CLIP(Bay(x, y, width));
@@ -3706,9 +3667,7 @@ bool Videostreaming::prepareBuffer(__u32 pixformat, void *inputbuffer, __u32 byt
                     }
                 }
             }
-
-            //Converting y16BayerDestBuffer to UYVY after Debayering for rendering
-            rgb2uyvy(y16BayerDestBuffer, yuyvBuffer, width, height);
+            rgb2yuyv(y16BayerDestBuffer, yuyvBuffer, width, height);
             memcpy(m_renderer->yuvBuffer, yuyvBuffer, width*height*2);
         }
         else if(y16FormatFor20CUG){
@@ -4588,6 +4547,15 @@ void Videostreaming::displayFrame() {
         m_renderer->y16BayerFormat = true;
     }
 
+    if((currentlySelectedCameraEnum == CommonEnums::SEE3CAM_CU200) && (m_capSrcFormat.fmt.pix.pixelformat != V4L2_PIX_FMT_UYVY))
+    {
+        m_renderer->rawY16Format = true;
+    }
+    else
+    {
+        m_renderer->rawY16Format = false;
+    }
+
     if((currentlySelectedCameraEnum == CommonEnums::SEE3CAM_20CUG || currentlySelectedCameraEnum == CommonEnums::SEE3CAM_16CUGM ||currentlySelectedCameraEnum == CommonEnums::See3CAM_CU135M_H01R1|| currentlySelectedCameraEnum == CommonEnums::SEE3CAM_135M || currentlySelectedCameraEnum == CommonEnums::SEE3CAM_CU136M) && (m_capSrcFormat.fmt.pix.pixelformat == V4L2_PIX_FMT_Y16)) {
         y16FormatFor20CUG = true;
     }
@@ -4687,7 +4655,7 @@ void Videostreaming::stopCapture() {
     m_renderer->y16BayerFormat = false; // BY default this will be false, If cu40 [ y16 bayer format ] is selected ,
     //this will be enabled.
 
-    m_renderer->rawY10Format = false;
+    m_renderer->rawY16Format = false;
     y16FormatFor20CUG = false;
     if (fd() >= 0) {
         emit logDebugHandle("Stop Previewing...");
@@ -5452,7 +5420,6 @@ void Videostreaming::sendFlipStatus(bool isHorizontal, bool isVertical)
 {
     horizontalFlip = isHorizontal;
     verticalFlip   = isVertical;
-    m_renderer->flipModeChanged = true;
 }
 
 
